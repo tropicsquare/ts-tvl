@@ -1,93 +1,166 @@
-# ts-tvl
+# TROPIC Verification Library
 
+The TROPIC Verification Library (TVL) is a [Python](https://www.python.org/)
+package for evaluating TROPIC01 functionalities.
+It is written from the TROPIC01
+[datasheet](https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_datasheet.pdf?job=pages)
+and
+[API](https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_user_api.pdf?job=pages)
+documents.
 
+Three main components are defined in the TVL:
+- targets: interfaces to the TROPIC01 implementations
+- `Host`: abstraction of the Host MCU, providing utilities to communicate with a target
+- messages: classes for modelling the data exchanged with the targets.
 
-## Getting started
+## Targets
+The TVL provides a set of classes to communicate with the different implementations
+of TROPIC01, referred to as targets, namely:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- `Tropic01Model`: the reference model, written in Python
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+More on TROPIC01 targets [here](./tvl/targets/README.md).
 
-## Add your files
+## Host
+The `Host` class intends to provide a user-friendly way to communicate with a
+target. It abstracts the low-level communication details, thus allowing the user
+to focus on the content of the messages sent to the target.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+More on TROPIC01 host [here](./tvl/host/README.md).
 
+## Messages
+The messages exchanged between the host and the target are implemented as Python
+classes. These classes are defined based on the API (see above).
+They abstract the way the messages are created an perform several low-level
+operations.
+
+More on messages [here](./tvl/messages/README.md).
+
+## Installing
+
+To use the TVL, install it in your Python environment.
+A good practice consists of creating a Python virtual environment beforehand:
+
+```shell
+python3.8 -m venv myvenv
+source myvenv/bin/activate
 ```
-cd existing_repo
-git remote add origin https://tropic-gitlab.corp.sldev.cz/internal/development-environment/ts-tvl.git
-git branch -M master
-git push -uf origin master
+
+The installation of the TVL:
+
+```shell
+pip install tvl-1.0.0-py3-none-any.whl
 ```
 
-## Integrate with your tools
+## How to use
 
-- [ ] [Set up project integrations](https://tropic-gitlab.corp.sldev.cz/internal/development-environment/ts-tvl/-/settings/integrations)
+1. instantiate and configure a TROPIC01 target
+2. instantiate the `Host` and link to the target
+3. create a request or a command
+4. send the request or command to the target via the `Host` instance
+5. repeat steps 3. and 4.
 
-## Collaborate with your team
+## Simple example: L2-level communication
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```python
+from tvl.host.host import Host
+from tvl.targets.model.tropic01_model import Tropic01Model
+from tvl.api.l2_api import TsL2GetInfoReqRequest
 
-## Test and Deploy
+# Instantiation of a target, here the `Tropic01Model`
+model = Tropic01Model()
+# Instantiation of the `Host`
+host = Host(target=model)
 
-Use the built-in continuous integration in GitLab.
+# Creation of a message, here `TsL2GetInfoReqRequest`
+request = TsL2GetInfoReqRequest(object_id=1, block_index=0)
+print(request)
+# > TsL2GetInfoReqRequest<(id=AUTO, length=AUTO, object_id=01, block_index=00, crc=AUTO)
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+# Sending of the request and reception of the response
+response = host.send_request(request)
 
-***
+print(response)
+# > TsL2GetInfoReqResponse<(status=01, length=07, object=[63, 68, 69, 70, 5f, 69, 64], crc=f253)
+```
 
-# Editing this README
+## More complete example: enabling L3-level communication
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```python
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-## Suggestions for a good README
+from tvl.host.host import Host, SessionError
+from tvl.targets.model.tropic01_model import Tropic01Model
+from tvl.constants import L2StatusEnum, L3ResultFieldEnum
+from tvl.api.l2_api import TsL2HandshakeReqRequest, TsL2HandshakeReqResponse
+from tvl.api.l3_api import TsL3PingCommand, TsL3PingResult
+from tvl.logging import setup_logging
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# Create X25519 keys to initialize the model and the host
+HOST_PRIVATE_KEY = X25519PrivateKey.generate()
+HOST_PRIVATE_KEY_BYTES = HOST_PRIVATE_KEY.private_bytes_raw()
+HOST_PUBLIC_KEY_BYTES = HOST_PRIVATE_KEY.public_key().public_bytes_raw()
 
-## Name
-Choose a self-explaining name for your project.
+TROPIC_PRIVATE_KEY = X25519PrivateKey.generate()
+TROPIC_PRIVATE_KEY_BYTES = TROPIC_PRIVATE_KEY.private_bytes_raw()
+TROPIC_PUBLIC_KEY_BYTES = TROPIC_PRIVATE_KEY.public_key().public_bytes_raw()
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+PAIRING_KEY_INDEX = 1
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# Configure logging (a dictionary can be used)
+setup_logging()
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+# Instantiate model
+model = Tropic01Model.from_dict(
+    {
+        "s_t_priv": TROPIC_PRIVATE_KEY_BYTES,
+        "s_t_pub": TROPIC_PUBLIC_KEY_BYTES,
+        "i_pairing_keys": {
+            PAIRING_KEY_INDEX: {"value": HOST_PUBLIC_KEY_BYTES},
+        },
+    }
+)
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+# Instantiate host
+host = Host.from_dict(
+    {
+        "s_h_priv": HOST_PRIVATE_KEY_BYTES,
+        "s_h_pub": HOST_PUBLIC_KEY_BYTES,
+        "s_t_pub": TROPIC_PUBLIC_KEY_BYTES,
+        "pairing_key_index": PAIRING_KEY_INDEX,
+    }
+# Set the model as being the host's target
+).set_target(model)
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# Secure channel is not yet established: send ping command to confirm
+ping_command_data_in = b"deadbeef"
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+ping_command = TsL3PingCommand(data_in=ping_command_data_in)
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+try:
+    ping_result = host.send_command(ping_command)
+except SessionError as exc:
+    print(exc)
+    # > Cannot encrypt command: no valid session.
+else:
+    assert False, "SessionError should be raised"
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Establish secure channel between model and host: send handshake request
+handshake_request = TsL2HandshakeReqRequest(
+    e_hpub=host.session.create_handshake_request(),
+    pkey_index=host.pairing_key_index,
+)
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+handshake_response = host.send_request(handshake_request)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+assert isinstance(handshake_response, TsL2HandshakeReqResponse)
+assert handshake_response.status.value == L2StatusEnum.REQ_OK
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+# Test L3 layer communication: send ping command
+ping_result = host.send_command(ping_command)
 
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+assert isinstance(ping_result, TsL3PingResult)
+assert ping_result.result.value == L3ResultFieldEnum.OK
+assert ping_result.data_out.value == ping_command.data_in.value
+assert ping_result.data_out.to_bytes() == ping_command_data_in
+```

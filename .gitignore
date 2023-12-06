@@ -1,0 +1,6 @@
+__pycache__/
+.vscode/
+dist/
+htmlcov/
+report.xml
+.coverage
