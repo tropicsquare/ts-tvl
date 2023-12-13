@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 
 from tvl.api.l3_api import TsL3MacAndDestroyCommand

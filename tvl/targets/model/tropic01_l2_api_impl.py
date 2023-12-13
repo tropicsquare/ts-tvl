@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import List, NoReturn, cast
 
 from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data

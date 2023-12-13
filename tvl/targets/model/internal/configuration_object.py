@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import contextlib
 from enum import Enum
 from typing import Any, Callable, Dict, List, Mapping

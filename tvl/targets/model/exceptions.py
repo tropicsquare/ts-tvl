@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Optional, Union
 
 from ...constants import L2StatusEnum, L3ResultFieldEnum

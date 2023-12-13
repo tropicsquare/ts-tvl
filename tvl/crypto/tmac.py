@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import List
 
 from .conversion import bit, bitlist_to_bytes, ints_to_bitlist

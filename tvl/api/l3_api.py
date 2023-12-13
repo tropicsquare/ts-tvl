@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 # GENERATED ON 2023-11-01 13:50:11.476671
 # BY api_generator.py VERSION 1.4
 # INPUT FILE: 260085b25a5b36a939489471e7f23f3cdd6c98ebd7c37e5cf9291203dd3ae4cd

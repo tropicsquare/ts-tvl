@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Any, ContextManager, Type
 
 from typing_extensions import Annotated, Self
