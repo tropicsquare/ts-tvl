@@ -1,0 +1,16 @@
+{#- Copyright 2023 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "api.py.j2" %}
+
+{%- set ENUM_NAME = "L3Enum" %}
+{%- set CLASS_NAME = "L3API" %}
+{%- set API_LEVEL = "\"l3_api\"" %}
+{%- set CLASS_PREFIX = "TsL3" %}
+{%- set METHOD_PREFIX = "ts_l3_" %}
+{%- set INPUT_CLASS = "Command" %}
+{%- set OUTPUT_CLASS = "Result" %}
+{%- set INPUT_CLASS_PARENT = "L3Command" %}
+{%- set OUTPUT_CLASS_PARENT = "L3Result" %}
+{%- set OUTPUT_TYPE_PATTERN = "%(type)s" %}
+{%- set BUILTIN_IMPORT = "" %}
+{%- set INTERNAL_IMPORT = "from tvl.messages.l3_messages import L3Command, L3Result" %}

@@ -1,0 +1,99 @@
+{#- Copyright 2023 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "header_api.j2" %}
+
+{%- set PREFIX = PREFIX | default("ts_l2") %}
+
+{% block content %}
+
+{%- set RESULT_TYPE = [PREFIX, "result_t"] | join("_") | lower %}
+{%- set LEN_TYPE = [PREFIX, "len_t"] | join("_") | lower %}
+
+#ifndef {{name}}
+#define {{name}}
+
+#include "type.h"
+{% for define in defines %}
+    {%- if define.description %}
+        {%- set description = " // %s" | format(define.description) %}
+    {%- else %}
+        {%- set description = "" %}
+    {%- endif %}
+#define {{define.name | upper}} {{define.value}}{{description}}
+{%- endfor %}
+{% for tag in tags %}
+/{{(" " + tag.name + " ").center(79, "*")}}
+    {%- if tag.description_long %}
+        {%- for line in tag.description_long.rstrip().split("\n") %}
+ * {{line}}
+        {%- endfor %}
+    {%- endif %}
+{{"*" * 79}}/
+
+// {{tag.description}}
+#define {{PREFIX | upper}}_{{tag.name | upper}} {{"%#04x" | format(tag.message_id)}}
+    {% for io in tag.structs.values() %}
+        {%- if io.name %}
+        {%- set struct_name = [PREFIX, tag.name | lower, io.name] | join("_") %}
+            {%-  if io.members %}
+typedef struct {
+               {%- for member in io.members %}
+                    {%- if member.size != 1 %}
+                        {%- if member.description %}
+    {{member.type}} {{member.name | lower}}[{{member.size}}]; // {{member.description}}
+                        {%- else %}
+    {{member.type}} {{member.name | lower}}[{{member.size}}];
+                        {%- endif %}
+                    {%- else %}
+                        {%- if member.description %}
+    {{member.type}} {{member.name | lower}}; // {{member.description}}
+                        {%- else %}
+    {{member.type}} {{member.name | lower}};
+                        {%- endif %}
+                    {%- endif %}
+                    {%- if member.description_long %}
+    /*
+                       {%- for line in member.description_long.rstrip().split("\n") %}
+    {{line}}
+                        {%- endfor %}
+    */
+                    {%- endif %}
+                    {%- if member.choices %}
+                        {%- for choice in member.choices %}
+                            {%- set _list = [PREFIX, tag.name, member.name, choice.name] %}
+                            {%- set define_name = _list | join("_") | upper %}
+                            {%- if choice.description %}
+    # define {{define_name}} {{choice.value}} // {{choice.description}}
+                            {%- else %}
+    # define {{define_name}} {{choice.value}}
+                            {%- endif %}
+                        {%- endfor %}
+                    {%- endif %}
+                {%- endfor %}
+} __attribute__((__packed__)) {{struct_name}};
+            {%- else %}
+typedef void {{struct_name}};
+            {%- endif %}
+        {%- endif %}
+    {% endfor %}
+    {%- set function_name = [PREFIX, tag.name] | join("_") | lower %}
+    {%- set output = tag.structs.output %}
+    {%- set output_struct_name = [function_name, output.name] | join("_") %}
+    {%- set input = tag.structs.input %}
+    {%- set input_struct_name = [function_name, input.name] | join("_") %}
+    {%- if input.name %}
+        {%- if output.name %}
+{{RESULT_TYPE}} {{function_name}}({{output_struct_name}} *output, {{input_struct_name}} *input, {{LEN_TYPE}} input_len);
+        {%- else %}
+{{RESULT_TYPE}} {{function_name}}}({{input_struct_name}} *input, u8 input_len);
+        {%- endif %}
+{%- else %}
+        {%- if output.name %}
+{{RESULT_TYPE}} {{function_name}}({{output_struct_name}} *output);
+        {%- else %}
+{{RESULT_TYPE}} {{function_name}}(void);
+        {%- endif %}
+    {%- endif %}
+{% endfor %}
+#endif // !{{name}}
+{% endblock content %}
