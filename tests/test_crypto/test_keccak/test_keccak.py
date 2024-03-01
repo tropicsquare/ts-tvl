@@ -10,7 +10,7 @@ from typing import Callable, List, NamedTuple, Tuple
 import pytest
 from Crypto.Hash import SHAKE256
 
-from tvl.crypto.conversion import bitlist_to_bytes, ints_to_bitlist
+from tvl.crypto.conversion import bit, bitlist_to_bytes, ints_to_bitlist
 from tvl.crypto.keccak import State, keccak_c, keccak_f
 from tvl.crypto.keccak import shake256 as _shake256
 
@@ -93,7 +93,7 @@ def test_permutation(bitrate: int, width: int, data: _Data):
     ],
 )
 def test_preset(
-    sponge: Callable[[List[int], int], List[int]],
+    sponge: Callable[[List[bit], int], List[bit]],
     data_in: str,
     expected_data_out: str,
 ):

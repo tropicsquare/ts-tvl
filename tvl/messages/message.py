@@ -65,7 +65,7 @@ class _MetaMessage(type):
         bases: Tuple[type, ...],
         namespace: Dict[str, Any],
         **kwargs: Any,
-    ) -> Self:
+    ) -> Type["_MetaMessage"]:
         existing_fields = {n for base in bases for n, *_ in _get_specs(base)}
 
         for field_name in (annot := namespace.get("__annotations__", {})):
@@ -267,7 +267,7 @@ class Message(BaseMessage):
         else:
             namespace = {}
 
-        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1)
+        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1)  # type: ignore
 
     @classmethod
     def with_length(cls, length: int) -> Type[Self]:

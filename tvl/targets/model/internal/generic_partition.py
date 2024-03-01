@@ -64,7 +64,7 @@ class GenericPartition(DefaultDict[int, T]):
         """
         instance = cls()
         for k, v in __mapping.items():
-            instance[k] = cls.SLOT_TYPE.from_dict(v)
+            instance[k] = cls.SLOT_TYPE.from_dict(v)  # type: ignore
         return instance
 
 

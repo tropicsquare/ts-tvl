@@ -13,11 +13,10 @@ from typing import (
     Protocol,
     Set,
     Tuple,
+    Type,
     TypeVar,
     cast,
 )
-
-from typing_extensions import Self
 
 
 class HasLogger(Protocol):
@@ -40,7 +39,7 @@ class MetaModel(type):
 
     def __new__(
         cls, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any]
-    ) -> Self:
+    ) -> Type["MetaModel"]:
         new_cls = super().__new__(cls, name, bases, namespace)
 
         api_bases: Dict[str, "functools.singledispatchmethod[Any]"] = {}

@@ -27,7 +27,7 @@ from ..messages.l2_messages import L2Request, L2Response
 from ..messages.l3_messages import L3Command, L3EncryptedPacket, L3Result
 from .low_level_communication import LowLevelFunctionFactory
 from .protocols import FunctionFactory, TargetDriver, TropicProtocol
-from .simple_driver import SimpleDriver
+from .simple_target_driver import SimpleTargetDriver
 
 T = TypeVar("T")
 
@@ -143,7 +143,7 @@ class Host:
         )
 
     def set_target(self, target: TropicProtocol) -> Self:
-        self._target_driver = SimpleDriver(target)
+        self._target_driver = SimpleTargetDriver(target)
         return self
 
     def set_target_driver(self, target_driver: TargetDriver) -> Self:
@@ -163,7 +163,7 @@ class Host:
 
     @functools.singledispatchmethod
     def _send_request(self, request: Any) -> Any:
-        raise NotImplementedError(f"{type(request)} not supported.")
+        raise TypeError(f"{type(request)} not supported.")
 
     def _ll_send_l2(self, l2request: L2Request) -> Tuple[L2Response, bytes]:
         self.logger.debug(f"L2 request: {l2request}.")
@@ -256,7 +256,7 @@ class Host:
 
     @functools.singledispatchmethod
     def _send_command(self, command: Any) -> Any:
-        raise NotImplementedError(f"{type(command)} not supported.")
+        raise TypeError(f"{type(command)} not supported.")
 
     @_send_command.register
     def _ll_send_l3(self, l3command: L3Command) -> bytes:

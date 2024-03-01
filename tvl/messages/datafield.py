@@ -194,7 +194,9 @@ class DataField(Generic[T]):
         self.value = value
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(value={self.value}, params={self.params})"
+        return (
+            f"{self.__class__.__name__}" f"(value={self.value}, params={self.params})"
+        )
 
     def __len__(self) -> int:
         if self._value is AUTO:
@@ -260,25 +262,25 @@ class U8Array(ArrayDataField):
     """Array of unsigned chars"""
 
     def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT8), param]
+        return Annotated[cls.__base__, params(dtype=Dtype.UINT8), param]  # type: ignore
 
 
 class U16Array(ArrayDataField):
     """Array of unsigned shorts"""
 
     def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT16), param]
+        return Annotated[cls.__base__, params(dtype=Dtype.UINT16), param]  # type: ignore
 
 
 class U32Array(ArrayDataField):
     """Array of unsigned ints"""
 
     def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT32), param]
+        return Annotated[cls.__base__, params(dtype=Dtype.UINT32), param]  # type: ignore
 
 
 class U64Array(ArrayDataField):
     """Array of unsigned longs"""
 
     def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT64), param]
+        return Annotated[cls.__base__, params(dtype=Dtype.UINT64), param]  # type: ignore

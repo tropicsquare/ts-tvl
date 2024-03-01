@@ -504,6 +504,8 @@ class BaseModel(metaclass=MetaModel):
         self.command_buffer.reset()
         self.response_buffer.reset()
         self._config = None
+        self._odata = b""
+        self._state = _FsmState.IDLE
 
     @property
     def config(self) -> ConfigurationObjectImpl:

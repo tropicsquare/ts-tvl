@@ -70,7 +70,6 @@ addopts = """
 [tool.coverage.run]
 omit = [
     "*/__init__.py",
-    "*/__version__.py",
     "tvl/api/l2_api.py",
     "tvl/api/l3_api.py",
     "tvl/targets/model/configuration_object_impl.py",

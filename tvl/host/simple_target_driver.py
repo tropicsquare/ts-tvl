@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from typing import Any, List
+from typing import Any, List, Optional
 
 from typing_extensions import Self
 
@@ -10,9 +10,16 @@ from ..protocols import TropicProtocol
 from .protocols import LLSendL2RequestFn, LLSendL3CommandFn
 
 
-class SimpleDriver:
-    def __init__(self, target: TropicProtocol) -> None:
-        self.logger = logging.getLogger(self.__class__.__name__.lower())
+class SimpleTargetDriver:
+    def __init__(
+        self,
+        target: TropicProtocol,
+        *,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
+        if logger is None:
+            logger = logging.getLogger(self.__class__.__name__.lower())
+        self.logger = logger
         self.target = target
 
     def __enter__(self) -> Self:
