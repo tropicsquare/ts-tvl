@@ -5,17 +5,19 @@ This approach aims to abstract the implementation details of the creation,
 checking, serialization and deserialization of the messages.
 It defines four main base classes, `L2Request`, `L2Response`, `L3Command` and
 `L3Result`, from which all the message types defined in the API are derived.
-Simply said, all the request, response, command and result types defined in the
-[API](https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_user_api.pdf?job=pages)
+Simply said, all the request, response, command and result types defined in the API
 have been modelled as Python classes in the TVL.
 
 These classes have been designed with the following features in mind:
+
 - initialization of the field values with Python types: `int`, `List[int]` and `bytes`
 - support for the following datatypes: `uint8_t`, `uint16_t`, `uint32_t` and `uint64_t`
 - fields can be scalars (one value) or arrays (several values)
 - padding of the value if necessary (in the case of arrays)
 - support for enumerated values
-- the value of some fields can be automatically computed
+- the value of some fields can be automatically computed:
+    - L2-level messages: `REQ_ID`, `REQ_LEN`, `REQ_CRC`, `RSP_LEN`, `RSP_CRC`
+    - L3-level messages: `CMD_ID`
 - endianess can be either little or big
 - serialization to `bytes` - the only type supported by the `TropicProtocol`
 - deserialization from `bytes`
@@ -33,6 +35,7 @@ from the API file.
 
 The base class `L2Request` defines the basic structure of requests, it contains
 the following fields:
+
 - `id` (in the datasheet: `REQ_ID`)
 - `length` (in the datasheet: `REQ_LEN`)
 - `crc` (in the datasheet: `REQ_CRC`)
@@ -44,6 +47,7 @@ considered as being the subfields of the `REQ_DATA` field.
 
 The base class `L2Response` defines the basic structure of responses, it contains
 the following fields:
+
 - `status` (in the datasheet: `STATUS`)
 - `length` (in the datasheet: `RSP_LEN`)
 - `crc` (in the datasheet: `RSP_CRC`)
@@ -129,6 +133,7 @@ from the API file.
 
 The base class `L3Command` defines the basic structure of plaintext commands,
 it contains the following field:
+
 - `id` (in the datasheet: `CMD_ID`)
 
 When inheriting from this base class, the fields defined by the child class are
@@ -138,6 +143,7 @@ considered as being the subfields of the `CMD_DATA` field.
 
 The base class `L3Result` defines the basic structure of plaintext responses,
 it contains the following field:
+
 - `result` (in the datasheet: `RESULT`)
 
 When inheriting from this base class, the fields defined by the child class are
@@ -165,43 +171,37 @@ The class `TsL2EncryptedCmdReqRequest` is defined in the file `l2_api.py`.
 Here is its definition:
 
 ```python
-class TsL2EncryptedCmdReqRequest(L2Request, id=0x04):
-    cmd_size: U16Scalar
-    cmd_ciphertext: U8Array[params(min_size=1, max_size=4096)]
-    cmd_tag: U8Array[params(size=16)]
+class TsL2EncryptedCmdReqRequest(L2Request, id=0x04): # (1)
+    cmd_size: U16Scalar  # (2)
+    cmd_ciphertext: U8Array[params(min_size=1, max_size=4096)]  # (3)
+    cmd_tag: U8Array[params(size=16)]  # (4)
 ```
 
-- First line:
-    - the class `TsL2EncryptedCmdReqRequest` inherits from `L2Request`, it has then
+1.  - the class `TsL2EncryptedCmdReqRequest` inherits from `L2Request`, it has then
     the fields already defined by this latter, namely `id`, `length` and `crc`.
     - the `id` argument here defines the `ID` attribute of the new class.
     This attribute is important as it allows to deserialize the requests from `bytes`.
     Its value is set to `0x04`, which allows to create an `TsL2EncryptedCmdReqRequest`
     object with `L2Request.instantiate_subclass(0x04, <data>)`.
     **This argument is not to be confused here with the `id` field!**
-- Second line:
-    - `cmd_size` is the first subfield of the `REQ_DATA` field. It is a `U16Scalar`
+2.  - `cmd_size` is the first subfield of the `REQ_DATA` field. It is a `U16Scalar`
     which means it is set with a single `int` in the constructor method of the message
     and accessing its `value` attribute will yield an `int`.
     This field will be serialized as an `uint16_t`.
-- Third line:
-    - `cmd_ciphertext` is the second subfield of the `REQ_DATA` field. it is a
+3.  - `cmd_ciphertext` is the second subfield of the `REQ_DATA` field. it is a
     `U8Array`, which means it is set with a list of `int` in the constructor method
     of the message and accessing its `value` atribute will yield a list of `int`.
     The array has a variable size: it accepts a minimum of 1 element and a maximum of
     4096 elements. If this `DataField` value is not set, the array will be padded
     with as many zeroes as needed to reach the minimum required size, 1 element
     in this example. This field will be serialized as an array of `uint8_t`.
-- Fourth line:
-    - `cmd_tag` is the last subfield of the `REQ_DATA` field. It is a `U8Array`,
+4.  - `cmd_tag` is the last subfield of the `REQ_DATA` field. It is a `U8Array`,
     meaning it is set with an `int` in the constructor method of the message
     and accessing its `value` attribute will yield an `int`. If this `DataField`
     value is not set or its array contains less than the fixed size, the array
     will be padded with as many zeroes as needed to reach the required size,
     16 elements in this example.
     This field will be serialized as an array of `uint8_t`.
-
-Here is how to use the `TsL2EncryptedCmdReqRequest` class.
 
 ```python
 # Creating a request -> instantiate the class
@@ -360,10 +360,10 @@ classDiagram
         from_bytes(data: bytes)$: BaseMessage
     }
     class Message{
-        ID: int$
-        instantiate_subclass(id: int, data: bytes): Message$
-        with_data_length(length: int): Type[Message]$
-        with_length(length: int): Type[Message]$
+        ID: int
+        instantiate_subclass(id: int, data: bytes)$: Message
+        with_data_length(length: int)$: Type[Message]
+        with_length(length: int)$: Type[Message]
     }
     class L2Frame{
         <<base class for L2 messages>>

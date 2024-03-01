@@ -26,8 +26,7 @@ classDiagram
     Host ..> L3Command : sends
     Host ..> L2Response : returns
     Host ..> L3Result : returns
-    TropicProtocol --o Host
-    Target ..|> TropicProtocol : implements
+    TropicProtocol --o Host: used as a target
 ```
 
 More on the messages [here](../messages/README.md).
@@ -44,7 +43,7 @@ host = Host(
     s_h_pub=b"HOST_PUBLIC_KEY",
     s_t_pub=b"TROPIC_PUBLIC_KEY",
     pairing_key_index=3,
-    target=<TropicProtocol-compliant target>,
+    target=<TropicProtocol-compliant object>,
 )
 ```
 
@@ -64,7 +63,7 @@ host = Host.from_dict(
         "pairing_key_index": 3,
     }
 # The target can be set with the `set_target` method
-).set_target(<TropicProtocol-compliant target>)
+).set_target(<TropicProtocol-compliant object>)
 ```
 
 > The `from_dict` class method accepts only Python builtin types, such as `bytes`
@@ -73,8 +72,8 @@ host = Host.from_dict(
 
 ### Validating the configuration
 
-The `configuration_file_model.py` file provides a
-[pydantic](https://pypi.org/project/pydantic/1.10.13/)
+The [`configuration_file_model.py`](../configuration_file_model.py)
+file provides a [pydantic](https://pypi.org/project/pydantic/1.10.13/)
 model for validating the host configuration dictionary: `HostConfigurationModel`.
 
 Example:
@@ -118,9 +117,7 @@ as `bytes` or send an `L2Request` object and receive the response
 as an `L2Response` object.
 
 The method `send_request` sends the request using the comunication protocol
-defined in the
-[TROPIC01 datasheet](https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_datasheet.pdf?job=pages)
-and returns the response it receives from the target.
+defined in the TROPIC01 datasheet and returns the response it receives from the target.
 
 Example:
 ```python
@@ -128,7 +125,7 @@ from tvl.host.host import Host
 from tvl.api.l2_api import TsL2GetInfoReqRequest, TsL2GetInfoReqResponse
 
 # Instantiation of the Host
-host = Host(target=<TropicProtocol-compliant target>)
+host = Host(target=<TropicProtocol-compliant object>)
 
 # - First way: send bytes
 response = host.send_request(b"\x01\x02\x02\x00+\x98")
@@ -176,7 +173,7 @@ from tvl.host.host import Host
 from tvl.api.l3_api import TsL3PingCommand, TsL3PingResult
 
 # Instantiation of the Host and a target
-host = Host(target=<TropicProtocol-compliant target>)
+host = Host(target=<TropicProtocol-compliant object>)
 
 # - First way: send bytes
 result = host.send_command(b"\x01deadbeef")

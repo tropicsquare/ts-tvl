@@ -1,11 +1,13 @@
-# Targets
-
-More information on the `Tropic01Model` [here](./model/README.md).
-
 ## TropicProtocol
 
-The `TropicProtocol` is at the center of the TVL. This protocol defines a set of
-methods a target has to implement to be considered as a target.
+The `TropicProtocol` defines the methods for communicating and controlling an
+implementation of the TROPIC01. Simply put, a class that implements these
+methods is considered a suitable target for testing with the `Host`. The details
+of the methods are open for customization should you choose to create your own target.
+
+> For the time being, only the target `Tropic01Model` is defined.
+
+More on the `Host` [here](../host/README.md).
 
 The diagram below expresses the relationships between the `TropicProtocol` and
 the other components of the TVL:
@@ -26,7 +28,6 @@ classDiagram
     class Host{
         set_target(target: TropicProtocol)
     }
-    Tropic01Model ..|> TropicProtocol : implements
     TropicProtocol --o Host
 ```
 
@@ -36,15 +37,12 @@ classDiagram
 > The compliance of a target to the `TropicProtocol` is thus not enforced at
 > runtime but is rather checked by static type checkers during the development.
 
-It is even more important for a target to comply with the `TropicProtocol` that
-it will allow it to be used by the `Host`. More on the `Host` [here](../host/README.md).
-
 ## Communication with a target
 
-The communication protocol of a TROPIC01 target is defined in the
-[datasheet](https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_datasheet.pdf?job=pages).
+The communication protocol of a TROPIC01 target is defined in the datasheet.
 
 It consists of three layers:
+
 - physical layer (L1)
 - data link layer (L2)
 - secure session layer (L3)
@@ -52,34 +50,31 @@ It consists of three layers:
 ### L1-level communication
 
 The physical layer (or L1 layer) of the TROPIC01 chip is a SPI slave interface.
-The `TropicProtocol` provides three method to control this SPI interface:
+The `TropicProtocol` provides three method to control this interface:
 
 ```python
 class TropicProtocol(Protocol):
 
     def spi_drive_csn_low(self) -> None:
         """Drive the Chip Select signal to LOW."""
-        ...
 
     def spi_drive_csn_high(self) -> None:
         """Drive the Chip Select signal to HIGH."""
-        ...
 
     def spi_send(self, data: bytes) -> bytes:
         """Send data to the chip and receive as many bytes as response."""
-        ...
 ```
 
 Communicating with a target boils down to using these three methods:
 
 ```python
-target = <TropicProtocol-compliant target>
+target = <TropicProtocol-compliant object>
 
-# Start transaction
+# Start the transaction
 target.spi_drive_csn_low()
 # Send and receive data
 received_data = target.spi_send(sent_data)
-# End transaction
+# End the transaction
 target.spi_drive_csn_high()
 ```
 
@@ -155,7 +150,7 @@ import logging
 from tvl.host.host.low_level_communication import ll_send_l2_request
 
 logger = logging.getLogger("example")
-target = <TropicProtocol-compliant target>
+target = <TropicProtocol-compliant object>
 
 request = b"l2_level_message"
 response = ll_send_l2_request(request, target, logger)
@@ -169,7 +164,7 @@ response = ll_send_l2_request(request, target, logger)
 ```python
 from tvl.host.host import Host
 
-target = <TropicProtocol-compliant target>
+target = <TropicProtocol-compliant object>
 host = Host(target=target)
 
 request = b"l2_level_message"
@@ -188,22 +183,18 @@ from tvl.host.host.low_level_communication import ll_send_l3_command
 
 def encrypt_command(command: bytes) -> bytes:
     """User implementation"""
-    ...
 
 def chunk_command(command: bytes) -> List[bytes]:
     """User implementation"""
-    ...
 
 def build_result(chunks: List[bytes]) -> bytes:
     """User implementation"""
-    ...
 
 def decrypt_result(result: bytes) -> bytes:
     """User implementation"""
-    ...
 
 logger = logging.getLogger("example")
-target = <TropicProtocol-compliant target>
+target = <TropicProtocol-compliant object>
 
 command = b"l3_level_message"
 encrypted_command = encrypt_command(command)
@@ -224,7 +215,7 @@ result = decrypt_result(encrypted_result)
 ```python
 from tvl.host.host import Host
 
-target = <TropicProtocol-compliant target>
+target = <TropicProtocol-compliant object>
 host = Host(target=target)
 
 command = b"l3_level_message"

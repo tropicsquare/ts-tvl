@@ -1,0 +1,17 @@
+host:
+  pairing_key_index: 2
+  s_h_priv: !!binary |
+    IJxFKNm5cd3Gxda6aW8qRaPmKDgqSObIUp8vw7RGM0A=
+  s_h_pub: !!binary |
+    QpBKphyTzbp23E73CGvmgRpxhqpMZK+BkfkTDE54YH0=
+  s_t_pub: !!binary |
+    3nDhioUMbO0A8CEwgkGXOOdallSW1KFr4+cQF87FORY=
+model:
+  i_pairing_keys:
+    2:
+      value: !!binary |
+        QpBKphyTzbp23E73CGvmgRpxhqpMZK+BkfkTDE54YH0=
+  s_t_priv: !!binary |
+    +L8kKM+XOyfhkHw+01FczoaHejABssHQq1F15J4EzF0=
+  s_t_pub: !!binary |
+    3nDhioUMbO0A8CEwgkGXOOdallSW1KFr4+cQF87FORY=

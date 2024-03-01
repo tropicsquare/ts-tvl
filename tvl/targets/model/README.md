@@ -1,12 +1,12 @@
 # Tropic01Model
+The `Tropic01Model` class is a functional model of the TROPIC01 chip written in [Python](https://www.python.org/).
+Use `Tropic01Model` as the behavioral reference for testing different TROPIC01 implementations.
 
-The `Tropic01Model` class is a [Python](https://www.python.org/) functional model of
-the TROPIC01 chip. Its behavior is defined based on the
-[datasheet](
-    https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_datasheet.pdf?job=pages)
-and the [API](
-    https://tropic-gitlab.corp.sldev.cz/internal/tropic01/tassic/-/jobs/artifacts/master/file/public/tropic01_user_api.pdf?job=pages)
-documents.
+## Communication protocol
+
+The `Tropic01Model` communication protocol is defined in the TROPIC01 datasheet.
+
+More on the topic [here](../README.md#communication-with-a-target).
 
 ## Composition
 
@@ -100,62 +100,12 @@ classDiagram
     CommandBuffer --* Tropic01Model: command_buffer
 ```
 
-## Instantiation by constructor method (not recommended)
+## Instantiation
 
-The first way to instantiate the model is to use the constructor method,
-providing instances of its internal components:
+The preferred way to instantiate the `Tropic01Model` class is to use its
+`from_dict` class method and provide it nested dictionaries containing simple values.
 
-```python
-from tvl.targets.model.tropic01_model import Tropic01Model
-from tvl.targets.model.internal.pairing_keys import PairingKeys, PairingKeySlot
-from tvl.targets.model.internal.ecc_keys import EccKeys, ECDSAKeyMemLayout, Origins
-
-# Instantiate the internal object managing the pairing keys
-pairing_keys = PairingKeys()
-pairing_keys[1] = PairingKeySlot(b"HOST_1_PUBLIC_KEY")
-pairing_keys[2] = PairingKeySlot(b"HOST_2_PUBLIC_KEY")
-
-# Instantiate the internal object managing the ECC keys
-ecc_keys = EccKeys()
-ecc_keys.slots[1] = ECDSAKeyMemLayout(
-    a=b"ECDSA_PUBLIC_KEY_SLOT_1",
-    d=b"ECDSA_PRIVATE_KEY_1_SLOT_1",
-    w=b"ECDSA_PRIVATE_KEY_2_SLOT_1",
-    origin=Origins.Ecc_Key_Generate,
-)
-ecc_keys.slots[5] = ECDSAKeyMemLayout(
-    a=b"ECDSA_PUBLIC_KEY_SLOT_5",
-    d=b"ECDSA_PRIVATE_KEY_1_SLOT_5",
-    w=b"ECDSA_PRIVATE_KEY_2_SLOT_5",
-    origin=Origins.Ecc_Key_Store,
-)
-
-# Instantiate the model
-model = Tropic01Model(
-    s_t_priv=b"TROPIC_PRIVATE_KEY",
-    s_t_pub=b"TROPIC_PUBLIC_KEY",
-    x509_certificate=b"X509_CERTIFICATE",
-    serial_code=b"12345678",
-    # Provide instances of internal objects
-    i_pairing_keys=pairing_keys,
-    r_ecc_keys=ecc_keys,
-)
-```
-
-This approach is however tedious as the user has to import a lot of classes from
-the codebase and, most importantly, it exposes the internal objects of the model,
-making scripts more likely to break if some internal class changes.
-
-It is therefore **not recommended** to instantiate the `Tropic01Model` class by its
-constructor method in the case of long, complex configurations and the second
-approach below should be preferred.
-
-## Instantiation with `Tropic01Model.from_dict` class method (preferred)
-
-The second way to instantiate the `Tropic01Model` class is to use its `from_dict` class method.
-The input consists of nested dictionaries containing simple values.
-The example below is equivalent to the one above:
-
+Examples:
 ```python
 from tvl.targets.model.tropic01_model import Tropic01Model
 
@@ -198,8 +148,8 @@ be parsed from a yaml file for example
 
 ### Validating the configuration
 
-The `configuration_file_model.py` file provides a
-[pydantic](https://pypi.org/project/pydantic/1.10.13/)
+The [`configuration_file_model.py`](../../configuration_file_model.py)
+file provides a [pydantic](https://pypi.org/project/pydantic/1.10.13/)
 model for validating the model configuration dictionary: `ModelConfigurationModel`.
 
 Example:
@@ -320,8 +270,5 @@ with open("config.yaml", "w") as fd:
     yaml.dump(configuration, fd)
 ```
 
-## Communication protocol
-
-The `Tropic01Model` communication protocol is defined in the TROPIC01 datasheet.
-
-More on the topic [here](../README.md#communication-with-a-target).
+A concrete example of how to create a valid configuration file is in the file
+[`examples/generate_configuration.py`](../../../examples/generate_configuration.py).
