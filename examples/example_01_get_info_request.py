@@ -6,7 +6,7 @@
 
 from tvl.api.l2_api import TsL2GetInfoReqRequest
 from tvl.host.host import Host
-from tvl.logging import setup_logging
+from tvl.logging_utils import setup_logging
 from tvl.targets.model.tropic01_model import Tropic01Model
 
 # Configure logging

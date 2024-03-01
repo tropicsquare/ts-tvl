@@ -6,7 +6,7 @@ from typing import Dict
 
 from pydantic import BaseModel, StrictBool
 
-from ....typing import SizedBytes
+from ....typing_utils import SizedBytes
 from .generic_partition import BaseSlot, GenericModel, GenericPartition
 
 SLOT_SIZE_BYTES = 444

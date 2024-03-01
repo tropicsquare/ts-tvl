@@ -12,7 +12,7 @@ from tvl.api.l3_api import L3Enum
 from tvl.configuration_file_model import load_configuration_file
 from tvl.constants import L2StatusEnum, L3ResultFieldEnum
 from tvl.host.host import Host, SessionError
-from tvl.logging import setup_logging
+from tvl.logging_utils import setup_logging
 from tvl.messages.l2_messages import crc16
 from tvl.targets.model.tropic01_model import Tropic01Model
 

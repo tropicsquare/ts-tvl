@@ -22,7 +22,7 @@ from .targets.model.internal.ecc_keys import EccModel
 from .targets.model.internal.mcounter import MCountersModel
 from .targets.model.internal.pairing_keys import PairingKeysModel
 from .targets.model.internal.user_data_partition import UserDataPartitionModel
-from .typing import FixedSizeBytes, RangedInt, SizedBytes
+from .typing_utils import FixedSizeBytes, RangedInt, SizedBytes
 
 
 class _BaseModel(BaseModel):

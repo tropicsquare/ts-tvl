@@ -22,7 +22,7 @@ from typing_extensions import Self
 
 from ....crypto.ecdsa import SignatureError, ecdsa_key_setup, ecdsa_sign
 from ....crypto.eddsa import eddsa_key_setup, eddsa_sign
-from ....typing import FixedSizeBytes
+from ....typing_utils import FixedSizeBytes
 from .generic_partition import GenericModel
 
 KEY_SIZE = 32

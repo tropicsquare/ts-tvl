@@ -6,7 +6,7 @@ from typing import Dict
 
 from pydantic import BaseModel
 
-from ....typing import FixedSizeBytes
+from ....typing_utils import FixedSizeBytes
 from .generic_partition import BaseSlot, GenericModel, GenericPartition
 
 KEY_SIZE = 32
