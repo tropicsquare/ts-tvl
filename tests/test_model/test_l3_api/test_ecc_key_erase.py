@@ -1,92 +1,51 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import random
-from typing import List, Tuple
+from typing import Any, Dict
 
 import pytest
+from _pytest.fixtures import SubRequest
 
 from tvl.api.l3_api import TsL3EccKeyEraseCommand, TsL3EccKeyEraseResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
-from tvl.targets.model.internal.ecc_keys import KEY_SIZE, Origins
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..base_test import BaseTestSecureChannel
-from ..utils import one_of
+from ..utils import UtilsEcc
 
 
-def _get_valid_indices() -> Tuple[List[int], List[int]]:
-    indices = list(range(1, 33))
-    random.shuffle(indices)
-    return indices[: (hl := len(indices) // 2)], indices[hl:]
+@pytest.fixture()
+def slot(model_configuration: Dict[str, Any], request: SubRequest):
+    model_configuration.update(
+        {"r_ecc_keys": {(val := request.param): UtilsEcc.get_valid_data()}}
+    )
+    yield val
 
 
-def _get_invalid_indices(*, k: int) -> List[int]:
-    indices = [0] + list(range(33, 256))
-    return random.sample(indices, k=k)
+@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES, indirect=True)
+def test_erasing_ok(slot: int, host: Host, model: Tropic01Model):
+    assert model.r_ecc_keys.slots[slot] is not None
+    result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
+
+    assert result.result.value == L3ResultFieldEnum.OK
+    assert isinstance(result, TsL3EccKeyEraseResult)
+    assert model.r_ecc_keys.slots[slot] is None
 
 
-def _get_valid_data():
-    if random.randint(0, 255) % 2 == 0:
-        return {
-            "d": os.urandom(KEY_SIZE),
-            "w": os.urandom(KEY_SIZE),
-            "a": os.urandom(KEY_SIZE * 2),
-            "origin": one_of(Origins),
-        }
-    return {
-        "s": os.urandom(KEY_SIZE),
-        "prefix": os.urandom(KEY_SIZE),
-        "a": os.urandom(KEY_SIZE),
-        "origin": one_of(Origins),
-    }
+@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES)
+def test_no_key(host: Host, model: Tropic01Model, slot: int):
+    assert model.r_ecc_keys.slots[slot] is None
+    result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
+
+    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert isinstance(result, TsL3EccKeyEraseResult)
+    assert model.r_ecc_keys.slots[slot] is None
 
 
-OK_IDX, NO_KEY_IDX = _get_valid_indices()
+@pytest.mark.parametrize("slot", UtilsEcc.INVALID_INDICES)
+def test_invalid_slot(host: Host, model: Tropic01Model, slot: int):
+    assert model.r_ecc_keys.slots[slot] is None
+    result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
 
-
-class TestEccKeyRead(BaseTestSecureChannel):
-    CONFIGURATION = {
-        "model": {
-            "r_ecc_keys": {
-                **{i: _get_valid_data() for i in OK_IDX},
-            }
-        }
-    }
-
-    @pytest.mark.parametrize("slot", OK_IDX)
-    def test_erasing_ok(self, host: Host, model: Tropic01Model, slot: int):
-        assert model.r_ecc_keys.slots[slot] is not None
-        command = TsL3EccKeyEraseCommand(
-            slot=slot,
-        )
-        result = host.send_command(command)
-
-        assert result.result.value == L3ResultFieldEnum.OK
-        assert isinstance(result, TsL3EccKeyEraseResult)
-        assert model.r_ecc_keys.slots[slot] is None
-
-    @pytest.mark.parametrize("slot", NO_KEY_IDX)
-    def test_no_key(self, host: Host, model: Tropic01Model, slot: int):
-        assert model.r_ecc_keys.slots[slot] is None
-        command = TsL3EccKeyEraseCommand(
-            slot=slot,
-        )
-        result = host.send_command(command)
-
-        assert result.result.value == L3ResultFieldEnum.FAIL
-        assert isinstance(result, TsL3EccKeyEraseResult)
-        assert model.r_ecc_keys.slots[slot] is None
-
-    @pytest.mark.parametrize("slot", _get_invalid_indices(k=10))
-    def test_invalid_slot(self, host: Host, model: Tropic01Model, slot: int):
-        assert model.r_ecc_keys.slots[slot] is None
-        command = TsL3EccKeyEraseCommand(
-            slot=slot,
-        )
-        result = host.send_command(command)
-
-        assert result.result.value == L3ResultFieldEnum.FAIL
-        assert model.r_ecc_keys.slots[slot] is None
+    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert model.r_ecc_keys.slots[slot] is None

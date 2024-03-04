@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
+from typing import Any, Dict
 
 import pytest
 
@@ -15,8 +16,6 @@ from tvl.targets.model.tropic01_l3_api_impl import (
 )
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..base_test import BaseTestSecureChannel
-
 R_CONFIG_CFG = {
     **{
         register: random.randint(0, 2**32 - 1)
@@ -28,25 +27,27 @@ R_CONFIG_CFG = {
 }
 
 
-class TestRConfigErase(BaseTestSecureChannel):
-    CONFIGURATION = {
-        "model": {
+@pytest.fixture()
+def model_configuration(model_configuration: Dict[str, Any]):
+    model_configuration.update(
+        {
             "r_config": {
                 register.name.lower(): value for register, value in R_CONFIG_CFG.items()
             }
         }
-    }
+    )
+    yield model_configuration
 
-    @pytest.mark.parametrize("register", R_CONFIG_CFG.keys())
-    def test_r_config_erase(
-        self,
-        host: Host,
-        model: Tropic01Model,
-        register: ConfigObjectRegisterAddressEnum,
-    ):
-        command = TsL3RConfigEraseCommand()
-        result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.OK
-        assert isinstance(result, TsL3RConfigEraseResult)
-        assert (_r := model.r_config[register.value]).value == _r.reset_value
+@pytest.mark.parametrize("register", R_CONFIG_CFG.keys())
+def test_r_config_erase(
+    host: Host,
+    model: Tropic01Model,
+    register: ConfigObjectRegisterAddressEnum,
+):
+    command = TsL3RConfigEraseCommand()
+    result = host.send_command(command)
+
+    assert result.result.value == L3ResultFieldEnum.OK
+    assert isinstance(result, TsL3RConfigEraseResult)
+    assert (_r := model.r_config[register.value]).value == _r.reset_value

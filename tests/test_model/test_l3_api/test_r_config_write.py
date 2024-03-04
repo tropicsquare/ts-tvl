@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
-from itertools import count
+from typing import Iterator
 
 import pytest
 
@@ -13,43 +13,41 @@ from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..base_test import BaseTestSecureChannel
+
+def _get_value() -> Iterator[int]:
+    while True:
+        yield random.randint(0, 2**32 - 1)
 
 
-class TestRConfigWrite(BaseTestSecureChannel):
-    @pytest.mark.parametrize(
-        "address, value",
-        (
-            pytest.param(a, v, id=f"{a!s}-{v:#x}")
-            for a, v in zip(
-                ConfigObjectRegisterAddressEnum,
-                (random.randint(0, 2**32 - 1) for _ in count()),
-            )
-        ),
+@pytest.mark.parametrize(
+    "address, value",
+    (
+        pytest.param(a, v, id=f"{a!s}-{v:#x}")
+        for a, v in zip(ConfigObjectRegisterAddressEnum, _get_value())
+    ),
+)
+def test_valid_address(host: Host, model: Tropic01Model, address: int, value: int):
+    assert (_r := model.r_config[address]).value == _r.reset_value
+
+    command = TsL3RConfigWriteCommand(
+        address=address,
+        value=value,
     )
-    def test_valid_address(
-        self, host: Host, model: Tropic01Model, address: int, value: int
-    ):
-        assert model.r_config[address].value == model.r_config[address].reset_value
+    result = host.send_command(command)
 
-        command = TsL3RConfigWriteCommand(
-            address=address,
-            value=value,
-        )
-        result = host.send_command(command)
+    assert result.result.value == L3ResultFieldEnum.OK
+    assert isinstance(result, TsL3RConfigWriteResult)
+    assert model.r_config[address].value == value
 
-        assert result.result.value == L3ResultFieldEnum.OK
-        assert isinstance(result, TsL3RConfigWriteResult)
-        assert model.r_config[address].value == value
 
-    @pytest.mark.parametrize(
-        "address", sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10)
+@pytest.mark.parametrize(
+    "address", sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10)
+)
+def test_invalid_address(host: Host, address: int):
+    command = TsL3RConfigWriteCommand(
+        address=address,
+        value=next(_get_value()),
     )
-    def test_invalid_address(self, host: Host, address: int):
-        command = TsL3RConfigWriteCommand(
-            address=address,
-            value=random.randint(0, 2**32 - 1),
-        )
-        result = host.send_command(command)
+    result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.FAIL

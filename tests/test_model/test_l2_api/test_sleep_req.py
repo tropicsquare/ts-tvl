@@ -5,6 +5,5 @@ import pytest
 
 
 @pytest.mark.skip(reason="TODO")
-class TestSleepReq:
-    def test(self):
-        pass
+def test_sleep_req():
+    pass

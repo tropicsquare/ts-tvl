@@ -1,117 +1,89 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import random
-from itertools import chain
-from typing import List, Tuple
+from typing import Any, Dict, Tuple
 
 import pytest
+from _pytest.fixtures import SubRequest
 
 from tvl.api.l3_api import TsL3McounterUpdateCommand, TsL3McounterUpdateResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
-from tvl.targets.model.internal.mcounter import MCOUNTER_MAX_VAL, NOTSET_VALUE
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..base_test import BaseTestSecureChannel
+from ..utils import UtilsMcounter
 
 
-def _get_valid_indices() -> Tuple[List[int], List[int], List[int]]:
-    indices = list(range(1, 17))
-    random.shuffle(indices)
-    return (
-        indices[: (hl := len(indices) // 3)],
-        indices[hl : hl * 2],
-        indices[hl * 2 :],
-    )
-
-
-def _get_invalid_indices(*, k: int) -> List[int]:
-    indices = [0] + list(range(17, 256))
-    return random.sample(indices, k=k)
-
-
-def _get_valid_data() -> int:
-    return random.randint(0, MCOUNTER_MAX_VAL)
-
-
-INIT_CTR_INDICES, NOTSET_CTR_INDICES, NULL_CTR_INDICES = _get_valid_indices()
-
-INIT_CTR = {idx: _get_valid_data() for idx in INIT_CTR_INDICES}
-
-NULL_CTR = {idx: 0 for idx in NULL_CTR_INDICES}
-
-
-class TestMCounterUpdate(BaseTestSecureChannel):
-    CONFIGURATION = {
-        "model": {
+@pytest.fixture()
+def prepare_data_ok(model_configuration: Dict[str, Any], request: SubRequest):
+    model_configuration.update(
+        {
             "r_mcounters": {
-                **{idx: {"value": value} for idx, value in INIT_CTR.items()},
-                **{idx: {"value": value} for idx, value in NULL_CTR.items()},
+                (idx := request.param): {
+                    "value": (val := UtilsMcounter.get_valid_data())
+                }
             }
         }
-    }
-
-    @pytest.mark.parametrize(
-        "idx, previous_value, expected_result_field, expected_value",
-        chain(
-            (
-                pytest.param(
-                    idx,
-                    value,
-                    L3ResultFieldEnum.OK,
-                    value - 1,
-                    id=f"{idx}-initialized",
-                )
-                for idx, value in INIT_CTR.items()
-            ),
-            (
-                pytest.param(
-                    idx,
-                    value,
-                    TsL3McounterUpdateResult.ResultEnum.UPDATE_ERR,
-                    value,
-                    id=f"{idx}-null",
-                )
-                for idx, value in NULL_CTR.items()
-            ),
-            (
-                pytest.param(
-                    idx,
-                    NOTSET_VALUE,
-                    L3ResultFieldEnum.FAIL,
-                    NOTSET_VALUE,
-                    id=f"{idx}-uninitialized",
-                )
-                for idx in NOTSET_CTR_INDICES
-            ),
-        ),
     )
-    def test_valid_slot(
-        self,
-        host: Host,
-        model: Tropic01Model,
-        idx: int,
-        previous_value: int,
-        expected_result_field: int,
-        expected_value: int,
-    ):
-        assert model.r_mcounters[idx].value == previous_value
+    yield idx, val
 
-        command = TsL3McounterUpdateCommand(
-            mcounter_index=idx,
-        )
-        result = host.send_command(command)
 
-        assert result.result.value == expected_result_field
-        assert isinstance(result, TsL3McounterUpdateResult)
-        assert model.r_mcounters[idx].value == expected_value
+@pytest.mark.parametrize("prepare_data_ok", UtilsMcounter.VALID_INDICES, indirect=True)
+def test_initialized(
+    prepare_data_ok: Tuple[int, int], host: Host, model: Tropic01Model
+):
+    index, previous_value = prepare_data_ok
+    assert model.r_mcounters[index].value == previous_value
 
-    @pytest.mark.parametrize("mcounter_index", _get_invalid_indices(k=10))
-    def test_invalid_slot(self, host: Host, mcounter_index: int):
-        command = TsL3McounterUpdateCommand(
-            mcounter_index=mcounter_index,
-        )
-        result = host.send_command(command)
+    command = TsL3McounterUpdateCommand(
+        mcounter_index=index,
+    )
+    result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.OK
+    assert isinstance(result, TsL3McounterUpdateResult)
+    assert model.r_mcounters[index].value == previous_value - 1
+
+
+@pytest.mark.parametrize("index", UtilsMcounter.VALID_INDICES)
+def test_uninitialized(index: int, host: Host, model: Tropic01Model):
+    assert model.r_mcounters[index].value == UtilsMcounter.NOTSET_VALUE
+
+    command = TsL3McounterUpdateCommand(
+        mcounter_index=index,
+    )
+    result = host.send_command(command)
+
+    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert isinstance(result, TsL3McounterUpdateResult)
+    assert model.r_mcounters[index].value == UtilsMcounter.NOTSET_VALUE
+
+
+@pytest.fixture()
+def index(model_configuration: Dict[str, Any], request: SubRequest):
+    model_configuration.update({"r_mcounters": {(idx := request.param): {"value": 0}}})
+    yield idx
+
+
+@pytest.mark.parametrize("index", UtilsMcounter.VALID_INDICES, indirect=True)
+def test_null(index: int, host: Host, model: Tropic01Model):
+    assert model.r_mcounters[index].value == 0
+
+    command = TsL3McounterUpdateCommand(
+        mcounter_index=index,
+    )
+    result = host.send_command(command)
+
+    assert result.result.value == TsL3McounterUpdateResult.ResultEnum.UPDATE_ERR
+    assert isinstance(result, TsL3McounterUpdateResult)
+    assert model.r_mcounters[index].value == 0
+
+
+@pytest.mark.parametrize("mcounter_index", UtilsMcounter.INVALID_INDICES)
+def test_invalid_index(host: Host, mcounter_index: int):
+    command = TsL3McounterUpdateCommand(
+        mcounter_index=mcounter_index,
+    )
+    result = host.send_command(command)
+
+    assert result.result.value == L3ResultFieldEnum.FAIL

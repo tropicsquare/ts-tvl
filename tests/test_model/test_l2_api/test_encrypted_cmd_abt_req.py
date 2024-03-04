@@ -5,6 +5,5 @@ import pytest
 
 
 @pytest.mark.skip(reason="TODO")
-class TestEncryptedCmdAbtReq:
-    def test(self):
-        pass
+def test_encrypted_cmd_abt_req():
+    pass

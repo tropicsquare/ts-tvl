@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
-from itertools import count
+from typing import Any, Dict, Iterator
 
 import pytest
 
@@ -12,8 +12,6 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
 from tvl.targets.model.tropic01_model import Tropic01Model
-
-from ..base_test import BaseTestSecureChannel
 
 U32_MAX = 2**32 - 1
 
@@ -27,83 +25,84 @@ I_CONFIG_CFG = {
 }
 
 
-def _valid_bit_index() -> int:
-    return random.randint(0, 31)
+def _valid_bit_index() -> Iterator[int]:
+    while True:
+        yield random.randint(0, 31)
 
 
-def _invalid_bit_index() -> int:
-    return random.randint(32, 255)
+def _invalid_bit_index() -> Iterator[int]:
+    while True:
+        yield random.randint(32, 255)
 
 
-class TestIConfigWrite(BaseTestSecureChannel):
-    CONFIGURATION = {
-        "model": {
+@pytest.fixture()
+def model_configuration(model_configuration: Dict[str, Any]):
+    model_configuration.update(
+        {
             "i_config": {
                 register.name.lower(): value for register, value in I_CONFIG_CFG.items()
             }
         }
-    }
-
-    @pytest.mark.parametrize(
-        "register, value, bit_index",
-        (
-            pytest.param(r, v, bi, id=f"{r!s}-{v:#x}-{bi}")
-            for (r, v), bi in zip(
-                I_CONFIG_CFG.items(), (_valid_bit_index() for _ in count())
-            )
-        ),
     )
-    def test_valid_bit_index(
-        self,
-        host: Host,
-        model: Tropic01Model,
-        register: ConfigObjectRegisterAddressEnum,
-        value: int,
-        bit_index: int,
-    ):
-        assert model.i_config[register.value].value == value
+    yield model_configuration
 
-        command = TsL3IConfigWriteCommand(
-            address=register.value,
-            bit_index=bit_index,
-        )
-        result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.OK
-        assert isinstance(result, TsL3IConfigWriteResult)
-        assert model.i_config[register.value].value == value & (
-            ~(2**bit_index) & U32_MAX
-        )
+@pytest.mark.parametrize(
+    "register, value, bit_index",
+    (
+        pytest.param(r, v, bi, id=f"{r!s}-{v:#x}-{bi}")
+        for (r, v), bi in zip(I_CONFIG_CFG.items(), _valid_bit_index())
+    ),
+)
+def test_valid_bit_index(
+    host: Host,
+    model: Tropic01Model,
+    register: ConfigObjectRegisterAddressEnum,
+    value: int,
+    bit_index: int,
+):
+    assert model.i_config[register.value].value == value
 
-    @pytest.mark.parametrize(
-        "register, bit_index",
-        (
-            pytest.param(r, bi, id=f"{r!s}-{bi}")
-            for r, bi in zip(I_CONFIG_CFG, (_invalid_bit_index() for _ in count()))
-        ),
+    command = TsL3IConfigWriteCommand(
+        address=register.value,
+        bit_index=bit_index,
     )
-    def test_invalid_bit_index(
-        self,
-        host: Host,
-        register: ConfigObjectRegisterAddressEnum,
-        bit_index: int,
-    ):
-        command = TsL3IConfigWriteCommand(
-            address=register.value,
-            bit_index=bit_index,
-        )
-        result = host.send_command(command)
+    result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.OK
+    assert isinstance(result, TsL3IConfigWriteResult)
+    assert model.i_config[register.value].value == value & (~(2**bit_index) & U32_MAX)
 
-    @pytest.mark.parametrize(
-        "address", sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10)
+
+@pytest.mark.parametrize(
+    "register, bit_index",
+    (
+        pytest.param(r, bi, id=f"{r!s}-{bi}")
+        for r, bi in zip(I_CONFIG_CFG, _invalid_bit_index())
+    ),
+)
+def test_invalid_bit_index(
+    host: Host,
+    register: ConfigObjectRegisterAddressEnum,
+    bit_index: int,
+):
+    command = TsL3IConfigWriteCommand(
+        address=register.value,
+        bit_index=bit_index,
     )
-    def test_invalid_address(self, host: Host, address: int):
-        command = TsL3IConfigWriteCommand(
-            address=address,
-            bit_index=_valid_bit_index(),
-        )
-        result = host.send_command(command)
+    result = host.send_command(command)
 
-        assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.FAIL
+
+
+@pytest.mark.parametrize(
+    "address", sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10)
+)
+def test_invalid_address(host: Host, address: int):
+    command = TsL3IConfigWriteCommand(
+        address=address,
+        bit_index=next(_valid_bit_index()),
+    )
+    result = host.send_command(command)
+
+    assert result.result.value == L3ResultFieldEnum.FAIL
