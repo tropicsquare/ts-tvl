@@ -354,9 +354,9 @@ class BaseModel(metaclass=MetaModel):
         elif self._state is _FsmState.CSN_FALLING_EDGE:
             # The first byte is GET_RESP, the chip should send back a response
             if data[0] == L2IdFieldEnum.GET_RESP:
-                # Send BUSY status sporadically to emulate a busy chip
+                # Sporadically set READY bit to 0 to emulate a busy chip
                 if next(self.busy_iter):
-                    result = bytes([L1ChipStatusFlag.BUSY])
+                    result = bytes([not L1ChipStatusFlag.READY])
                     fill = bytes([L2StatusEnum.NO_RESP])
                     self._state = _FsmState.SEND_NO_RESP
 
@@ -393,7 +393,7 @@ class BaseModel(metaclass=MetaModel):
                 else:
                     self.response_buffer.add(responses_)
                     self._odata = self.response_buffer.next()
-                result = bytes([L1ChipStatusFlag.READY])
+                result = bytes([not L1ChipStatusFlag.READY])
                 fill = self.init_byte[:1]
                 self._state = _FsmState.SEND_INIT_BYTE
 

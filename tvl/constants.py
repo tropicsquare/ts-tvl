@@ -5,10 +5,8 @@ from enum import IntEnum, IntFlag
 
 
 class L1ChipStatusFlag(IntFlag):
-    READY = 0
-    """Init value"""
-    BUSY = 1
-    """TROPIC01 is processing L2 Request frame or L3 Command packet"""
+    READY = 1
+    """TROPIC01 is ready to receive L2 Request frame or L3 Command packet"""
     ALARM = 2
     """TROPIC01 is in Alarm mode"""
     START = 4
