@@ -26,7 +26,6 @@ from typing_extensions import Self
 from ...constants import (
     ENCRYPTION_TAG_LEN,
     PADDING_BYTE,
-    RESEND_MAX_COUNT,
     S_HI_PUB_NB_SLOTS,
     L1ChipStatusFlag,
     L2IdFieldEnum,
@@ -48,7 +47,7 @@ from .internal.ecc_keys import EccKeys
 from .internal.mcounter import MCounters
 from .internal.pairing_keys import PairingKeys
 from .internal.random_number_generator import RandomNumberGenerator
-from .internal.response_buffer import MaxResendCountReachedError, ResponseBuffer
+from .internal.response_buffer import ResponseBuffer
 from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
 
@@ -97,7 +96,6 @@ class BaseModel(metaclass=MetaModel):
         serial_code: bytes = b"serial_code",
         activate_encryption: bool = True,
         debug_random_value: Optional[bytes] = None,
-        resend_max_count: int = RESEND_MAX_COUNT,
         init_byte: bytes = b"\x00",
         busy_iter: Optional[Iterable[bool]] = None,
     ):
@@ -132,8 +130,6 @@ class BaseModel(metaclass=MetaModel):
                 Defaults to True.
             debug_random_value (bytes, optional): TRNG2 initial random value.
                 Defaults to None.
-            resend_max_count (int, optional): maximal number of times the
-                latest response can be resent. Defaults to RESEND_MAX_COUNT.
             init_byte (bytes): byte sent behind the chip status byte upon
                 reception of a request. Defaults to b"\x00".
             busy_iter (Iterable[bool], optional): iterable managing the
@@ -193,7 +189,7 @@ class BaseModel(metaclass=MetaModel):
         self.pairing_key_slot: int = -1
 
         # response buffer
-        self.response_buffer = ResponseBuffer(resend_max_count)
+        self.response_buffer = ResponseBuffer()
         # command buffer
         self.command_buffer = CommandBuffer()
 
@@ -239,7 +235,6 @@ class BaseModel(metaclass=MetaModel):
             serial_code=self.serial_code,
             activate_encryption=self.activate_encryption,
             debug_random_value=self.trng2.debug_random_value,
-            resend_max_count=self.response_buffer.resend_max_count,
             init_byte=self.init_byte,
             busy_iter=self.busy_iter,
         )
@@ -281,7 +276,6 @@ class BaseModel(metaclass=MetaModel):
             **__s("serial_code"),
             **__s("activate_encryption"),
             **__s("debug_random_value"),
-            **__s("resend_max_count"),
             **__s("init_byte"),
             **__s("busy_iter"),
         )
@@ -385,11 +379,9 @@ class BaseModel(metaclass=MetaModel):
                     responses_ = self.process_input(data)
                 except ResendLastResponse as exc:
                     self.logger.info(exc)
-                    try:
-                        self._odata = self.response_buffer.latest()
-                    except MaxResendCountReachedError as exc:
-                        self.logger.info(exc)
-                        self._odata = b""
+                    self._odata = self.response_buffer.latest()
+                    if not self._odata:
+                        raise RuntimeError("Should not happen: no latest response.")
                 else:
                     self.response_buffer.add(responses_)
                     self._odata = self.response_buffer.next()

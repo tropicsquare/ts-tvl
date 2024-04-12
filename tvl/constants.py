@@ -74,9 +74,6 @@ DH_LEN = 32
 PADDING_BYTE = b"\x00"
 """L1 level padding byte value"""
 
-RESEND_MAX_COUNT = 2
-"""Maximum number of times the latest response can be resent"""
-
 ENCRYPTION_TAG_LEN = 16
 """Length of the tag added to the encrypted data after AESGCM encryption"""
 

@@ -75,9 +75,7 @@ classDiagram
         debug_random_value
         get_random_bytes()
     }
-    class ResponseBuffer{
-        resend_max_count
-    }
+    class ResponseBuffer
     class TropicEncryptedSession{
         nonce_cmd
         nonce_resp

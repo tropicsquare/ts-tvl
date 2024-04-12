@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Extra, StrictBool, StrictBytes, StrictInt
+from pydantic import BaseModel, Extra, StrictBool, StrictBytes
 from typing_extensions import TypedDict
 
 from .constants import (
@@ -58,7 +58,6 @@ class ModelConfigurationModel(_BaseModel):
     serial_code: Optional[FixedSizeBytes[SERIAL_CODE_SIZE]]
     debug_random_value: Optional[StrictBytes]
     activate_encryption: Optional[StrictBool]
-    resend_max_count: Optional[StrictInt]
     init_byte: Optional[FixedSizeBytes[1]]
     busy_iter: Optional[List[StrictBool]]
 

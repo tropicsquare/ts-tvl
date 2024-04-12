@@ -194,7 +194,9 @@ class L2APIImplementation(L2API):
         return TsL2EncryptedCmdAbtResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
-        raise ResendLastResponse("Resend the latest response.")
+        if self.response_buffer.latest():
+            raise ResendLastResponse("Resend the latest response.")
+        raise L2ProcessingErrorGeneric("No latest response to send.")
 
     def ts_l2_sleep_req(self, request: TsL2SleepReqRequest) -> TsL2SleepReqResponse:
         self.check_access_privileges(
