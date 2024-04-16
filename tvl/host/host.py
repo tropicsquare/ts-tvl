@@ -4,6 +4,7 @@
 import contextlib
 import functools
 import logging
+import os
 from typing import (
     Any,
     Callable,
@@ -93,7 +94,7 @@ class Host:
         Valid once the host and Tropic chip have been paired."""
         self.pairing_key_index = __i(pairing_key_index, -1)
         """Index at which the host public key is stored in the Tropic chip"""
-        self.session = HostEncryptedSession()
+        self.session = HostEncryptedSession(random_source=os)
         """Encrypted session"""
         self.activate_encryption = activate_encryption
         """Encrypt L3-layer messages"""

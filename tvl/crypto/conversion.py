@@ -21,7 +21,7 @@ def ints_to_bitlist(__b: Iterable[int], /) -> List[bit]:
 
 def bitlist_to_int(r: Iterable[bit]) -> int:
     """Turn a list of bits into an integer"""
-    return sum(bit * (2**i) for i, bit in enumerate(r))
+    return sum(bit_ * (2**i) for i, bit_ in enumerate(r))
 
 
 def bitlist_to_bytes(__l: Iterable[bit], /) -> bytes:

@@ -7,16 +7,16 @@ from tvl.targets.model.internal.random_number_generator import RandomNumberGener
 def test_value_is_deterministic_when_initialized_with_not_none():
     rng = RandomNumberGenerator(b"deadbeef")
 
-    v0 = rng.get_random_bytes(0)
-    v1 = rng.get_random_bytes(1)
-    v2 = rng.get_random_bytes(2)
-    v3 = rng.get_random_bytes(3)
-    v4 = rng.get_random_bytes(4)
-    v5 = rng.get_random_bytes(5)
-    v6 = rng.get_random_bytes(6)
-    v7 = rng.get_random_bytes(7)
-    v8 = rng.get_random_bytes(8)
-    v16 = rng.get_random_bytes(16)
+    v0 = rng.urandom(0)
+    v1 = rng.urandom(1)
+    v2 = rng.urandom(2)
+    v3 = rng.urandom(3)
+    v4 = rng.urandom(4)
+    v5 = rng.urandom(5)
+    v6 = rng.urandom(6)
+    v7 = rng.urandom(7)
+    v8 = rng.urandom(8)
+    v16 = rng.urandom(16)
 
     assert all(
         (
@@ -51,16 +51,16 @@ def test_value_is_deterministic_when_initialized_with_not_none():
 def test_value_is_random_when_initialized_with_none():
     rng = RandomNumberGenerator(None)
 
-    v0 = rng.get_random_bytes(0)
-    v1 = rng.get_random_bytes(1)
-    v2 = rng.get_random_bytes(2)
-    v3 = rng.get_random_bytes(3)
-    v4 = rng.get_random_bytes(4)
-    v5 = rng.get_random_bytes(5)
-    v6 = rng.get_random_bytes(6)
-    v7 = rng.get_random_bytes(7)
-    v8 = rng.get_random_bytes(8)
-    v16 = rng.get_random_bytes(16)
+    v0 = rng.urandom(0)
+    v1 = rng.urandom(1)
+    v2 = rng.urandom(2)
+    v3 = rng.urandom(3)
+    v4 = rng.urandom(4)
+    v5 = rng.urandom(5)
+    v6 = rng.urandom(6)
+    v7 = rng.urandom(7)
+    v8 = rng.urandom(8)
+    v16 = rng.urandom(16)
 
     assert all(
         (

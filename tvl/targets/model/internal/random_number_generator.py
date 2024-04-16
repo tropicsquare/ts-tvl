@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+from itertools import cycle, islice
 from typing import Optional
 
 
@@ -24,16 +25,15 @@ class RandomNumberGenerator:
         """
         self.debug_random_value = debug_random_value
 
-    def get_random_bytes(self, length: int) -> bytes:
+    def urandom(self, size: int, /) -> bytes:
         """Read random bytes from the random number generator.
 
         Args:
-            length (int): the number of bytes to read
+            size (int): the number of bytes to generate.
 
         Returns:
             an array of random values
         """
-        if not self.debug_random_value:
-            return os.urandom(length)
-        word_number = (length // len(self.debug_random_value)) + 1
-        return (self.debug_random_value * word_number)[:length]
+        if self.debug_random_value is None:
+            return os.urandom(size)
+        return bytes(islice(cycle(self.debug_random_value), size))

@@ -395,7 +395,7 @@ class L3APIImplementation(L3API):
         n_bytes = command.n_bytes.value
         self.logger.debug(f"Number of random bytes: {n_bytes}.")
 
-        random_data = self.trng2.get_random_bytes(n_bytes)
+        random_data = self.trng2.urandom(n_bytes)
         self.logger.debug(f"Random data: {random_data}.")
         return TsL3RandomValueGetResult(
             result=L3ResultFieldEnum.OK, random_data=random_data
@@ -518,7 +518,7 @@ class L3APIImplementation(L3API):
             self.r_ecc_keys.store(
                 slot,
                 curve,
-                self.trng2.get_random_bytes(KEY_SIZE),
+                self.trng2.urandom(KEY_SIZE),
                 Origins.Ecc_Key_Generate,
             )
         except ECCKeyExistsInSlotError as exc:

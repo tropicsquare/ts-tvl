@@ -184,7 +184,7 @@ class BaseModel(metaclass=MetaModel):
         # Actual configuration object update
         self._config: Optional[ConfigurationObjectImpl] = None
         # Create an empty encrypted session state.
-        self.session = TropicEncryptedSession()
+        self.session = TropicEncryptedSession(random_source=self.trng2)
         # pairing key currently used by the session
         self.pairing_key_slot: int = -1
 
