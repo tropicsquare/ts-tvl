@@ -1,6 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
+from itertools import chain, islice, repeat
 from typing import List, NoReturn, cast
 
 from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data
@@ -22,7 +23,13 @@ from ...api.l2_api import (
     TsL2StartupReqRequest,
     TsL2StartupReqResponse,
 )
-from ...constants import CERTIFICATE_BLOCK_SIZE, L2StatusEnum
+from ...constants import (
+    CERTIFICATE_BLOCK_SIZE,
+    CHIP_ID_SIZE,
+    RISCV_FW_VERSION_SIZE,
+    SPECT_FW_VERSION_SIZE,
+    L2StatusEnum,
+)
 from ...messages.l2_messages import L2Response
 from ...messages.l3_messages import L3Command, L3EncryptedPacket, L3Result
 from .exceptions import (
@@ -60,20 +67,24 @@ class L2APIImplementation(L2API):
                 block_index * CERTIFICATE_BLOCK_SIZE,
                 (block_index + 1) * CERTIFICATE_BLOCK_SIZE,
             )
-            object_ = self.x509_certificate[slice_]
+            object_, len_ = self.x509_certificate[slice_], CERTIFICATE_BLOCK_SIZE
         elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.CHIP_ID:
-            object_ = self.chip_id
+            object_, len_ = self.chip_id, CHIP_ID_SIZE
         elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.RISCV_FW_VERSION:
-            object_ = self.riscv_fw_version
+            object_, len_ = self.riscv_fw_version, RISCV_FW_VERSION_SIZE
         elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.SPECT_FW_VERSION:
-            object_ = self.spect_fw_version
+            object_, len_ = self.spect_fw_version, SPECT_FW_VERSION_SIZE
         elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.FW_BANK:
+            # Start-up mode is not modelled
             raise L2ProcessingErrorGeneric(
                 f"{object_id} supported only in start-up mode."
             )
         else:
             raise NotImplementedError(f"Unsupported object id {object_id}")
-        return TsL2GetInfoReqResponse(status=L2StatusEnum.REQ_OK, object=object_)
+        return TsL2GetInfoReqResponse(
+            status=L2StatusEnum.REQ_OK,
+            object=bytes(islice(chain(object_, repeat(0x00)), len_)),
+        )
 
     def ts_l2_handshake_req(
         self, request: TsL2HandshakeReqRequest
