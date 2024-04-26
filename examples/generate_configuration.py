@@ -37,7 +37,7 @@ def generate_configuration() -> Dict[str, Any]:
     tropic_public_key_bytes = tropic_private_key.public_key().public_bytes_raw()
 
     # Four pairing key indices are available
-    pairing_key_index = choice([1, 2, 3, 4])
+    pairing_key_index = choice([0, 1, 2, 3])
 
     configuration = {
         "host": {

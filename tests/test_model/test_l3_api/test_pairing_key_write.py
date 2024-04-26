@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from random import sample
 from typing import Any, Dict
 
 import pytest
@@ -13,9 +12,9 @@ from tvl.host.host import Host
 from tvl.targets.model.internal.pairing_keys import BLANK_VALUE, INVALID_VALUE, KEY_SIZE
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import sample_outside
+from ..utils import sample_from, sample_outside
 
-KEY_SLOTS = sample(lst := (1, 2, 3, 4), k=len(lst))
+KEY_SLOTS = sample_from((lst := TsL3PairingKeyWriteCommand.SlotEnum), k=4)
 SECURE_CHANNEL_KEY_IDX, SET_KEY_IDX, BLANK_KEY_IDX, INVALID_KEY_IDX = KEY_SLOTS
 
 SET_KEY = os.urandom(KEY_SIZE)
@@ -86,7 +85,9 @@ def test_write_key(
     assert model.i_pairing_keys[slot].read() == expected_new_value
 
 
-@pytest.mark.parametrize("slot", sample_outside(KEY_SLOTS, 1, k=10))
+@pytest.mark.parametrize(
+    "slot", sample_outside(TsL3PairingKeyWriteCommand.SlotEnum, 1, k=10)
+)
 def test_write_out_of_range_key_slot(host: Host, slot: int):
     command = TsL3PairingKeyWriteCommand(
         slot=slot,

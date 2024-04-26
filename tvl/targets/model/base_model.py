@@ -531,9 +531,9 @@ class BaseModel(metaclass=MetaModel):
             return
         self.logger.debug(f"Pairing key slot #{self.pairing_key_slot}")
         self.logger.debug(f"Configuration field: {value:#b}")
-        if not 0 < self.pairing_key_slot <= S_HI_PUB_NB_SLOTS:
+        if not 0 <= self.pairing_key_slot < S_HI_PUB_NB_SLOTS:
             raise L3ProcessingErrorFail("Chip not paired yet.")
-        if not value & 2 ** (self.pairing_key_slot - 1):
+        if not value & 2**self.pairing_key_slot:
             raise L3ProcessingErrorUnauthorized(
                 f"Pairing key slot #{self.pairing_key_slot} "
                 f"does not have access to {name}."

@@ -35,7 +35,7 @@ class HostConfigurationModel(_BaseModel):
     s_h_priv: FixedSizeBytes[DH_LEN]
     s_h_pub: FixedSizeBytes[DH_LEN]
     s_t_pub: FixedSizeBytes[DH_LEN]
-    pairing_key_index: RangedInt[1, S_HI_PUB_NB_SLOTS]
+    pairing_key_index: RangedInt[0, S_HI_PUB_NB_SLOTS - 1]
     activate_encryption: Optional[StrictBool]
 
 

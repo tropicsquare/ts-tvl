@@ -7,6 +7,7 @@ from typing import Any, Dict
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
+from tvl.constants import S_HI_PUB_NB_SLOTS
 from tvl.host.host import Host
 from tvl.targets.model.tropic01_model import Tropic01Model
 
@@ -26,7 +27,7 @@ def configuration():
             "s_h_priv": host_priv_key_bytes,
             "s_h_pub": host_pub_key_bytes,
             "s_t_pub": tropic_pub_key_bytes,
-            "pairing_key_index": (pki := random.randint(1, 4)),
+            "pairing_key_index": (pki := random.randrange(S_HI_PUB_NB_SLOTS)),
         },
         "model": {
             "s_t_priv": tropic_priv_key_bytes,

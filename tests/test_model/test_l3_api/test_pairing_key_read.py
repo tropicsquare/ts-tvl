@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from random import sample
 from typing import Any, Dict
 
 import pytest
@@ -12,9 +11,9 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.internal.pairing_keys import BLANK_VALUE, INVALID_VALUE, KEY_SIZE
 
-from ..utils import sample_outside
+from ..utils import sample_from, sample_outside
 
-KEY_SLOTS = sample(lst := (1, 2, 3, 4), k=len(lst))
+KEY_SLOTS = sample_from((lst := TsL3PairingKeyReadCommand.SlotEnum), k=4)
 SECURE_CHANNEL_KEY_IDX, SET_KEY_IDX, BLANK_KEY_IDX, INVALID_KEY_IDX = KEY_SLOTS
 
 SET_KEY = os.urandom(KEY_SIZE)
@@ -52,7 +51,9 @@ def test_read_key(host: Host, slot: int, expected_new_value: bytes):
     assert result.s_hipub.to_bytes() == expected_new_value
 
 
-@pytest.mark.parametrize("slot", sample_outside(KEY_SLOTS, 1, k=10))
+@pytest.mark.parametrize(
+    "slot", sample_outside(TsL3PairingKeyReadCommand.SlotEnum, 1, k=10)
+)
 def test_read_out_of_range_key_slot(host: Host, slot: int):
     command = TsL3PairingKeyReadCommand(
         slot=slot,

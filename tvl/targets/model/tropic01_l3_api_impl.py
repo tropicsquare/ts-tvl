@@ -118,13 +118,12 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"pong: {result}")
         return result
 
-    def _check_slot_access_privileges(
+    def _check_pairing_key_slot_access_privileges(
         self, address: int, access_privileges_list: List[Tuple[str, int]]
     ) -> None:
-        for access_privileges in access_privileges_list:
-            value = int(access_privileges[0].split("_")[-1])
-            if address == value:
-                self.check_access_privileges(*access_privileges)
+        for name, value in access_privileges_list:
+            if address == int(name.rsplit("_", maxsplit=1)[-1]) - 1:
+                self.check_access_privileges(name, value)
                 return
         raise L3ProcessingErrorFail(f"Slot index {address=:#06x} out of range.")
 
@@ -132,7 +131,7 @@ class L3APIImplementation(L3API):
         self, command: TsL3PairingKeyWriteCommand
     ) -> TsL3PairingKeyWriteResult:
         config = self.config.cfg_uap_pairing_key_write
-        self._check_slot_access_privileges(
+        self._check_pairing_key_slot_access_privileges(
             (pkey_slot := command.slot.value),
             [
                 ("write_pkey_slot_1", config.write_pkey_slot_1),
@@ -160,7 +159,7 @@ class L3APIImplementation(L3API):
         self, command: TsL3PairingKeyReadCommand
     ) -> TsL3PairingKeyReadResult:
         config = self.config.cfg_uap_pairing_key_read
-        self._check_slot_access_privileges(
+        self._check_pairing_key_slot_access_privileges(
             (pkey_slot := command.slot.value),
             [
                 ("read_pkey_slot_1", config.read_pkey_slot_1),
@@ -305,10 +304,10 @@ class L3APIImplementation(L3API):
     def _check_ranged_access_privileges(
         self, address: int, access_privileges_list: List[Tuple[str, int]]
     ) -> None:
-        for access_privileges in access_privileges_list:
-            lower, upper = map(int, access_privileges[0].split("_")[-2:])
+        for name, value in access_privileges_list:
+            lower, upper = map(int, name.rsplit("_", maxsplit=2)[-2:])
             if lower <= address <= upper:
-                self.check_access_privileges(*access_privileges)
+                self.check_access_privileges(name, value)
                 return
         raise L3ProcessingErrorFail(f"Slot index {address=:#06x} out of range.")
 
