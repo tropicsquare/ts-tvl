@@ -44,6 +44,7 @@ from .exceptions import (
 )
 from .internal.command_buffer import CommandBuffer
 from .internal.ecc_keys import EccKeys
+from .internal.mac_and_destroy import MacAndDestroyData
 from .internal.mcounter import MCounters
 from .internal.pairing_keys import PairingKeys
 from .internal.random_number_generator import RandomNumberGenerator
@@ -85,6 +86,7 @@ class BaseModel(metaclass=MetaModel):
         r_ecc_keys: Optional[EccKeys] = None,
         r_user_data: Optional[UserDataPartition] = None,
         r_mcounters: Optional[MCounters] = None,
+        r_macandd_data: Optional[MacAndDestroyData] = None,
         i_config: Optional[ConfigurationObjectImpl] = None,
         i_pairing_keys: Optional[PairingKeys] = None,
         s_t_priv: Optional[bytes] = None,
@@ -110,6 +112,8 @@ class BaseModel(metaclass=MetaModel):
                 Defaults to None.
             r_mcounters (MCounters, optional): monotonic counters partition.
                 Defaults to None.
+            r_macandd_data (MacAndDestroyData, optional): Mac-and-Destroy
+                data slots. Defaults to None.
             i_config (ConfigurationObjectImpl, optional): irreversible
                 configuration object. Defaults to None.
             i_pairing_keys (PairingKeys, optional): pairing key partition.
@@ -158,6 +162,8 @@ class BaseModel(metaclass=MetaModel):
         """General purpose storage for user data"""
         self.r_mcounters = __factory(r_mcounters, MCounters)
         """Data for Monotonic Counters"""
+        self.r_macandd_data = __factory(r_macandd_data, MacAndDestroyData)
+        """Mac and Destroy infrastructure"""
 
         # --- I-Memory Partitions ---
 
@@ -227,6 +233,7 @@ class BaseModel(metaclass=MetaModel):
             r_ecc_keys=self.r_ecc_keys.to_dict(),
             r_user_data=self.r_user_data.to_dict(),
             r_mcounters=self.r_mcounters.to_dict(),
+            r_macandd_data=self.r_macandd_data.to_dict(),
             i_config=self.i_config.to_dict(),
             i_pairing_keys=self.i_pairing_keys.to_dict(),
             s_t_priv=self.s_t_priv,
@@ -268,6 +275,7 @@ class BaseModel(metaclass=MetaModel):
             **__d("r_ecc_keys", EccKeys),
             **__d("r_user_data", UserDataPartition),
             **__d("r_mcounters", MCounters),
+            **__d("r_macandd_data", MacAndDestroyData),
             **__d("i_config", ConfigurationObjectImpl),
             **__d("i_pairing_keys", PairingKeys),
             **__s("s_t_priv"),

@@ -58,7 +58,6 @@ from .configuration_object_impl import ConfigObjectRegisterAddressEnum
 from .exceptions import (
     L3ProcessingError,
     L3ProcessingErrorFail,
-    L3ProcessingErrorInvalidCmd,
 )
 from .internal.ecc_keys import (
     KEY_SIZE,
@@ -67,6 +66,11 @@ from .internal.ecc_keys import (
     ECCKeyExistsInSlotError,
     Origins,
     SignatureFailedError,
+)
+from .internal.mac_and_destroy import (
+    MACANDD_KEY_LEN,
+    MacAndDestroyF1,
+    MacAndDestroyF2,
 )
 from .internal.mcounter import (
     MCounterNotInitializedError,
@@ -681,4 +685,40 @@ class L3APIImplementation(L3API):
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand
     ) -> TsL3MacAndDestroyResult:
-        raise L3ProcessingErrorInvalidCmd("Mac-and-Destroy not yet available.")
+        config = self.config.cfg_uap_mac_and_destroy
+        self._check_ranged_access_privileges(
+            (slot := command.slot.value),
+            [
+                ("macandd_1_32", config.macandd_1_32),
+                ("macandd_33_64", config.macandd_33_64),
+                ("macandd_65_96", config.macandd_65_96),
+                ("macandd_97_128", config.macandd_97_128),
+            ],
+        )
+        self.logger.info("Executing Mac-and-Destroy sequence.")
+        slot_bytes = command.slot.to_bytes()
+        data_in = command.data_in.to_bytes()
+        self.logger.debug("Data_in: %s", data_in)
+
+        def _internal_key_source() -> bytes:
+            return self.trng2.urandom(MACANDD_KEY_LEN)
+
+        key_f2 = _internal_key_source()
+        f2 = MacAndDestroyF2(key_f2)
+
+        si = self.r_macandd_data.read_slot(slot, erase=True)
+        f2.load(si)
+
+        key_f1 = _internal_key_source()
+
+        si_p = MacAndDestroyF1(key_f1).load(data_in).load(slot_bytes).compute()
+        self.r_macandd_data.write_slot(slot, si_p)
+
+        si_p = self.r_macandd_data.read_slot(slot)
+        f2.load(si_p).load(slot_bytes)
+
+        data_out = f2.compute()
+        self.logger.debug("Data_out: %s", data_out)
+        return TsL3MacAndDestroyResult(
+            result=L3ResultFieldEnum.OK, padding=[], data_out=data_out
+        )
