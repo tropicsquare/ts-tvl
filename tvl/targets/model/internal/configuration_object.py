@@ -3,12 +3,15 @@
 
 import contextlib
 from enum import Enum
-from typing import Any, Callable, Dict, List, Mapping
+from itertools import count, islice
+from typing import Any, Callable, Dict, Iterator, Mapping, Tuple
 
 from pydantic import BaseModel, root_validator
 from typing_extensions import Self
 
+CONFIG_OBJECT_SIZE_BYTES = 512
 REGISTER_SIZE = 32
+REGISTER_SIZE_BYTES = 32 // 8
 REGISTER_MASK = 2**REGISTER_SIZE - 1
 
 
@@ -118,25 +121,23 @@ class ConfigurationObject:
     """Chip configuration abstraction"""
 
     def __init__(self, **kwargs: int) -> None:
-        for regname in self.registers():
+        for regname, register in self.registers():
             with contextlib.suppress(KeyError):
-                self.__dict__[regname].value = kwargs[regname]
+                register.value = kwargs[regname]
 
-    def registers(self) -> List[str]:
+    def registers(self) -> Iterator[Tuple[str, ConfigObjectRegister]]:
         """Go over the registers of the configuration object.
 
         Returns:
-            the list of the registers in the configuration object
+            an iterator of the registers in the configuration object
         """
-        return [
-            key
-            for key, value in self.__dict__.items()
-            if isinstance(value, ConfigObjectRegister)
-        ]
+        for key, value in self.__dict__.items():
+            if isinstance(value, ConfigObjectRegister):
+                yield key, value
 
     def __getitem__(self, __item: int) -> ConfigObjectRegister:
-        for regname in self.registers():
-            if (register := self.__dict__[regname]).address == __item:
+        for _, register in self.registers():
+            if register.address == __item:
                 return register
         raise IndexError(f"Index {__item:#x} out of range")
 
@@ -144,7 +145,7 @@ class ConfigurationObject:
         if not isinstance(__other, self.__class__):
             return NotImplemented
         new_instance = self.__class__()
-        for regname in self.registers():
+        for regname, _ in self.registers():
             new_instance.__dict__[regname].value = (
                 self.__dict__[regname].value & __other.__dict__[regname].value
             )
@@ -152,8 +153,8 @@ class ConfigurationObject:
 
     def __str__(self) -> str:
         registers = "; ".join(
-            f"{regname}={self.__dict__[regname].value:#010x}"
-            for regname in self.registers()
+            f"{regname}={register.value:#010x}"
+            for regname, register in self.registers()
         )
         return f"{self.__class__.__name__}({registers})"
 
@@ -164,7 +165,7 @@ class ConfigurationObject:
             return NotImplemented
         return all(
             self.__dict__[regname].value == __other.__dict__[regname].value
-            for regname in self.registers()
+            for regname, _ in self.registers()
         )
 
     def to_dict(self) -> Dict[str, int]:
@@ -173,7 +174,7 @@ class ConfigurationObject:
         Returns:
             the content of the configuration object
         """
-        return {regname: self.__dict__[regname].value for regname in self.registers()}
+        return {regname: register.value for regname, register in self.registers()}
 
     @classmethod
     def from_dict(cls, __mapping: Mapping[str, int], /) -> Self:
@@ -186,6 +187,49 @@ class ConfigurationObject:
             the new instance
         """
         return cls(**__mapping)
+
+    def to_bytes(self) -> bytes:
+        """Serialize the configuration object as bytes
+
+        Returns:
+            the content of the configuration object as bytes
+        """
+        address_register_mapping = {
+            register.address: register for _, register in self.registers()
+        }
+        return b"".join(
+            register.value.to_bytes(REGISTER_SIZE_BYTES, "big")
+            if (register := address_register_mapping.get(address)) is not None
+            else b"\x00\x00\x00\x00"
+            for address in range(0, CONFIG_OBJECT_SIZE_BYTES, REGISTER_SIZE_BYTES)
+        )
+
+    @classmethod
+    def from_bytes(cls, __data: bytes, /) -> Self:
+        """Create a new configuration object from raw bytes
+
+        Args:
+            __data (bytes): the serialized configuration object
+
+        Returns:
+            the new instance
+        """
+
+        def _chunked(data: bytes) -> Iterator[int]:
+            it = iter(data)
+            while chunk := bytes(islice(it, REGISTER_SIZE_BYTES)):
+                yield int.from_bytes(chunk, "big")
+
+        new_instance = cls()
+        address_register_mapping = {
+            register.address: register for _, register in new_instance.registers()
+        }
+
+        for value, address in zip(_chunked(__data), count(step=REGISTER_SIZE_BYTES)):
+            if (register := address_register_mapping.get(address)) is not None:
+                register.value = value
+
+        return new_instance
 
 
 class ConfigurationObjectModel(BaseModel):

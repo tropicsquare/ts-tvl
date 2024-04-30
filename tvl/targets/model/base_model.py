@@ -98,6 +98,7 @@ class BaseModel(metaclass=MetaModel):
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
         busy_iter: Optional[Iterable[bool]] = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """Initialize the model.
 
@@ -143,7 +144,9 @@ class BaseModel(metaclass=MetaModel):
             return default()
 
         # logging settings
-        self.logger = logging.getLogger(self.__class__.__name__.lower())
+        if logger is None:
+            logger = logging.getLogger(self.__class__.__name__.lower())
+        self.logger = logger
 
         # --- R-Memory Partitions ---
 

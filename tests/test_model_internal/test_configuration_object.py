@@ -8,6 +8,7 @@ import pytest
 
 from tvl.targets.model.configuration_object_impl import ConfigurationObjectImpl
 from tvl.targets.model.internal.configuration_object import (
+    REGISTER_SIZE,
     AccessType,
     ConfigObjectField,
     ConfigObjectRegister,
@@ -56,11 +57,11 @@ def test_access_types_write(
 
 @pytest.mark.parametrize("iteration", range(5))
 def test_configuration_register(iteration: int):
-    width = random.randint(1, 32)
-    offset = random.randint(0, 32 - width)
+    width = random.randint(1, REGISTER_SIZE)
+    offset = random.randint(0, REGISTER_SIZE - width)
     while (ac := random.choice(list(iter(AccessType)))) is AccessType.WO:
         pass
-    reg_value = random.getrandbits(32)
+    reg_value = random.getrandbits(REGISTER_SIZE)
 
     mask = 2**width - 1
     field_mask = ~(mask << offset) & 0xFFFF_FFFF
@@ -97,12 +98,12 @@ def test_configuration_object_and():
     c1 = ConfigurationObjectImpl()
     c2 = ConfigurationObjectImpl()
 
-    for regname in c2.registers():
-        getattr(c2, regname).value = random.getrandbits(32)
+    for _, register in c2.registers():
+        register.value = random.getrandbits(REGISTER_SIZE)
 
     ref_dict = {
         regname: getattr(c1, regname).value & getattr(c2, regname).value
-        for regname in c1.registers()
+        for regname, _ in c1.registers()
     }
     c3 = c1 & c2
     assert c3 != c1
@@ -117,12 +118,11 @@ def test_configuration_object_getitem():
     c = ConfigurationObjectImpl()
 
     # test existing address
-    regname = random.choice(c.registers())
-    reg = getattr(c, regname)
+    reg = random.choice([reg for _, reg in c.registers()])
     assert reg is c[reg.address]
 
     # test non-existing address
-    possible_addresses = [getattr(c, reg).address for reg in c.registers()]
+    possible_addresses = [reg.address for _, reg in c.registers()]
     while (dummy_address := random.getrandbits(8)) in possible_addresses:
         pass
     with pytest.raises(IndexError):
@@ -137,20 +137,36 @@ def test_configuration_object_dict():
     assert c1d1
     assert ConfigurationObjectImpl.from_dict(c1d1) == c1
 
-    for regname in c1.registers():
-        getattr(c1, regname).value = random.getrandbits(32)
+    for _, register in c1.registers():
+        register.value = random.getrandbits(REGISTER_SIZE)
 
     c1d2 = c1.to_dict()
     assert c1d2 != c1d1
     assert ConfigurationObjectImpl.from_dict(c1d2) == c1
 
-    while (
-        dummy_key := "".join(random.choices(string.ascii_letters, k=5))
-    ) in c1.registers():
+    while (dummy_key := "".join(random.choices(string.ascii_letters, k=5))) in {
+        name for name, _ in c1.registers()
+    }:
         pass
-    while (dummy_value := random.getrandbits(32)) in default_values:
+    while (dummy_value := random.getrandbits(REGISTER_SIZE)) in default_values:
         pass
 
     c2 = ConfigurationObjectImpl.from_dict({dummy_key: dummy_value})
-    for regname in c2.registers():
-        assert getattr(c2, regname).value != dummy_value
+    for _, register in c2.registers():
+        assert register.value != dummy_value
+
+
+def test_configuration_object_bytes():
+    c1 = ConfigurationObjectImpl()
+    c1b1 = c1.to_bytes()
+
+    for _, register in c1.registers():
+        register.value = random.getrandbits(REGISTER_SIZE)
+
+    c1b2 = c1.to_bytes()
+
+    assert c1b2 != c1b1
+
+    c2 = ConfigurationObjectImpl.from_bytes(c1b2)
+    assert c2 == c1
+    assert c2.to_bytes() == c1b2
