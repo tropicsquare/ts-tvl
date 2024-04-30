@@ -170,7 +170,7 @@ class HostEncryptedSession(EncryptedSessionBase):
 
     def encrypt_command(self, command_plaintext: bytes) -> bytes:
         self._check_nonce_sync()
-        nonce = self.nonce_cmd.to_bytes(IV_LEN, "big")
+        nonce = self.nonce_cmd.to_bytes(IV_LEN, "little")
         self.nonce_cmd += 1
         command_ciphertext = encrypt(self.k_cmd, nonce, command_plaintext)
         if self.nonce_resp > MAX_NONCE:
@@ -180,7 +180,7 @@ class HostEncryptedSession(EncryptedSessionBase):
         return command_ciphertext
 
     def decrypt_response(self, response_ciphertext: bytes) -> Optional[bytes]:
-        nonce = self.nonce_resp.to_bytes(IV_LEN, "big")
+        nonce = self.nonce_resp.to_bytes(IV_LEN, "little")
         self.nonce_resp += 1
         try:
             response_plaintext = decrypt(self.k_resp, nonce, response_ciphertext)
@@ -241,7 +241,7 @@ class TropicEncryptedSession(EncryptedSessionBase):
 
     def decrypt_command(self, command_ciphertext: bytes) -> Optional[bytes]:
         self._check_nonce_sync()
-        nonce = self.nonce_cmd.to_bytes(IV_LEN, "big")
+        nonce = self.nonce_cmd.to_bytes(IV_LEN, "little")
         self.nonce_cmd += 1
         try:
             command_plaintext = decrypt(self.k_cmd, nonce, command_ciphertext)
@@ -255,7 +255,7 @@ class TropicEncryptedSession(EncryptedSessionBase):
         return command_plaintext
 
     def encrypt_response(self, response_plaintext: bytes) -> bytes:
-        nonce = self.nonce_resp.to_bytes(IV_LEN, "big")
+        nonce = self.nonce_resp.to_bytes(IV_LEN, "little")
         self.nonce_resp += 1
         response_ciphertext = encrypt(self.k_resp, nonce, response_plaintext)
         if self.nonce_resp > MAX_NONCE:
