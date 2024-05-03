@@ -1,9 +1,9 @@
+# GENERATED ON 2024-05-03 13:32:47.844493
+# BY api_generator VERSION 1.5
+# INPUT FILE: 562B5DFEC8AA351B39DCACBC4124A623A5F85B45C438BD38336BE5D56B3F6312
+#
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
-
-# GENERATED ON 2023-11-01 13:50:11.476671
-# BY api_generator.py VERSION 1.4
-# INPUT FILE: 260085b25a5b36a939489471e7f23f3cdd6c98ebd7c37e5cf9291203dd3ae4cd
 
 from enum import IntEnum
 
@@ -17,9 +17,9 @@ class L3Enum(IntEnum):
     PING = 0x01
     """Ping"""
     PAIRING_KEY_WRITE = 0x10
-    """Write Pairing key Slot"""
+    """Write Pairing key slot"""
     PAIRING_KEY_READ = 0x11
-    """Read Pairing key Slot"""
+    """Read Pairing key slot"""
     R_CONFIG_WRITE = 0x20
     """Write R-Config"""
     R_CONFIG_READ = 0x21
@@ -45,7 +45,7 @@ class L3Enum(IntEnum):
     ECC_KEY_READ = 0x62
     """Read Public part of ECC Key"""
     ECC_KEY_ERASE = 0x63
-    """Erase ECC Key Slot"""
+    """Erase ECC Key slot"""
     ECDSA_SIGN = 0x70
     """ECDSA Sign"""
     EDDSA_SIGN = 0x71
@@ -63,20 +63,29 @@ class L3Enum(IntEnum):
 
 
 class TsL3PingCommand(L3Command, id=L3Enum.PING):
-    data_in: U8Array[params(min_size=0, max_size=32)]  # Data in
+    data_in: U8Array[params(min_size=0, max_size=4096)]  # Data in
     """The input data"""
 
 
 class TsL3PingResult(L3Result, id=L3Enum.PING):
-    data_out: U8Array[params(min_size=0, max_size=32)]  # Data out
+    data_out: U8Array[params(min_size=0, max_size=4096)]  # Data out
     """The output data (loopback of the DATA_IN L3 Field)."""
 
 
 class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
-    slot: U8Scalar  # Slot to Write
-    """The Pairing Key slot. Valid values are 1 - 4."""
+    slot: U8Scalar  # Slot to write in
+    """The Pairing Key slot. Valid values are 0 - 3."""
+    class SlotEnum(IntEnum):
+        PAIRING_KEY_SLOT_0 = 0x00
+        """Corresponds to $S_{H0Pub}$."""
+        PAIRING_KEY_SLOT_1 = 0x01
+        """Corresponds to $S_{H1Pub}$."""
+        PAIRING_KEY_SLOT_2 = 0x02
+        """Corresponds to $S_{H2Pub}$."""
+        PAIRING_KEY_SLOT_3 = 0x03
+        """Corresponds to $S_{H3Pub}$."""
     s_hipub: U8Array[params(size=32)]  # Public Key
-    """The X25519 public key to be written in the Pairing Key Slot specified
+    """The X25519 public key to be written in the Pairing Key slot specified
     in the SLOT field."""
 
 
@@ -86,20 +95,29 @@ class TsL3PairingKeyWriteResult(L3Result, id=L3Enum.PAIRING_KEY_WRITE):
 
 class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
     slot: U8Scalar  # Slot to Read
-    """The Pairing Key slot. Valid values are 1 - 4."""
+    """The Pairing Key slot. Valid values are 0 - 3."""
+    class SlotEnum(IntEnum):
+        PAIRING_KEY_SLOT_0 = 0x00
+        """Corresponds to $S_{H0Pub}$."""
+        PAIRING_KEY_SLOT_1 = 0x01
+        """Corresponds to $S_{H1Pub}$."""
+        PAIRING_KEY_SLOT_2 = 0x02
+        """Corresponds to $S_{H2Pub}$."""
+        PAIRING_KEY_SLOT_3 = 0x03
+        """Corresponds to $S_{H3Pub}$."""
 
 
 class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
     s_hipub: U8Array[params(size=32)]  # Public Key
-    """The X25519 public key to be written in the Pairing Key Slot specified
+    """The X25519 public key to be written in the Pairing Key slot specified
     in the SLOT field."""
 
 
 class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
-    """The address offset of the CO to write."""
+    """The CO address offset for TROPIC01 to compute the actual CO address."""
     value: U32Scalar  # Configuration object value
-    """The value to write to the CO."""
+    """The CO value to write in the computed address."""
 
 
 class TsL3RConfigWriteResult(L3Result, id=L3Enum.R_CONFIG_WRITE):
@@ -108,12 +126,12 @@ class TsL3RConfigWriteResult(L3Result, id=L3Enum.R_CONFIG_WRITE):
 
 class TsL3RConfigReadCommand(L3Command, id=L3Enum.R_CONFIG_READ):
     address: U16Scalar  # Configuration object address
-    """The address offset of the CO to read."""
+    """The CO address offset for TROPIC01 to compute the actual CO address."""
 
 
 class TsL3RConfigReadResult(L3Result, id=L3Enum.R_CONFIG_READ):
     value: U32Scalar  # Configuration object value
-    """The value of the read CO."""
+    """The CO value TROPIC01 read from the computed address."""
 
 
 class TsL3RConfigEraseCommand(L3Command, id=L3Enum.R_CONFIG_ERASE):
@@ -126,7 +144,7 @@ class TsL3RConfigEraseResult(L3Result, id=L3Enum.R_CONFIG_ERASE):
 
 class TsL3IConfigWriteCommand(L3Command, id=L3Enum.I_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
-    """The address offset of the CO to write."""
+    """The CO address offset for TROPIC01 to compute the actual CO address."""
     bit_index: U8Scalar  # Bit to write.
     """The bit to write from 1 to 0. Valid values are 0-31."""
 
@@ -137,19 +155,20 @@ class TsL3IConfigWriteResult(L3Result, id=L3Enum.I_CONFIG_WRITE):
 
 class TsL3IConfigReadCommand(L3Command, id=L3Enum.I_CONFIG_READ):
     address: U16Scalar  # Configuration object address
-    """The address offset of the CO to read."""
+    """The CO address offset for TROPIC01 to compute the actual CO address."""
 
 
 class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
     value: U32Scalar  # Configuration object value
-    """The value of the read CO."""
+    """The CO value TROPIC01 read from the computed address."""
 
 
 class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     udata_slot: U16Scalar  # Slot to write
     """The slot of the User Data partition. Valid values are 1 - 512."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to write
-    """The data stream to be written in the selected User Data slot."""
+    """The data stream to be written in the slot specified in the UDATA_SLOT
+    L3 field."""
 
 
 class TsL3RMemDataWriteResult(L3Result, id=L3Enum.R_MEM_DATA_WRITE):
@@ -167,7 +186,8 @@ class TsL3RMemDataReadCommand(L3Command, id=L3Enum.R_MEM_DATA_READ):
 
 class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
     data: U8Array[params(min_size=0, max_size=444)]  # Data to read
-    """The data stream read from the User Data partition of R-Memory."""
+    """The data stream read from the slot specified in the UDATA_SLOT L3
+    field."""
 
 
 class TsL3RMemDataEraseCommand(L3Command, id=L3Enum.R_MEM_DATA_ERASE):
@@ -186,16 +206,15 @@ class TsL3RandomValueGetCommand(L3Command, id=L3Enum.RANDOM_VALUE_GET):
 
 class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
     random_data: U8Array[params(min_size=0, max_size=255)]  # Random data
-    """The random data from TRNG2. The number of bytes provided is given by
-    the N_BYTES L3 Field."""
+    """The random data from TRNG2 in the number of bytes specified in the
+    N_BYTES L3 Field."""
 
 
 class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) where to write the
-    generated key. Valid values are 1 - 32."""
+    slot: U8Scalar  # ECC Key slot
+    """The slot to write the generated key. Valid values are 1 - 32."""
     curve: U8Scalar  # Elliptic Curve
-    """The Elliptic Curve for which the key shall be generated."""
+    """The Elliptic Curve the key is generated from."""
     class CurveEnum(IntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
@@ -208,11 +227,10 @@ class TsL3EccKeyGenerateResult(L3Result, id=L3Enum.ECC_KEY_GENERATE):
 
 
 class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) where to write the K
-    L3 Field. Valid values are 1 - 32."""
+    slot: U8Scalar  # ECC Key slot
+    """The slot to write the K L3 Field. Valid values are 1 - 32."""
     curve: U8Scalar  # The type of Elliptic Curve the K L3 Field belongs to.
-    """The Elliptic Curve for which the key shall be generated."""
+    """The Elliptic Curve the key is generated from."""
     class CurveEnum(IntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
@@ -221,8 +239,8 @@ class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
     padding: U8Array[params(size=13)]  # Padding
     """The padding by dummy data."""
     k: U8Array[params(size=32)]  # Key to store
-    """The ECC Key to store. It must be a member of the field given by the
-    curve specified in the CURVE L3 Field."""
+    """The ECC Key to store. The key must be a member of the field given by
+    the curve specified in the CURVE L3 Field."""
 
 
 class TsL3EccKeyStoreResult(L3Result, id=L3Enum.ECC_KEY_STORE):
@@ -230,36 +248,35 @@ class TsL3EccKeyStoreResult(L3Result, id=L3Enum.ECC_KEY_STORE):
 
 
 class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) to read the ECC Key
-    from. Valid values are 1 - 32."""
+    slot: U8Scalar  # ECC Key slot
+    """The slot to read the public ECC Key from. Valid values are 1 - 32."""
 
 
 class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
     curve: U8Scalar  # Elliptic Curve
-    """The type of Elliptic Curve key public key returned."""
+    """The type of Elliptic Curve public key returned."""
     class CurveEnum(IntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
         """Ed25519 Curve - 32-byte long public key."""
     origin: U8Scalar  # Origin of the key.
-    """Origin of the key."""
+    """The origin of the key."""
     class OriginEnum(IntEnum):
         ECC_KEY_GENERATE = 0x01
-        """Key was generated on the device."""
+        """The key is from key generation on the device."""
         ECC_KEY_STORE = 0x02
-        """Key was stored to the device."""
+        """The key is from key storage in the device."""
     padding: U8Array[params(size=14)]  # Padding
     """The padding by dummy data."""
     pub_key: U8Array[params(min_size=32, max_size=64)]  # Public Key
-    """The public key from the selected ECC Key slot."""
+    """The public key from the ECC Key slot as specified in the SLOT L3
+    Field."""
 
 
 class TsL3EccKeyEraseCommand(L3Command, id=L3Enum.ECC_KEY_ERASE):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) to erase. Valid
-    values are 1 - 32."""
+    slot: U8Scalar  # ECC Key slot
+    """The slot to erase. Valid values are 1 - 32."""
 
 
 class TsL3EccKeyEraseResult(L3Result, id=L3Enum.ECC_KEY_ERASE):
@@ -267,13 +284,13 @@ class TsL3EccKeyEraseResult(L3Result, id=L3Enum.ECC_KEY_ERASE):
 
 
 class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) to read the key for
+    slot: U8Scalar  # ECC Key slot
+    """The slot (from the ECC Keys partition in R-Memory) to read the key for
     ECDSA signing."""
     padding: U8Array[params(size=14)]  # Padding
     """The padding by dummy data."""
     msg_hash: U8Array[params(size=32)]  # Hash of the Message to sign.
-    """The hash of the Message to sign (max size of 32 bytes)."""
+    """The hash of the message to sign (max size of 32 bytes)."""
 
 
 class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
@@ -289,8 +306,8 @@ class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
 
 
 class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
-    slot: U8Scalar  # ECC Key Slot
-    """The slot (from the ECC Keys partition of R-Memory) to read the key for
+    slot: U8Scalar  # ECC Key slot
+    """The slot (from the ECC Keys partition in R-Memory) to read the key for
     EdDSA signing."""
     padding: U8Array[params(size=14)]  # Padding
     """The padding by dummy data."""
@@ -331,8 +348,8 @@ class TsL3McounterUpdateCommand(L3Command, id=L3Enum.MCOUNTER_UPDATE):
 class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
     class ResultEnum(IntEnum):
         UPDATE_ERR = 0x13
-        """Failure to update the Monotonic counter specified by the
-            MCOUNTER_INDEX L3 Field. The Monotonic Counter is already at 0."""
+        """Failure to update the specified Monotonic Counter. The
+            Monotonic Counter is already at 0."""
         COUNTER_INVALID = 0x14
         """The Monotonic Counter detects an attack and is locked. The
             counter must be reinitialized."""
@@ -340,7 +357,7 @@ class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
 
 class TsL3McounterGetCommand(L3Command, id=L3Enum.MCOUNTER_GET):
     mcounter_index: U8Scalar  # Index of Monotonic Counter
-    """The index of the Monotonic counter to get the value of. Valid index
+    """The index of the Monotonic Counter to get the value of. Valid index
     values are 1 - 16."""
 
 
@@ -356,7 +373,7 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
 
 class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
     slot: U8Scalar  # Mac-and-Destroy slot
-    """The slot (from the MAC-and-Destroy data partition of R-Memory) to
+    """The slot (from the MAC-and-Destroy data partition in R-Memory) to
     execute the MAC_And_Destroy sequence. Valid values are 1 - 128."""
     padding: U8Array[params(size=2)]  # Padding
     """The padding by dummy data."""
@@ -377,7 +394,7 @@ class TsL3SerialCodeGetCommand(L3Command, id=L3Enum.SERIAL_CODE_GET):
 
 class TsL3SerialCodeGetResult(L3Result, id=L3Enum.SERIAL_CODE_GET):
     serial_code: U8Array[params(size=32)]  # Serial code
-    """The per-chip unique identifier."""
+    """The unique per-chip identifier."""
 
 
 class L3API(BaseModel):
@@ -395,125 +412,171 @@ class L3API(BaseModel):
     """
 
     @api("l3_api")
-    def ts_l3_ping(self, command: TsL3PingCommand) -> TsL3PingResult:
+    def ts_l3_ping(
+        self, command: TsL3PingCommand
+    ) -> TsL3PingResult:
         """A dummy command to check the Secure Channel Session
 		communication."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_pairing_key_write(self, command: TsL3PairingKeyWriteCommand) -> TsL3PairingKeyWriteResult:
-        """Command to write the X25519 public key to a Pairing Key Slot."""
+    def ts_l3_pairing_key_write(
+        self, command: TsL3PairingKeyWriteCommand
+    ) -> TsL3PairingKeyWriteResult:
+        """Command to write the X25519 public key to a Pairing Key slot."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_pairing_key_read(self, command: TsL3PairingKeyReadCommand) -> TsL3PairingKeyReadResult:
+    def ts_l3_pairing_key_read(
+        self, command: TsL3PairingKeyReadCommand
+    ) -> TsL3PairingKeyReadResult:
         """Command to read the X25519 public key from a Pairing Key slot."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_config_write(self, command: TsL3RConfigWriteCommand) -> TsL3RConfigWriteResult:
+    def ts_l3_r_config_write(
+        self, command: TsL3RConfigWriteCommand
+    ) -> TsL3RConfigWriteResult:
         """Command to write a single CO to R-Config."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_config_read(self, command: TsL3RConfigReadCommand) -> TsL3RConfigReadResult:
+    def ts_l3_r_config_read(
+        self, command: TsL3RConfigReadCommand
+    ) -> TsL3RConfigReadResult:
         """Command to read a single CO from R-Config."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_config_erase(self, command: TsL3RConfigEraseCommand) -> TsL3RConfigEraseResult:
-        """Command to erase the whole R-Config (convert all bits of all CO to
+    def ts_l3_r_config_erase(
+        self, command: TsL3RConfigEraseCommand
+    ) -> TsL3RConfigEraseResult:
+        """Command to erase the whole R-Config (convert the bits of all CO to
 		1)."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_i_config_write(self, command: TsL3IConfigWriteCommand) -> TsL3IConfigWriteResult:
+    def ts_l3_i_config_write(
+        self, command: TsL3IConfigWriteCommand
+    ) -> TsL3IConfigWriteResult:
         """Command to write a single bit of CO (from I-Config) from 1 to 0."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_i_config_read(self, command: TsL3IConfigReadCommand) -> TsL3IConfigReadResult:
+    def ts_l3_i_config_read(
+        self, command: TsL3IConfigReadCommand
+    ) -> TsL3IConfigReadResult:
         """Command to read a single CO from I-Config."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_mem_data_write(self, command: TsL3RMemDataWriteCommand) -> TsL3RMemDataWriteResult:
-        """Command to write general purpose data to a slot from the User Data
-		partition of R-Memory."""
+    def ts_l3_r_mem_data_write(
+        self, command: TsL3RMemDataWriteCommand
+    ) -> TsL3RMemDataWriteResult:
+        """Command to write general purpose data in a slot from the User Data
+		partition in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_mem_data_read(self, command: TsL3RMemDataReadCommand) -> TsL3RMemDataReadResult:
+    def ts_l3_r_mem_data_read(
+        self, command: TsL3RMemDataReadCommand
+    ) -> TsL3RMemDataReadResult:
         """Command to read the general purpose data from a slot of the User
-		Data partition of R-Memory."""
+		Data partition in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_r_mem_data_erase(self, command: TsL3RMemDataEraseCommand) -> TsL3RMemDataEraseResult:
-        """Command to erase a slot from the User Data partition of
+    def ts_l3_r_mem_data_erase(
+        self, command: TsL3RMemDataEraseCommand
+    ) -> TsL3RMemDataEraseResult:
+        """Command to erase a slot from the User Data partition in
 		R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_random_value_get(self, command: TsL3RandomValueGetCommand) -> TsL3RandomValueGetResult:
+    def ts_l3_random_value_get(
+        self, command: TsL3RandomValueGetCommand
+    ) -> TsL3RandomValueGetResult:
         """Command to get random numbers generated by TRNG2."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_ecc_key_generate(self, command: TsL3EccKeyGenerateCommand) -> TsL3EccKeyGenerateResult:
-        """Command to generate an ECC Key and store the key in the ECC Keys
-		partition of R-Memory."""
+    def ts_l3_ecc_key_generate(
+        self, command: TsL3EccKeyGenerateCommand
+    ) -> TsL3EccKeyGenerateResult:
+        """Command to generate an ECC Key and store the key in a slot from the
+		ECC Keys partition in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_ecc_key_store(self, command: TsL3EccKeyStoreCommand) -> TsL3EccKeyStoreResult:
-        """Command to store an ECC Key to the ECC Keys partition of
-		R-Memory."""
+    def ts_l3_ecc_key_store(
+        self, command: TsL3EccKeyStoreCommand
+    ) -> TsL3EccKeyStoreResult:
+        """Command to store an ECC Key in a slot from the ECC Keys partition
+		in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_ecc_key_read(self, command: TsL3EccKeyReadCommand) -> TsL3EccKeyReadResult:
-        """Command to read the public part of an ECC Key from the ECC Keys
-		partition of R-Memory."""
+    def ts_l3_ecc_key_read(
+        self, command: TsL3EccKeyReadCommand
+    ) -> TsL3EccKeyReadResult:
+        """Command to read the public ECC Key from a slot of the ECC Keys
+		partition in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_ecc_key_erase(self, command: TsL3EccKeyEraseCommand) -> TsL3EccKeyEraseResult:
-        """Command to erase a slot with an ECC Key from the ECC Keys partition
-		of R-Memory."""
+    def ts_l3_ecc_key_erase(
+        self, command: TsL3EccKeyEraseCommand
+    ) -> TsL3EccKeyEraseResult:
+        """Command to erase an ECC Key from a slot in the ECC Keys partition
+		in R-Memory."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_ecdsa_sign(self, command: TsL3EcdsaSignCommand) -> TsL3EcdsaSignResult:
+    def ts_l3_ecdsa_sign(
+        self, command: TsL3EcdsaSignCommand
+    ) -> TsL3EcdsaSignResult:
         """Command to sign a message hash with an ECDSA algorithm."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_eddsa_sign(self, command: TsL3EddsaSignCommand) -> TsL3EddsaSignResult:
+    def ts_l3_eddsa_sign(
+        self, command: TsL3EddsaSignCommand
+    ) -> TsL3EddsaSignResult:
         """Command to sign a message with an EdDSA algorithm."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_mcounter_init(self, command: TsL3McounterInitCommand) -> TsL3McounterInitResult:
+    def ts_l3_mcounter_init(
+        self, command: TsL3McounterInitCommand
+    ) -> TsL3McounterInitResult:
         """Command to initialize the Monotonic Counter."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_mcounter_update(self, command: TsL3McounterUpdateCommand) -> TsL3McounterUpdateResult:
-        """Command to update (decrement by 1) the Monotonic Counter."""
+    def ts_l3_mcounter_update(
+        self, command: TsL3McounterUpdateCommand
+    ) -> TsL3McounterUpdateResult:
+        """Command to update the Monotonic Counter (decrement by 1)."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_mcounter_get(self, command: TsL3McounterGetCommand) -> TsL3McounterGetResult:
+    def ts_l3_mcounter_get(
+        self, command: TsL3McounterGetCommand
+    ) -> TsL3McounterGetResult:
         """Command to get the value of the Monotonic Counter."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_mac_and_destroy(self, command: TsL3MacAndDestroyCommand) -> TsL3MacAndDestroyResult:
+    def ts_l3_mac_and_destroy(
+        self, command: TsL3MacAndDestroyCommand
+    ) -> TsL3MacAndDestroyResult:
         """Command to execute the MAC-and-Destroy sequence."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
-    def ts_l3_serial_code_get(self, command: TsL3SerialCodeGetCommand) -> TsL3SerialCodeGetResult:
-        """Command to obtain the per-chip unique identifier."""
+    def ts_l3_serial_code_get(
+        self, command: TsL3SerialCodeGetCommand
+    ) -> TsL3SerialCodeGetResult:
+        """Command to obtain the unique per-chip identifier."""
         raise NotImplementedError("TODO")

@@ -1,9 +1,9 @@
+# GENERATED ON 2024-05-03 13:32:44.960127
+# BY api_generator VERSION 1.5
+# INPUT FILE: 2C18948086D82710712C3EAC49E570E71639179BFD482B5B4802C277A475C6CA
+#
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
-
-# GENERATED ON 2023-11-01 13:50:10.860122
-# BY api_generator.py VERSION 1.4
-# INPUT FILE: 3ffbc20e19bdc9da1799eff5e1ce3485c14730b894b2c56b1052599d11722657
 
 from enum import IntEnum
 from typing import List, Union
@@ -33,6 +33,8 @@ class L2Enum(IntEnum):
     """Write new FW."""
     MUTABLE_FW_ERASE_REQ = 0xB2
     """Erase FW."""
+    GET_LOG_REQ = 0xA2
+    """Get FW log"""
 
 
 class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
@@ -50,8 +52,8 @@ class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
         SPECT_FW_VERSION = 0x04
         """The SPECT FW version (4 Bytes)"""
         FW_BANK = 0xB0
-        """Read FW header from selected bank id (as index). Supported only in
-        Start-up mode."""
+        """The FW header read from the selected bank id (shown as an index).
+        Supported only in Start-up mode."""
     block_index: U8Scalar
     """The index of the 128 Byte long block to request"""
     class BlockIndexEnum(IntEnum):
@@ -77,10 +79,19 @@ class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
     e_hpub: U8Array[params(size=32)]  # Ephemeral Key of Host MCU.
     """The Host MCU's Ephemeral X25519 public key. A little endian encoding of
     the x-coordinate from the public Curve25519 point."""
-    pkey_index: U8Scalar  # Pairing Key Slot
+    pkey_index: U8Scalar  # Pairing Key slot
     """The index of the Pairing Key slot to establish a Secure Channel Session
     with (TROPIC01 fetches $S_{HiPub}$ from the Pairing Key slot specified in
     this field)."""
+    class PkeyIndexEnum(IntEnum):
+        PAIRING_KEY_SLOT_0 = 0x00
+        """Corresponds to $S_{H0Pub}$."""
+        PAIRING_KEY_SLOT_1 = 0x01
+        """Corresponds to $S_{H1Pub}$."""
+        PAIRING_KEY_SLOT_2 = 0x02
+        """Corresponds to $S_{H2Pub}$."""
+        PAIRING_KEY_SLOT_3 = 0x03
+        """Corresponds to $S_{H3Pub}$."""
 
 
 class TsL2HandshakeReqResponse(L2Response, id=L2Enum.HANDSHAKE_REQ):
@@ -132,8 +143,10 @@ class TsL2SleepReqRequest(L2Request, id=L2Enum.SLEEP_REQ):
     sleep_kind: U8Scalar  # Sleep Kind
     """The type of Sleep mode TROPIC01 moves to."""
     class SleepKindEnum(IntEnum):
-        SLEEP_MODE = 0x00
+        SLEEP_MODE = 0x05
         """Sleep Mode"""
+        DEEP_SLEEP_MODE = 0x0A
+        """Deep Sleep Mode"""
 
 
 class TsL2SleepReqResponse(L2Response, id=L2Enum.SLEEP_REQ):
@@ -144,11 +157,10 @@ class TsL2StartupReqRequest(L2Request, id=L2Enum.STARTUP_REQ):
     startup_id: U8Scalar  # The request ID
     class StartupIdEnum(IntEnum):
         REBOOT = 0x01
-        """Restart the chip and initialize it as if power-cycle was
-        applied."""
+        """Restart, then initialize as if a power-cycle was applied."""
         MAINTENANCE_REBOOT = 0x03
-        """Restart the chip, and initialize it. Stay in "Start-up" Mode, do
-        not load Mutable FW from R-Memory."""
+        """Restart, then initialize. Stay in Start-up mode and do not load the
+        mutable FW from R-Memory."""
 
 
 class TsL2StartupReqResponse(L2Response, id=L2Enum.STARTUP_REQ):
@@ -156,7 +168,7 @@ class TsL2StartupReqResponse(L2Response, id=L2Enum.STARTUP_REQ):
 
 
 class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
-    bank_id: U8Scalar  # The Identifier of the bank to write
+    bank_id: U8Scalar  # The Identifier of the bank to write in.
     class BankIdEnum(IntEnum):
         FW1 = 0x01
         """Firmware bank 1."""
@@ -166,8 +178,8 @@ class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
         """SPECT bank 1."""
         SPECT2 = 0x12
         """SPECT bank 2"""
-    offset: U16Scalar  # Offset for specific bank for chunk write
-    data: U8Array[params(min_size=1, max_size=128)]  # Binary data to write
+    offset: U16Scalar  # The offset of the specific bank to write the chunk
+    data: U8Array[params(min_size=1, max_size=128)]  # The binary data to write
 
 
 class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
@@ -191,6 +203,15 @@ class TsL2MutableFwEraseReqResponse(L2Response, id=L2Enum.MUTABLE_FW_ERASE_REQ):
     pass
 
 
+class TsL2GetLogReqRequest(L2Request, id=L2Enum.GET_LOG_REQ):
+    pass
+
+
+class TsL2GetLogReqResponse(L2Response, id=L2Enum.GET_LOG_REQ):
+    log_msg: U8Array[params(min_size=0, max_size=255)]  # Log message
+    """Log message of RISCV FW."""
+
+
 class L2API(BaseModel):
     """
     Implementation of the TASSIC functional model.
@@ -206,58 +227,83 @@ class L2API(BaseModel):
     """
 
     @api("l2_api")
-    def ts_l2_get_info_req(self, request: TsL2GetInfoReqRequest) -> Union[TsL2GetInfoReqResponse, List[TsL2GetInfoReqResponse]]:
+    def ts_l2_get_info_req(
+        self, request: TsL2GetInfoReqRequest
+    ) -> Union[TsL2GetInfoReqResponse, List[TsL2GetInfoReqResponse]]:
         """Request to obtain information about TROPIC01. The type of
-		information obtained is distinguished by OBJECT_ID. NOTE: In case the
-		"Start-up" mode is active the Immutable FW is running and then any
-		version identification has highest bit set to '1'. SPECT_FW_VERSION in
-		that case will return dummy value of 0x80000000 because the SPECT FW
-		is part of this Immutable FW."""
+		information obtained is distinguished by OBJECT_ID.  NOTE: If Start-up
+		mode is active, TROPIC01 executes the immutable FW. Any version
+		identification then has the highest bit set to 1. SPECT_FW_VERSION
+		then returns a dummy value of 0x80000000 because the SPECT FW is part
+		of the immutable FW."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_handshake_req(self, request: TsL2HandshakeReqRequest) -> Union[TsL2HandshakeReqResponse, List[TsL2HandshakeReqResponse]]:
+    def ts_l2_handshake_req(
+        self, request: TsL2HandshakeReqRequest
+    ) -> Union[TsL2HandshakeReqResponse, List[TsL2HandshakeReqResponse]]:
         """Request to execute a Secure Channel Handshake and establish a new
 		Secure Channel Session (TROPIC01 moves to Secure Channel Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_cmd_req(self, request: TsL2EncryptedCmdReqRequest) -> Union[TsL2EncryptedCmdReqResponse, List[TsL2EncryptedCmdReqResponse]]:
+    def ts_l2_encrypted_cmd_req(
+        self, request: TsL2EncryptedCmdReqRequest
+    ) -> Union[TsL2EncryptedCmdReqResponse, List[TsL2EncryptedCmdReqResponse]]:
         """Request to execute an L3 Command."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_cmd_abt(self, request: TsL2EncryptedCmdAbtRequest) -> Union[TsL2EncryptedCmdAbtResponse, List[TsL2EncryptedCmdAbtResponse]]:
-        """Request to abort the execution of the L3 Command and optionally
-		invalidate the current Secure Channel Session (TROPIC01 moves to Idle
-		Mode)."""
+    def ts_l2_encrypted_cmd_abt(
+        self, request: TsL2EncryptedCmdAbtRequest
+    ) -> Union[TsL2EncryptedCmdAbtResponse, List[TsL2EncryptedCmdAbtResponse]]:
+        """Request to stop the L3 Command execution and optionally invalidate
+		the current Secure Channel Session (TROPIC01 moves to Idle Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> Union[TsL2ResendReqResponse, List[TsL2ResendReqResponse]]:
+    def ts_l2_resend_req(
+        self, request: TsL2ResendReqRequest
+    ) -> Union[TsL2ResendReqResponse, List[TsL2ResendReqResponse]]:
         """Request for TROPIC01 to resend the last L2 Response."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_sleep_req(self, request: TsL2SleepReqRequest) -> Union[TsL2SleepReqResponse, List[TsL2SleepReqResponse]]:
+    def ts_l2_sleep_req(
+        self, request: TsL2SleepReqRequest
+    ) -> Union[TsL2SleepReqResponse, List[TsL2SleepReqResponse]]:
         """Request for TROPIC01 to go to Sleep Mode or Deep Sleep Mode."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_startup_req(self, request: TsL2StartupReqRequest) -> Union[TsL2StartupReqResponse, List[TsL2StartupReqResponse]]:
-        """Reset the chip."""
+    def ts_l2_startup_req(
+        self, request: TsL2StartupReqRequest
+    ) -> Union[TsL2StartupReqResponse, List[TsL2StartupReqResponse]]:
+        """Request for TROPIC01 to reset."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_mutable_fw_update_req(self, request: TsL2MutableFwUpdateReqRequest) -> Union[TsL2MutableFwUpdateReqResponse, List[TsL2MutableFwUpdateReqResponse]]:
-        """Write chunk of new mutable FW to a R-Memory bank. Pay attention to
-		write only to correctly erased bank (see Mutable_FW_Erase_Req).
-		Command supported only in "Start-up" mode, i.e. after Startup_Req with
-		MAINTENANCE_REBOOT."""
+    def ts_l2_mutable_fw_update_req(
+        self, request: TsL2MutableFwUpdateReqRequest
+    ) -> Union[TsL2MutableFwUpdateReqResponse, List[TsL2MutableFwUpdateReqResponse]]:
+        """Request to write a chunk of the new mutable FW to a R-Memory bank.
+		Supported only in Start-up mode (i.e. after Startup_Req with
+		MAINTENANCE_REBOOT).  NOTE: Write only to the correctly erased bank
+		(see Mutable_FW_Erase_Req)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_mutable_fw_erase_req(self, request: TsL2MutableFwEraseReqRequest) -> Union[TsL2MutableFwEraseReqResponse, List[TsL2MutableFwEraseReqResponse]]:
-        """Erase mutble FW stored in a R-Memory bank. Command supported only
-		in "Start-up" mode, i.e. after Startup_Req with MAINTENANCE_REBOOT."""
+    def ts_l2_mutable_fw_erase_req(
+        self, request: TsL2MutableFwEraseReqRequest
+    ) -> Union[TsL2MutableFwEraseReqResponse, List[TsL2MutableFwEraseReqResponse]]:
+        """Request to erase the mutable FW stored in a R-Memory bank.
+		Supported only in Start-up mode (i.e. after Startup_Req with
+		MAINTENANCE_REBOOT)."""
+        raise NotImplementedError("TODO")
+
+    @api("l2_api")
+    def ts_l2_get_log_req(
+        self, request: TsL2GetLogReqRequest
+    ) -> Union[TsL2GetLogReqResponse, List[TsL2GetLogReqResponse]]:
+        """Get log from FW running on RISCV CPU."""
         raise NotImplementedError("TODO")
