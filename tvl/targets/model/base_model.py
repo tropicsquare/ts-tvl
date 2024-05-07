@@ -38,7 +38,6 @@ from ...messages.l3_messages import L3Command, L3Result
 from .configuration_object_impl import ConfigurationObjectImpl
 from .exceptions import (
     L2ProcessingError,
-    L3ProcessingErrorFail,
     L3ProcessingErrorUnauthorized,
     ResendLastResponse,
 )
@@ -535,7 +534,7 @@ class BaseModel(metaclass=MetaModel):
         self.logger.debug(f"Pairing key slot #{self.pairing_key_slot}")
         self.logger.debug(f"Configuration field: {value:#b}")
         if not 0 <= self.pairing_key_slot < S_HI_PUB_NB_SLOTS:
-            raise L3ProcessingErrorFail("Chip not paired yet.")
+            raise RuntimeError("Chip not paired yet.")
         if not value & 2**self.pairing_key_slot:
             raise L3ProcessingErrorUnauthorized(
                 f"Pairing key slot #{self.pairing_key_slot} "

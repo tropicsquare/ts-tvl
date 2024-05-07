@@ -90,12 +90,23 @@ class L2APIImplementation(L2API):
     def ts_l2_handshake_req(
         self, request: TsL2HandshakeReqRequest
     ) -> TsL2HandshakeReqResponse:
-        s_h_pubkey = self.i_pairing_keys[(idx := request.pkey_index.value)]
+        pkey_index = request.pkey_index.value
+        try:
+            pkey_index = TsL2HandshakeReqRequest.PkeyIndexEnum(pkey_index)
+        except ValueError:
+            raise L2ProcessingErrorHandshake(f"Invalid {pkey_index = }") from None
+        self.logger.debug(f"{pkey_index = }")
+
+        s_h_pubkey = self.i_pairing_keys[pkey_index]
 
         if s_h_pubkey.is_blank():
-            raise L2ProcessingErrorHandshake(f"Pairing key slot #{idx} is blank.")
+            raise L2ProcessingErrorHandshake(
+                f"Pairing key slot #{pkey_index} is blank."
+            )
         if s_h_pubkey.is_invalidated():
-            raise L2ProcessingErrorHandshake(f"Pairing key slot #{idx} is invalidated.")
+            raise L2ProcessingErrorHandshake(
+                f"Pairing key slot #{pkey_index} is invalidated."
+            )
 
         if self.s_t_priv is None:
             raise RuntimeError("Tropic is not paired yet.")
@@ -103,10 +114,10 @@ class L2APIImplementation(L2API):
         e_tpub, t_tauth = self.session.process_handshake_request(
             self.s_t_priv,
             s_h_pubkey.read(),
-            idx,
+            pkey_index,
             request.e_hpub.to_bytes(),
         )
-        self.pairing_key_slot = idx
+        self.pairing_key_slot = pkey_index
 
         return TsL2HandshakeReqResponse(
             status=L2StatusEnum.REQ_OK, e_tpub=e_tpub, t_tauth=t_tauth

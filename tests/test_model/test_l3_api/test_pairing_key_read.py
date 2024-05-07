@@ -60,4 +60,4 @@ def test_read_out_of_range_key_slot(host: Host, slot: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED
