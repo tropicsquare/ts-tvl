@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +8,7 @@ from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 from pathlib import Path
 from typing import Callable, Iterable
 
-from .configuration_object_generator import (
+from tvl.configuration_object_generator.internal import (
     TEMPLATE_DIR,
     __version__,
     generate_configuration_object,
@@ -112,4 +114,5 @@ def main() -> None:
     generate_configuration_object(**vars(args))
 
 
-main()
+if __name__ == "__main__":
+    main()
