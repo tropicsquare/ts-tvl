@@ -88,3 +88,6 @@ SPECT_FW_VERSION_SIZE = 4
 
 SERIAL_CODE_SIZE = 4
 """Length of the Serial Code"""
+
+CHUNK_SIZE = 128
+"""Size of chunks sent by the model"""

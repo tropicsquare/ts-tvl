@@ -158,7 +158,7 @@ def ll_send_l3_command(
     cmd_chunks: List[bytes],
     target: TropicProtocol,
     logger: logging.Logger,
-    max_recvd: int = 20,
+    max_recvd: int = 40,
     send_chunk_fn: LLSendL2RequestFn = ll_send_l2_request,
     l3_receive_fn: ReceiveFn = ll_receive,
     receive_chunk_fn: ReceiveFn = ll_receive,

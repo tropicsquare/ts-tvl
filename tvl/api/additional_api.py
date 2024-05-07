@@ -13,7 +13,7 @@ This file defines an additional L2-message pair to handle splitted commands
 and results more conveniently in both the model and the host.
 """
 
-MAX_L2_FRAME_DATA_LEN = 255
+MAX_L2_FRAME_DATA_LEN = 252
 ENCRYPTED_PACKET_MAX_SIZE = 2 + 4096 + 16
 
 

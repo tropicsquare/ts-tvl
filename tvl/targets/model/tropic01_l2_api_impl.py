@@ -26,6 +26,7 @@ from ...api.l2_api import (
 from ...constants import (
     CERTIFICATE_BLOCK_SIZE,
     CHIP_ID_SIZE,
+    CHUNK_SIZE,
     RISCV_FW_VERSION_SIZE,
     SPECT_FW_VERSION_SIZE,
     L2StatusEnum,
@@ -170,7 +171,9 @@ class L2APIImplementation(L2API):
         self.logger.info("Creating L2 response(s).")
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
 
-        result_chunks = list(split_data(encrypted_result.to_bytes()))
+        result_chunks = list(
+            split_data(encrypted_result.to_bytes(), chunk_size=CHUNK_SIZE)
+        )
 
         for i, chunk in enumerate(result_chunks, start=1):
             if i != len(result_chunks):
