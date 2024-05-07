@@ -27,6 +27,7 @@ black = "^23.11.0"
 
 [tool.poetry.scripts]
 api_generator = 'tvl.api_generator.__main__:main'
+co_generator = 'tvl.configuration_object_generator.__main__:main'
 
 [build-system]
 requires = ["poetry-core"]
