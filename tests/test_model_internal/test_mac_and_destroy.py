@@ -7,7 +7,7 @@ from typing import Any, Callable, ContextManager, NamedTuple, Tuple, Type, cast
 import pytest
 from _pytest.fixtures import SubRequest
 
-from tve.interfaces.model.internal.mac_and_destroy import (
+from tvl.targets.model.internal.mac_and_destroy import (
     MACANDD_KEY_LEN,
     MACANDD_KMAC_OUTPUT_LEN,
     MacAndDestroyData,
@@ -19,20 +19,30 @@ from tve.interfaces.model.internal.mac_and_destroy import (
 )
 
 
-def test_read():
+def test_slot_read():
     macandd_data = MacAndDestroyData()
     slot = random.randint(0, 128)
-    assert not macandd_data.items()
+    assert not macandd_data.slots.items()
 
     value = macandd_data.read_slot(slot)
     assert len(value) == MACANDD_KMAC_OUTPUT_LEN
-    assert macandd_data.items()
+    assert macandd_data.slots.items()
 
     value = macandd_data.read_slot(slot, erase=True)
-    assert not macandd_data.items()
+    assert not macandd_data.slots.items()
 
 
-def test_write():
+def test_key_read():
+    macandd_data = MacAndDestroyData()
+    slot = random.randint(0, 128)
+    assert not macandd_data.keys.items()
+
+    value = macandd_data.read_key(slot)
+    assert len(value) == MACANDD_KEY_LEN
+    assert macandd_data.keys.items()
+
+
+def test_slot_write():
     macandd_data = MacAndDestroyData()
     slot = random.randint(0, 128)
 
@@ -43,15 +53,33 @@ def test_write():
     assert rd_value == wr_value
 
 
+def test_key_write():
+    macandd_data = MacAndDestroyData()
+    slot = random.randint(0, 128)
+
+    wr_value = os.urandom(MACANDD_KEY_LEN)
+    macandd_data.write_key(slot, wr_value)
+
+    rd_value = macandd_data.read_key(slot)
+    assert rd_value == wr_value
+
+
 def test_dict():
-    macandd_data_slot_dict = {"value": os.urandom(MACANDD_KMAC_OUTPUT_LEN)}
     macandd_data_dict = {
-        (slot := random.randint(0, 10)): macandd_data_slot_dict
+        "slots":{
+            (slot := random.randint(0, 10)):
+                (slot_dict := {"value": os.urandom(MACANDD_KMAC_OUTPUT_LEN)})
+        },
+        "keys":{
+            (key := random.randint(0, 10)):
+                (key_dict := {"value": os.urandom(MACANDD_KEY_LEN)})
+        },
     }
 
     macandd_data = MacAndDestroyData.from_dict(macandd_data_dict)
     assert macandd_data.to_dict() == macandd_data_dict
-    assert macandd_data[slot].to_dict() == macandd_data_slot_dict
+    assert macandd_data.slots[slot].to_dict() == slot_dict
+    assert macandd_data.keys[key].to_dict() == key_dict
 
 
 Params = Tuple[

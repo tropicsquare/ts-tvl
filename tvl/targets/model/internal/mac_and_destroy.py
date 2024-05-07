@@ -1,8 +1,10 @@
 import os
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Any, Dict, Mapping, Optional
 
 from pydantic import BaseModel
+from typing_extensions import Self
+
 from tvl.crypto.conversion import bitlist_to_bytes, ints_to_bitlist
 from tvl.crypto.kmac import kmac256
 from tvl.targets.model.internal.generic_partition import (
@@ -11,11 +13,11 @@ from tvl.targets.model.internal.generic_partition import (
     GenericPartition,
 )
 from tvl.typing_utils import FixedSizeBytes
-from typing_extensions import Self
 
 MACANDD_DATA_INPUT_LEN = 32
 MACANDD_SLOT_BYTE_LEN = 1
 MACANDD_KEY_LEN = 32
+MACANDD_KEY_DEFAULT_VALUE = b"\xff" * MACANDD_KEY_LEN
 MACANDD_KMAC_OUTPUT_LEN = 32
 
 
@@ -25,20 +27,58 @@ class MacAndDestroyError(Exception):
 
 @dataclass
 class MacAndDestroySlot(BaseSlot):
-    value: bytes = field(
-        default_factory=lambda: os.urandom(MACANDD_KMAC_OUTPUT_LEN)
-    )
+    value: bytes = field(default_factory=lambda: os.urandom(MACANDD_KMAC_OUTPUT_LEN))
 
 
-class MacAndDestroyData(GenericPartition[MacAndDestroySlot]):
+class MacAndDestroySlots(GenericPartition[MacAndDestroySlot]):
+    pass
+
+
+@dataclass
+class MacAndDestroyKey(BaseSlot):
+    value: bytes = field(default=MACANDD_KEY_DEFAULT_VALUE)
+
+
+class MacAndDestroyKeys(GenericPartition[MacAndDestroyKey]):
+    pass
+
+
+class MacAndDestroyData:
+    def __init__(
+        self,
+        slots: Optional[MacAndDestroySlots] = None,
+        keys: Optional[MacAndDestroyKeys] = None,
+    ) -> None:
+        self.slots = MacAndDestroySlots() if slots is None else slots
+        self.keys = MacAndDestroyKeys() if keys is None else keys
+
     def read_slot(self, idx: int, *, erase: bool = False) -> bytes:
-        slot = self[idx]
+        slot = self.slots[idx]
         if erase:
-            del self[idx]
+            del self.slots[idx]
         return slot.value
 
     def write_slot(self, idx: int, value: bytes) -> None:
-        self[idx].value = value
+        self.slots[idx].value = value
+
+    def read_key(self, idx: int) -> bytes:
+        return self.keys[idx].value
+
+    def write_key(self, idx: int, value: bytes) -> None:
+        self.keys[idx].value = value
+
+    def to_dict(self) -> Dict[int, Any]:
+        return {
+            "slots": self.slots.to_dict(),
+            "keys": self.keys.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, __mapping: Mapping[int, Any], /) -> Self:
+        return cls(
+            slots=MacAndDestroySlots.from_dict(__mapping.get("slots", {})),
+            keys=MacAndDestroyKeys.from_dict(__mapping.get("keys", {})),
+        )
 
 
 def mac_and_destroy_kmac(key: bytes, data: bytes) -> bytes:
@@ -95,5 +135,18 @@ class MacAndDestroySlotModel(BaseModel):
     value: FixedSizeBytes[MACANDD_KMAC_OUTPUT_LEN]
 
 
-class MacAndDestroyDataModel(GenericModel):
+class MacAndDestroySlotsModel(GenericModel):
     __root__: Dict[int, MacAndDestroySlotModel]
+
+
+class MacAndDestroyKeyModel(BaseModel):
+    value: FixedSizeBytes[MACANDD_KEY_LEN]
+
+
+class MacAndDestroyKeysModel(GenericModel):
+    __root__: Dict[int, MacAndDestroyKeyModel]
+
+
+class MacAndDestroyDataModel(BaseModel):
+    slots: Optional[MacAndDestroySlotsModel]
+    keys: Optional[MacAndDestroyKeysModel]

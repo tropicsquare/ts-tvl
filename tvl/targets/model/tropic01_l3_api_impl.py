@@ -55,10 +55,7 @@ from ...api.l3_api import (
 )
 from ...constants import L3ResultFieldEnum
 from .configuration_object_impl import ConfigObjectRegisterAddressEnum
-from .exceptions import (
-    L3ProcessingError,
-    L3ProcessingErrorFail,
-)
+from .exceptions import L3ProcessingError, L3ProcessingErrorFail
 from .internal.ecc_keys import (
     KEY_SIZE,
     CurveMismatchError,
@@ -67,11 +64,7 @@ from .internal.ecc_keys import (
     Origins,
     SignatureFailedError,
 )
-from .internal.mac_and_destroy import (
-    MACANDD_KEY_LEN,
-    MacAndDestroyF1,
-    MacAndDestroyF2,
-)
+from .internal.mac_and_destroy import MacAndDestroyF1, MacAndDestroyF2
 from .internal.mcounter import (
     MCounterNotInitializedError,
     MCounterUpdateError,
@@ -700,18 +693,14 @@ class L3APIImplementation(L3API):
         data_in = command.data_in.to_bytes()
         self.logger.debug("Data_in: %s", data_in)
 
-        def _internal_key_source() -> bytes:
-            return self.trng2.urandom(MACANDD_KEY_LEN)
-
-        key_f2 = _internal_key_source()
-        f2 = MacAndDestroyF2(key_f2)
+        f2 = MacAndDestroyF2(self.r_macandd_data.read_key(2))
 
         si = self.r_macandd_data.read_slot(slot, erase=True)
         f2.load(si)
 
-        key_f1 = _internal_key_source()
+        f1 = MacAndDestroyF1(self.r_macandd_data.read_key(1))
 
-        si_p = MacAndDestroyF1(key_f1).load(data_in).load(slot_bytes).compute()
+        si_p = f1.load(data_in).load(slot_bytes).compute()
         self.r_macandd_data.write_slot(slot, si_p)
 
         si_p = self.r_macandd_data.read_slot(slot)
