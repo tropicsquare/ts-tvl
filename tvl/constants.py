@@ -1,7 +1,9 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import IntEnum, IntFlag
+from enum import IntFlag
+
+from .typing_utils import HexReprIntEnum
 
 
 class L1ChipStatusFlag(IntFlag):
@@ -13,12 +15,12 @@ class L1ChipStatusFlag(IntFlag):
     """TROPIC01 is in Start-up mode"""
 
 
-class L2IdFieldEnum(IntEnum):
+class L2IdFieldEnum(HexReprIntEnum):
     GET_RESP = 0xAA
     """Request to read L2 Response frame"""
 
 
-class L2StatusEnum(IntEnum):
+class L2StatusEnum(HexReprIntEnum):
     """Valid STATUS field values"""
 
     REQ_OK = 0x01
@@ -49,7 +51,7 @@ class L2StatusEnum(IntEnum):
     """No L2 Response frame available."""
 
 
-class L3ResultFieldEnum(IntEnum):
+class L3ResultFieldEnum(HexReprIntEnum):
     OK = 0xC3
     """Command successfully executed."""
     FAIL = 0x3C
