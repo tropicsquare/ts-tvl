@@ -4,13 +4,15 @@
 import logging
 from functools import lru_cache, partial
 from inspect import signature
-from itertools import chain, repeat
+from itertools import chain, repeat, takewhile
 from typing import (
     Any,
     Callable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
+    Tuple,
     Type,
     TypedDict,
     TypeVar,
@@ -28,6 +30,13 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 Param = Mapping[str, Any]
 Params = Mapping[type, Param]
+OptParam = Optional[Param]
+
+
+class Info(NamedTuple):
+    param: OptParam
+    level: int
+
 
 ReceiveFn = Callable[[TropicProtocol, logging.Logger], bytes]
 
@@ -200,8 +209,8 @@ def ll_send_l3_command(
     return result_chunks
 
 
-def _partialize(base_fn: F, fn_params: Optional[Param] = None) -> F:
-    if not fn_params:
+def partialize(base_fn: F, fn_params: OptParam = None) -> F:
+    if fn_params is None:
         return base_fn
 
     partial_params = {
@@ -231,45 +240,67 @@ class LowLevelFunctionFactory:
         self.create_ll_l2_fn.cache_clear()
         self.create_ll_l3_fn.cache_clear()
 
+    def _get_info(self, __type: type, __limit: type) -> Info:
+        if self.parameters is None:
+            return Info(None, 0)
+
+        for i, class_ in enumerate(
+            takewhile(lambda type_: issubclass(type_, __limit), __type.__mro__)
+        ):
+            if (_params := self.parameters.get(class_)) is not None:
+                return Info(_params, i)
+
+        return Info(None, 0)
+
+    @staticmethod
+    def _extract_params(tx_info: Info, rx_info: Info) -> Tuple[OptParam, OptParam]:
+        # give priority to rx over tx, as well as the lower level
+        if (
+            tx_info.param is not None and tx_info.level < rx_info.level
+        ) or rx_info.param is None:
+            return tx_info.param, tx_info.param
+        return tx_info.param, rx_info.param
+
+    def get_l2_params(self, tx_l2_type: Type[L2Request]) -> Tuple[OptParam, OptParam]:
+        rx_l2_type = [
+            sub
+            for sub in L2Frame.SUBCLASSES[tx_l2_type.ID]
+            if issubclass(sub, L2Response)
+        ][0]
+        return self._extract_params(
+            self._get_info(tx_l2_type, L2Request),
+            self._get_info(rx_l2_type, L2Response),
+        )
+
+    def get_l3_params(self, tx_l3_type: Type[L3Command]) -> Tuple[OptParam, OptParam]:
+        rx_l3_type = [
+            sub
+            for sub in L3Packet.SUBCLASSES[tx_l3_type.ID]
+            if issubclass(sub, L3Result)
+        ][0]
+        return self._extract_params(
+            self._get_info(tx_l3_type, L3Command), self._get_info(rx_l3_type, L3Result)
+        )
+
     @lru_cache
     def create_ll_l2_fn(self, l2_type: Type[L2Request]) -> LLSendL2RequestFn:
-        if not self.parameters:
-            return ll_send_l2_request
-
-        tx_params = self.parameters.get(l2_type, None)
-        for sub in L2Frame.SUBCLASSES[l2_type.ID]:
-            if issubclass(sub, L2Response):
-                if (rx_params := self.parameters.get(sub, None)) is not None:
-                    break
-        else:
-            rx_params = tx_params
-
-        return _partialize(
-            _partialize(ll_send_l2_request, tx_params),
-            dict(receive_fn=_partialize(ll_receive, rx_params)),
+        tx_param, rx_param = self.get_l2_params(l2_type)
+        return partialize(
+            partialize(ll_send_l2_request, tx_param),
+            dict(receive_fn=partialize(ll_receive, rx_param)),
         )
 
     @lru_cache
     def create_ll_l3_fn(self, l3_type: Type[L3Command]) -> LLSendL3CommandFn:
-        if not self.parameters:
-            return ll_send_l3_command
-
-        tx_params = self.parameters.get(l3_type, None)
-        for sub in L3Packet.SUBCLASSES[l3_type.ID]:
-            if issubclass(sub, L3Result):
-                if (rx_params := self.parameters.get(sub, None)) is not None:
-                    break
-        else:
-            rx_params = tx_params
-
-        return _partialize(
-            _partialize(ll_send_l3_command, tx_params),
+        tx_param, rx_param = self.get_l3_params(l3_type)
+        return partialize(
+            partialize(ll_send_l3_command, tx_param),
             dict(
                 send_chunk_fn=self.create_ll_l2_fn(TsL2EncryptedCmdReqRequest),
-                l3_receive_fn=_partialize(ll_receive, rx_params),
-                receive_chunk_fn=_partialize(
+                l3_receive_fn=partialize(ll_receive, rx_param),
+                receive_chunk_fn=partialize(
                     ll_receive,
-                    self.parameters.get(TsL2EncryptedCmdReqResponse, None),
+                    self._get_info(TsL2EncryptedCmdReqResponse, L2Response).param,
                 ),
             ),
         )
