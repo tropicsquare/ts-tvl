@@ -1,6 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import IntEnum
 from typing import Tuple
 
 from pydantic import conbytes, conint
@@ -44,3 +45,10 @@ class RangedInt:
     def __class_getitem__(cls, param: Tuple[int, int]):
         mn, mx = param
         return conint(strict=True, ge=mn, le=mx)
+
+
+class HexReprIntEnum(IntEnum):
+    """Represents enumerated integers in hexadecimal"""
+
+    def __repr__(self) -> str:
+        return f"<{self!s}: {self.value:#x}>"
