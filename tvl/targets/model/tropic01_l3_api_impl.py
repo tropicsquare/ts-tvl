@@ -123,7 +123,7 @@ class L3APIImplementation(L3API):
         self, address: int, access_privileges_list: List[Tuple[str, int]]
     ) -> None:
         for name, value in access_privileges_list:
-            if address == int(name.rsplit("_", maxsplit=1)[-1]) - 1:
+            if address == int(name.rsplit("_", maxsplit=1)[-1]):
                 self.check_access_privileges(name, value)
                 return
         raise RuntimeError(f"Slot index {address=:#06x} out of range.")
@@ -142,10 +142,10 @@ class L3APIImplementation(L3API):
         self._check_pairing_key_slot_access_privileges(
             pkey_slot,
             [
+                ("write_pkey_slot_0", config.write_pkey_slot_0),
                 ("write_pkey_slot_1", config.write_pkey_slot_1),
                 ("write_pkey_slot_2", config.write_pkey_slot_2),
                 ("write_pkey_slot_3", config.write_pkey_slot_3),
-                ("write_pkey_slot_4", config.write_pkey_slot_4),
             ],
         )
 
@@ -177,10 +177,10 @@ class L3APIImplementation(L3API):
         self._check_pairing_key_slot_access_privileges(
             pkey_slot,
             [
+                ("read_pkey_slot_0", config.read_pkey_slot_0),
                 ("read_pkey_slot_1", config.read_pkey_slot_1),
                 ("read_pkey_slot_2", config.read_pkey_slot_2),
                 ("read_pkey_slot_3", config.read_pkey_slot_3),
-                ("read_pkey_slot_4", config.read_pkey_slot_4),
             ],
         )
 
