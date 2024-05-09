@@ -1,7 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from tvl.targets.model.internal.random_number_generator import RandomNumberGenerator
+from tvl.random_number_generator import RandomNumberGenerator
 
 
 def test_value_is_deterministic_when_initialized_with_not_none():
