@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
 
@@ -15,6 +14,7 @@ from tvl.targets.model.internal.generic_partition import (
 from tvl.typing_utils import FixedSizeBytes
 
 MACANDD_DATA_INPUT_LEN = 32
+MACANDD_SLOT_DEFAULT_VALUE = b"\xff" * MACANDD_DATA_INPUT_LEN
 MACANDD_SLOT_BYTE_LEN = 1
 MACANDD_KEY_LEN = 32
 MACANDD_KEY_DEFAULT_VALUE = b"\xff" * MACANDD_KEY_LEN
@@ -27,7 +27,7 @@ class MacAndDestroyError(Exception):
 
 @dataclass
 class MacAndDestroySlot(BaseSlot):
-    value: bytes = field(default_factory=lambda: os.urandom(MACANDD_KMAC_OUTPUT_LEN))
+    value: bytes = field(default=MACANDD_SLOT_DEFAULT_VALUE)
 
 
 class MacAndDestroySlots(GenericPartition[MacAndDestroySlot]):
@@ -67,14 +67,14 @@ class MacAndDestroyData:
     def write_key(self, idx: int, value: bytes) -> None:
         self.keys[idx].value = value
 
-    def to_dict(self) -> Dict[int, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "slots": self.slots.to_dict(),
             "keys": self.keys.to_dict(),
         }
 
     @classmethod
-    def from_dict(cls, __mapping: Mapping[int, Any], /) -> Self:
+    def from_dict(cls, __mapping: Mapping[str, Any], /) -> Self:
         return cls(
             slots=MacAndDestroySlots.from_dict(__mapping.get("slots", {})),
             keys=MacAndDestroyKeys.from_dict(__mapping.get("keys", {})),
