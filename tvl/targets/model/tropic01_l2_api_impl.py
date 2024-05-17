@@ -13,10 +13,14 @@ from ...api.l2_api import (
     TsL2EncryptedCmdReqResponse,
     TsL2GetInfoReqRequest,
     TsL2GetInfoReqResponse,
+    TsL2GetLogReqRequest,
+    TsL2GetLogReqResponse,
     TsL2HandshakeReqRequest,
     TsL2HandshakeReqResponse,
     TsL2MutableFwEraseReqRequest,
+    TsL2MutableFwEraseReqResponse,
     TsL2MutableFwUpdateReqRequest,
+    TsL2MutableFwUpdateReqResponse,
     TsL2ResendReqRequest,
     TsL2SleepReqRequest,
     TsL2SleepReqResponse,
@@ -39,7 +43,6 @@ from .exceptions import (
     L2ProcessingErrorHandshake,
     L2ProcessingErrorNoSession,
     L2ProcessingErrorTag,
-    L2ProcessingErrorUnknownRequest,
     L3ProcessingError,
     ResendLastResponse,
 )
@@ -266,16 +269,16 @@ class L2APIImplementation(L2API):
 
     def ts_l2_mutable_fw_update_req(
         self, request: TsL2MutableFwUpdateReqRequest
-    ) -> NoReturn:
+    ) -> TsL2MutableFwUpdateReqResponse:
         # Start-up mode is not modelled
-        raise L2ProcessingErrorUnknownRequest(
-            f"{type(request)} accessible only in start-up mode."
-        )
+        return TsL2MutableFwUpdateReqResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_mutable_fw_erase_req(
         self, request: TsL2MutableFwEraseReqRequest
-    ) -> NoReturn:
+    ) -> TsL2MutableFwEraseReqResponse:
         # Start-up mode is not modelled
-        raise L2ProcessingErrorUnknownRequest(
-            f"{type(request)} accessible only in start-up mode."
-        )
+        return TsL2MutableFwEraseReqResponse(status=L2StatusEnum.REQ_OK)
+
+    def ts_l2_get_log_req(self, request: TsL2GetLogReqRequest) -> TsL2GetLogReqResponse:
+        # Return OK status to avoid issues during tests
+        return TsL2GetLogReqResponse(status=L2StatusEnum.REQ_OK, log_msg=b"")
