@@ -1,5 +1,5 @@
-# GENERATED ON 2024-05-09 09:37:02.379797
-# BY configuration_object_generator.py VERSION 0.3
+# GENERATED ON 2024-05-17 15:53:40.203540
+# BY internal.py VERSION 0.3
 # INPUT FILE: 9a53604569b8f7927ee6fc59814a64817b72964c69f6e2818a37ea8a26aed66f
 #
 # Copyright 2023 TropicSquare
@@ -438,22 +438,22 @@ class ConfigObjectRegisterAddressEnum(IntEnum):
 
 class ConfigurationObjectImpl(ConfigurationObject):
     def __init__(self, **kwargs: int) -> None:
-        self.cfg_start_up = CfgStartUp(ConfigObjectRegisterAddressEnum.CFG_START_UP, 0x0000003E)
-        self.cfg_sleep_mode = CfgSleepMode(ConfigObjectRegisterAddressEnum.CFG_SLEEP_MODE, 0x00000003)
-        self.cfg_sensors = CfgSensors(ConfigObjectRegisterAddressEnum.CFG_SENSORS, 0x0003FFFF)
-        self.cfg_debug = CfgDebug(ConfigObjectRegisterAddressEnum.CFG_DEBUG, 0x00000001)
+        self.cfg_start_up = CfgStartUp(ConfigObjectRegisterAddressEnum.CFG_START_UP, 0xFFFFFFFF)
+        self.cfg_sleep_mode = CfgSleepMode(ConfigObjectRegisterAddressEnum.CFG_SLEEP_MODE, 0xFFFFFFFF)
+        self.cfg_sensors = CfgSensors(ConfigObjectRegisterAddressEnum.CFG_SENSORS, 0xFFFFFFFF)
+        self.cfg_debug = CfgDebug(ConfigObjectRegisterAddressEnum.CFG_DEBUG, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_write = CfgUapPairingKeyWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_read = CfgUapPairingKeyRead(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ, 0xFFFFFFFF)
-        self.cfg_uap_r_config_write = CfgUapRConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE, 0x0000FFFF)
-        self.cfg_uap_r_config_read = CfgUapRConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ, 0x0000FFFF)
-        self.cfg_uap_r_config_erase = CfgUapRConfigErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE, 0x0000FFFF)
-        self.cfg_uap_i_config_write = CfgUapIConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE, 0x0000FFFF)
-        self.cfg_uap_i_config_read = CfgUapIConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ, 0x0000FFFF)
-        self.cfg_uap_ping = CfgUapPing(ConfigObjectRegisterAddressEnum.CFG_UAP_PING, 0x000000FF)
+        self.cfg_uap_r_config_write = CfgUapRConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE, 0xFFFFFFFF)
+        self.cfg_uap_r_config_read = CfgUapRConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ, 0xFFFFFFFF)
+        self.cfg_uap_r_config_erase = CfgUapRConfigErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE, 0xFFFFFFFF)
+        self.cfg_uap_i_config_write = CfgUapIConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE, 0xFFFFFFFF)
+        self.cfg_uap_i_config_read = CfgUapIConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ, 0xFFFFFFFF)
+        self.cfg_uap_ping = CfgUapPing(ConfigObjectRegisterAddressEnum.CFG_UAP_PING, 0xFFFFFFFF)
         self.cfg_uap_r_mem_data_write = CfgUapRMemDataWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_WRITE, 0xFFFFFFFF)
         self.cfg_uap_r_mem_data_read = CfgUapRMemDataRead(ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_READ, 0xFFFFFFFF)
         self.cfg_uap_r_mem_data_erase = CfgUapRMemDataErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_ERASE, 0xFFFFFFFF)
-        self.cfg_uap_random_value_get = CfgUapRandomValueGet(ConfigObjectRegisterAddressEnum.CFG_UAP_RANDOM_VALUE_GET, 0x000000FF)
+        self.cfg_uap_random_value_get = CfgUapRandomValueGet(ConfigObjectRegisterAddressEnum.CFG_UAP_RANDOM_VALUE_GET, 0xFFFFFFFF)
         self.cfg_uap_ecc_key_generate = CfgUapEccKeyGenerate(ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_GENERATE, 0xFFFFFFFF)
         self.cfg_uap_ecc_key_store = CfgUapEccKeyStore(ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_STORE, 0xFFFFFFFF)
         self.cfg_uap_ecc_key_read = CfgUapEccKeyRead(ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_READ, 0xFFFFFFFF)
@@ -464,7 +464,7 @@ class ConfigurationObjectImpl(ConfigurationObject):
         self.cfg_uap_mcounter_get = CfgUapMcounterGet(ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_GET, 0xFFFFFFFF)
         self.cfg_uap_mcounter_update = CfgUapMcounterUpdate(ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_UPDATE, 0xFFFFFFFF)
         self.cfg_uap_mac_and_destroy = CfgUapMacAndDestroy(ConfigObjectRegisterAddressEnum.CFG_UAP_MAC_AND_DESTROY, 0xFFFFFFFF)
-        self.cfg_uap_serial_code_get = CfgUapSerialCodeGet(ConfigObjectRegisterAddressEnum.CFG_UAP_SERIAL_CODE_GET, 0x000000FF)
+        self.cfg_uap_serial_code_get = CfgUapSerialCodeGet(ConfigObjectRegisterAddressEnum.CFG_UAP_SERIAL_CODE_GET, 0xFFFFFFFF)
         super().__init__(**kwargs)
 
 

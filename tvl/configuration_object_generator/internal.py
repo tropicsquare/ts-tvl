@@ -93,9 +93,7 @@ class Converter:
     def convert_register(cls, reg: InputRegister) -> ContextRegister:
         return {
             "baseaddr": reg["baseaddr"],
-            "reset": sum(
-                field["reset"] << field["lowidx"] for field in reg["fields"].values()
-            ),
+            "reset": 0xFFFF_FFFF,
             "fields": {
                 key: cls.convert_field(value) for key, value in reg["fields"].items()
             },
