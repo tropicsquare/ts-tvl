@@ -1,0 +1,160 @@
+{#- Copyright 2023 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "header_api.j2" %}
+
+{%- set ENUM_NAME = ENUM_NAME | default("L2Enum") %}
+{%- set CLASS_NAME = CLASS_NAME | default("L2API") %}
+{%- set API_LEVEL = API_LEVEL | default("\"l2_api\"") %}
+{%- set CLASS_PREFIX = CLASS_PREFIX | default("TsL2") %}
+{%- set METHOD_PREFIX = METHOD_PREFIX | default("ts_l2_") %}
+{%- set INPUT_CLASS = INPUT_CLASS | default("Request") %}
+{%- set OUTPUT_CLASS = OUTPUT_CLASS | default("Response") %}
+{%- set INPUT_CLASS_PARENT = INPUT_CLASS_PARENT | default("L2Request") %}
+{%- set OUTPUT_CLASS_PARENT = OUTPUT_CLASS_PARENT | default("L2Response") %}
+{%- set OUTPUT_TYPE_PATTERN = OUTPUT_TYPE_PATTERN | default("Union[%(type)s, List[%(type)s]]") %}
+{%- set BUILTIN_IMPORT = BUILTIN_IMPORT | default("from typing import List, Union") %}
+{%- set INTERNAL_IMPORT = INTERNAL_IMPORT | default("from tvl.messages.l2_messages import L2Request, L2Response") %}
+
+
+{%- macro to_hex(number) -%}
+    0x{{-"%02X" | format(number)}}
+{%- endmacro -%}
+
+
+{%- macro to_camelcase(string) -%}
+    {%- set words = [] -%}
+    {%- for word in string.split("_") -%}
+        {%- set _tmp = words.append(word.capitalize()) -%}
+    {%- endfor -%}
+    {{- words | join }}
+{%- endmacro -%}
+
+
+{%- macro format_output_type(output_type) -%}
+    {{- OUTPUT_TYPE_PATTERN | format(type=output_type)}}
+{%- endmacro -%}
+
+
+{% block content %}
+from enum import IntEnum
+{%- if BUILTIN_IMPORT %}
+{{BUILTIN_IMPORT}}
+{%- endif %}
+
+from tvl.messages.datafield import (
+    U8Array,
+    U8Scalar,
+    U16Array,
+    U16Scalar,
+    U32Array,
+    U32Scalar,
+    U64Array,
+    U64Scalar,
+    params,
+)
+{{INTERNAL_IMPORT}}
+from tvl.targets.model.base_model import BaseModel
+from tvl.targets.model.meta_model import api
+
+{% for define in defines %}
+{{define.name | upper}} = {{define.value}}
+{%- if define.description %}
+{{['"""', define.description, '"""'] | join | wordwrap(80, wrapstring="\n") | replace("\t", " "*4)}}
+{%- endif %}
+{%- endfor %}
+
+class {{ENUM_NAME}}(IntEnum):
+{%- for element in enum_class.elements %}
+    {{element.name}} = {{to_hex(element.message_id)}}
+    {%- if element.description %}
+    {{['"""', element.description, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
+    {%- endif %}
+{%- endfor %}
+
+{% for message in messages %}
+{%- if message.io_type == "input" %}
+    {%- set class_type = INPUT_CLASS %}
+    {%- set parent = INPUT_CLASS_PARENT %}
+    {%- set verify_result_choices = False %}
+{%- else %}
+    {%- set class_type = OUTPUT_CLASS %}
+    {%- set parent = OUTPUT_CLASS_PARENT %}
+    {%- set verify_result_choices = True %}
+{%- endif %}
+class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}}.{{message.tag}}):
+    {%- set print_placeholder = True %}
+    {%- if verify_result_choices and message.result_choices %}
+        {%- set print_placeholder = False %}
+    class ResultEnum(IntEnum):
+        {%- for choice in message.result_choices %}
+        {{choice.name | upper}} = {{to_hex(choice.value)}}
+            {%- if choice.description %}
+        {{['"""', choice.description, '"""'] | join | wordwrap(66, wrapstring="\n\t\t\t") | replace("\t", " "*4)}}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+    {%- if message.arguments %}
+        {%- set print_placeholder = False %}
+        {%- for argument in message.arguments %}
+            {%- if argument.max_size %}
+                {%- set args = "min_size=%d, max_size=%d" | format(argument.min_size, argument.max_size) %}
+            {%- elif argument.size %}
+                {%- set args = "size=%d" | format(argument.size) %}
+            {%- else %}
+                {%- set args = "" %}
+            {%- endif %}
+            {%- if args %}
+                {%- set annotations = "%s[params(%s)]" | format(argument.dtype, args) %}
+            {%- else %}
+                {%- set annotations = argument.dtype %}
+            {%- endif %}
+            {%- if argument.description %}
+    {{argument.name}}: {{annotations}}  # {{argument.description}}
+            {%- else %}
+    {{argument.name}}: {{annotations}}
+            {%- endif %}
+            {%- if argument.description_long %}
+    {{['"""', argument.description_long, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
+            {%- endif %}
+            {%- if argument.choices %}
+    class {{to_camelcase(argument.name)}}Enum(IntEnum):
+                {%- for choice in argument.choices %}
+        {{choice.name | upper}} = {{to_hex(choice.value)}}
+                    {%- if choice.description %}
+        {{['"""', choice.description, '"""'] | join | wordwrap(70, wrapstring="\n\t\t") | replace("\t", " "*4)}}
+                    {%- endif %}
+                {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+    {%- if print_placeholder %}
+    pass
+    {%- endif %}
+
+{% endfor %}
+class {{CLASS_NAME}}(BaseModel):
+    """
+    Implementation of the TASSIC functional model.
+
+    When adding a new {{INPUT_CLASS | lower}} processing method, decorate it with the
+    function `api` as shown below. Do not forget the type hint.
+
+    ```python
+    @api({{API_LEVEL}})
+    def handler(self, request: <in type>) -> {{format_output_type("<out type>")}}:
+        # Processing
+    ```
+    """
+{% for function in api_class.functions %}
+    {%- set input_type = [CLASS_PREFIX, function.input, INPUT_CLASS] | join %}
+    {%- set output_type = [CLASS_PREFIX, function.output, OUTPUT_CLASS] | join %}
+    @api({{API_LEVEL}})
+    def {{METHOD_PREFIX}}{{function.name}}(
+        self, {{INPUT_CLASS | lower}}: {{input_type}}
+    ) -> {{format_output_type(output_type)}}:
+        {%- if function.description %}
+        {{['"""', function.description, '"""'] | join | wordwrap(70, wrapstring="\n\t\t")}}
+        {%- endif %}
+        raise NotImplementedError("TODO")
+{% endfor %}
+{%- endblock content %}

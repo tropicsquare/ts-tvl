@@ -1,0 +1,121 @@
+{#- Copyright 2023 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "header_api.j2" %}
+{% block content %}
+
+{%- macro add_newline(line) -%}
+    {{- line.rstrip().replace("\n", "\\newline ") -}}
+{%- endmacro -%}
+
+{%- macro format_cmd_size(fmt, field, io, offset) -%}
+    {%- if field.function[io + "_size"] == field.function[io + "_max_size"] %}
+        {%- if field.function[io + "_size"] == field.function[io + "_min_size"] %}
+                {{fmt|format(field.function[io + "_size"] + offset)}}
+        {%- else %}
+                {{fmt|format(field.function[io + "_min_size"] + offset)}} - {{fmt|format(field.function[io + "_max_size"] + offset)}}
+        {%- endif %}
+    {%- else %}
+        {{fmt|format(field.function[io + "_min_size"] + offset)}} - {{fmt|format(field.function[io + "_max_size"] + offset)}}
+    {%- endif %}
+{%- endmacro -%}
+
+{%- macro format_fld_size(fmt, io) -%}
+    {%- if io["size"] == io["max_size"] %}
+        {%- if io["size"] == io["min_size"] %}
+                {{fmt|format(io["size"])}}
+        {%- else %}
+                {{fmt|format(io["min_size"])}} - {{fmt|format(io["max_size"])}}
+        {%- endif %}
+    {%- else %}
+        {{fmt|format(io["min_size"])}} - {{fmt|format(io["max_size"])}}
+    {%- endif %}
+{%- endmacro -%}
+
+\colorlet{lightgray}{gray!70}
+\colorlet{verylightgray}{gray!30}
+\newcolumntype{Y}{>{\hsize=0.5\hsize}X}
+\newcolumntype{Z}{>{\hsize=1.5\hsize}X}
+
+{%- for command in commands %}
+
+\begin{xltabular}{\linewidth}{|Y|Z|}
+
+    \hline
+    \rowcolor{TropicBlue}
+    \color{white}\textbf{Parameter} & \color{white}\textbf{Description} \\\hline
+    \rowcolor{TropicBlue!70}
+    \multicolumn{2}{|l|}{\color{white}\textbf{Information}} \\\hline
+
+    \textbf{Name} & \TsApiCmd{ {{command.name}} } \\\hline
+
+    \textbf{Description} & {{add_newline(command.description_long)}} \\\hline
+
+    \textbf{API function name} & {{command.function.name}} \\\hline\hline
+
+    {% for io in ("input", "output") %}
+
+        {%- if io in command.function %}
+
+                \rowcolor{TropicBlue!70}
+                {%- if io == "input" %}
+                        \multicolumn{2}{|l|}{\color{white}\textbf{Request}} \\\hline
+                {%- else %}
+                        \multicolumn{2}{|l|}{\color{white}\textbf{Response}} \\\hline
+                {%- endif %}
+
+                \rowcolor{lightgray}
+                {%- if io == "input" %}
+                        \color{white}\textbf{REQ_ID} & \color{white}{{"%#04x"|format(command.message_id)}}\\\hline
+                {%- endif %}
+
+                \rowcolor{lightgray}
+                {%- if io == "input" %}
+                        \color{white}\textbf{REQ_LEN} & \color{white}{{ format_cmd_size("%#04x", command, io, 0) }}\\\hline
+                {%- else %}
+                        \color{white}\textbf{RSP_LEN} & \color{white}{{ format_cmd_size("%#04x", command, io, 0) }}\\\hline
+                {%- endif %}
+
+                \rowcolor{lightgray}
+                {%- if io == "input" %}
+                        \color{white}\textbf{REQ_DATA} & \color{white} (length: {{ format_cmd_size("%d", command, io, 0) }} byte(s)) \\\hline
+                {%- else %}
+                        \color{white}\textbf{RSP_DATA} & \color{white} (length: {{ format_cmd_size("%d", command, io, 0) }} byte(s)) \\\hline
+                {%- endif %}
+
+                {%- if command.function[io] %}
+                        {%- for _io in command.function[io] %}
+                                \rowcolor{verylightgray}
+                                \multicolumn{2}{|l|}{\textbf{ {{-_io.name-}} }} \\\hline
+
+                                {%- if _io.description_long %}
+                                        \textbf{Description} & {{add_newline(_io.description_long)}} \\\hline
+                                {%- endif %}
+
+                                \textbf{Size} & {{ format_fld_size("%d", _io) }} \\\hline
+
+                                {%- if _io.choices %}
+                                        {%- set lines = [] -%}
+                                        {% for choice in _io.choices %}
+                                                {%- set _ = lines.append("\\textbf{%s} (%#04x): %s" % (choice.name, choice.value, choice.description)) -%}
+                                        {% endfor %}
+
+                                        \textbf{Possible values} & $\bullet$ {{ lines|join("\\newline " + "$\\bullet$ ") }} \\\hline
+                                {%- endif %}
+                        {%- endfor %}
+                {%- endif %}
+
+                \rowcolor{lightgray}
+                {%- if io == "input" %}
+                        \color{white}\textbf{REQ_CRC} & \color{white}(length: 2 bytes) \\\hline
+                {%- else %}
+                        \color{white}\textbf{RSP_CRC} & \color{white}(length: 2 bytes) \\\hline
+                {%- endif %}
+        {%- endif %}
+
+    {% endfor %}
+    \caption{ {{-command.name}} syntax}
+\end{xltabular}
+\pagebreak
+{%- endfor %}
+
+{%- endblock content %}

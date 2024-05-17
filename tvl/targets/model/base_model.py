@@ -35,6 +35,7 @@ from ...crypto.encrypted_session import TropicEncryptedSession
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
 from ...messages.l3_messages import L3Command, L3Result
+from ...random_number_generator import RandomNumberGenerator
 from .configuration_object_impl import ConfigurationObjectImpl
 from .exceptions import (
     L2ProcessingError,
@@ -46,7 +47,6 @@ from .internal.ecc_keys import EccKeys
 from .internal.mac_and_destroy import MacAndDestroyData
 from .internal.mcounter import MCounters
 from .internal.pairing_keys import PairingKeys
-from .internal.random_number_generator import RandomNumberGenerator
 from .internal.response_buffer import ResponseBuffer
 from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
@@ -212,6 +212,10 @@ class BaseModel(metaclass=MetaModel):
         if busy_iter is None:
             busy_iter = sample((lst := [True] * 5 + [False] * 5), k=len(lst))
         self.busy_iter = cycle(busy_iter)
+
+    def set_logger(self, logger: logging.Logger) -> Self:
+        self.logger = logger
+        return self
 
     def __enter__(self) -> Self:
         """Instance can be used as a context manager"""

@@ -4,7 +4,6 @@
 import contextlib
 import functools
 import logging
-import os
 from typing import (
     Any,
     Callable,
@@ -26,6 +25,7 @@ from ..constants import ENCRYPTION_TAG_LEN, L2StatusEnum, L3ResultFieldEnum
 from ..crypto.encrypted_session import HostEncryptedSession
 from ..messages.l2_messages import L2Request, L2Response
 from ..messages.l3_messages import L3Command, L3EncryptedPacket, L3Result
+from ..random_number_generator import RandomNumberGenerator
 from .low_level_communication import LowLevelFunctionFactory
 from .protocols import FunctionFactory, TargetDriver, TropicProtocol
 from .simple_target_driver import SimpleTargetDriver
@@ -66,6 +66,8 @@ class Host:
         activate_encryption: bool = True,
         split_data_fn: Callable[[bytes], Iterator[bytes]] = split_data,
         function_factory: Optional[FunctionFactory] = None,
+        debug_random_value: Optional[bytes] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         def __i(value: Optional[T], default: Any) -> T:
             if value is not None:
@@ -74,7 +76,9 @@ class Host:
                 return default()
             return default
 
-        self.logger = logging.getLogger(self.__class__.__name__.lower())
+        if logger is None:
+            logger = logging.getLogger(self.__class__.__name__.lower())
+        self.logger = logger
 
         if target is not None and target_driver is not None:
             raise InitializationError(
@@ -94,7 +98,8 @@ class Host:
         Valid once the host and Tropic chip have been paired."""
         self.pairing_key_index = __i(pairing_key_index, -1)
         """Index at which the host public key is stored in the Tropic chip"""
-        self.session = HostEncryptedSession(random_source=os)
+        self.rng = RandomNumberGenerator(debug_random_value)
+        self.session = HostEncryptedSession(random_source=self.rng)
         """Encrypted session"""
         self.activate_encryption = activate_encryption
         """Encrypt L3-layer messages"""
@@ -126,6 +131,7 @@ class Host:
             s_t_pub=self.s_t_pub,
             pairing_key_index=self.pairing_key_index,
             activate_encryption=self.activate_encryption,
+            debug_random_value=self.rng.debug_random_value,
         )
 
     @classmethod
@@ -141,7 +147,12 @@ class Host:
             **__s("s_t_pub"),
             **__s("pairing_key_index"),
             **__s("activate_encryption"),
+            **__s("debug_random_value"),
         )
+
+    def set_logger(self, logger: logging.Logger) -> Self:
+        self.logger = logger
+        return self
 
     def set_target(self, target: TropicProtocol) -> Self:
         self._target_driver = SimpleTargetDriver(target)

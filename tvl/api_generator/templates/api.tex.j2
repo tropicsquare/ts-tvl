@@ -1,0 +1,99 @@
+{#- Copyright 2023 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "header_api.j2" %}
+{% block content %}
+
+{%- macro add_newline(line) -%}
+    {{- line.rstrip().replace("\n", "\\newline ") -}}
+{%- endmacro -%}
+
+\documentclass{tropic_design_spec}
+
+\title{API documentation}
+\author{Henri L'Hôte}
+\date{October 2022}
+
+\begin{document}
+
+\def \projectname {API Documentation}
+\def \documentname {API Latex}
+\def \versionnumber {0.1}
+
+\colorlet{lightgray}{gray!70}
+\colorlet{verylightgray}{gray!30}
+\newcolumntype{Y}{>{\hsize=0.5\hsize}X}
+\newcolumntype{Z}{>{\hsize=1.5\hsize}X}
+
+\listoftables
+\newpage
+
+{%- for command in commands %}
+
+\begin{xltabular}{\linewidth}{|Y|Z|}
+
+    \hline
+    \rowcolor{TropicBlue}
+    \color{white}\textbf{Parameter} & \color{white}\textbf{Description} \\\hline
+    \rowcolor{TropicBlue!70}
+    \multicolumn{2}{|l|}{\color{white}\textbf{Command info}} \\\hline
+    \textbf{command name} & {{command.name | upper}} \\\hline
+    \textbf{description} & {{command.description}} \\\hline
+    {%- if command.description_long %}
+    \textbf{description_long} & {{ add_newline(command.description_long) }} \\\hline
+    {%- endif %}
+    \textbf{encryption} & {{ ["No", "Yes"][command.encryption] }} \\\hline
+    \textbf{processing_layer} & {{command.processing_layer}} \\\hline
+    \textbf{API function name} & {{command.function.name}} \\\hline\hline
+    {%- if command.function.description_long %}
+    \textbf{description_long} & {{ add_newline(command.function.description_long) }} \\\hline
+    {%- endif %}
+    {% for io in ("input", "output") %}
+        {%- if command.function[io] %}
+    \rowcolor{TropicBlue!70}
+            {%- if io == "input" %}
+    \multicolumn{2}{|l|}{\color{white}\textbf{Command Request}} \\\hline
+            {%- else %}
+    \multicolumn{2}{|l|}{\color{white}\textbf{Command Response}} \\\hline
+            {%- endif %}
+    \rowcolor{lightgray}
+    \color{white}\textbf{REQ_ID} & \color{white}{{"%#04x"|format(command.message_id)}} (length: 1 byte) \\\hline
+    \rowcolor{lightgray}
+    \color{white}\textbf{REQ_LEN} & \color{white}{{"%#04x"|format(command.function[io + "_size"])}} (length: 1 byte) \\\hline
+    \rowcolor{lightgray}
+            {%- if io == "input" %}
+    \color{white}\textbf{REQ_PAYLOAD} & \color{white} (length: {{ command.function[io + "_size"] }} byte(s)) \\\hline
+            {%- else %}
+    \color{white}\textbf{RESP_PAYLOAD} & \color{white} (length: {{ command.function[io + "_size"] }} byte(s)) \\\hline
+            {%- endif %}
+            {%- for _io in command.function[io] %}
+    \rowcolor{verylightgray}
+    \multicolumn{2}{|l|}{\textbf{ {{-_io.name-}} }} \\\hline
+                {%- if _io.description %}
+    \textbf{description} & {{_io.description}} \\\hline
+                {%- endif %}
+                {%- if _io.description_long %}
+    \textbf{description_long} & {{ add_newline(_io.description_long) }} \\\hline
+                {%- endif %}
+    \textbf{type} & {{_io.type}} \\\hline
+                {%- if _io.size %}
+    \textbf{size} & {{_io.size}} \\\hline
+                {%- endif %}
+                {%- if _io.choices %}
+                    {%- set lines = [] -%}
+                    {% for choice in _io.choices %}
+                        {%- set _ = lines.append("\\textbf{%s} (%#04x): %s" % (choice.name, choice.value, choice.description)) -%}
+                    {% endfor %}
+    \textbf{possible values} & $\bullet$ {{ lines|join("\\newline " + "$\\bullet$ ") }} \\\hline
+                {%- endif %}
+            {%- endfor %}
+    \rowcolor{lightgray}
+    \color{white}\textbf{REQ_CRC} & \color{white}(length: 2 bytes) \\\hline
+        {%- endif %}
+    {% endfor %}
+    \caption{ {{-command.name}} syntax}
+\end{xltabular}
+\pagebreak
+{%- endfor %}
+
+\end{document}
+{%- endblock content %}
