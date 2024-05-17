@@ -93,3 +93,7 @@ SERIAL_CODE_SIZE = 4
 
 CHUNK_SIZE = 128
 """Size of chunks sent by the model"""
+
+MAX_L2_FRAME_DATA_LEN = 252
+
+ENCRYPTED_PACKET_MAX_SIZE = 2 + 4096 + 16

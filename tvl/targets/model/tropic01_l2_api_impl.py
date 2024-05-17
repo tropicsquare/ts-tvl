@@ -4,7 +4,7 @@
 from itertools import chain, islice, repeat
 from typing import List, NoReturn, cast
 
-from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data
+from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk
 from ...api.l2_api import (
     L2API,
     TsL2EncryptedCmdAbtRequest,
@@ -30,7 +30,6 @@ from ...api.l2_api import (
 from ...constants import (
     CERTIFICATE_BLOCK_SIZE,
     CHIP_ID_SIZE,
-    CHUNK_SIZE,
     RISCV_FW_VERSION_SIZE,
     SPECT_FW_VERSION_SIZE,
     L2StatusEnum,
@@ -186,7 +185,7 @@ class L2APIImplementation(L2API):
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
 
         result_chunks = list(
-            split_data(encrypted_result.to_bytes(), chunk_size=CHUNK_SIZE)
+            self.split_data_fn(encrypted_result.to_bytes())
         )
 
         for i, chunk in enumerate(result_chunks, start=1):

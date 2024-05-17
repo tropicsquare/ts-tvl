@@ -11,6 +11,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -27,10 +28,12 @@ from ...constants import (
     ENCRYPTION_TAG_LEN,
     PADDING_BYTE,
     S_HI_PUB_NB_SLOTS,
+    CHUNK_SIZE,
     L1ChipStatusFlag,
     L2IdFieldEnum,
     L2StatusEnum,
 )
+from ...utils import chunked
 from ...crypto.encrypted_session import TropicEncryptedSession
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
@@ -50,6 +53,9 @@ from .internal.response_buffer import ResponseBuffer
 from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
 
+
+def split_data(data: bytes, *, chunk_size: int = 252) -> Iterator[bytes]:
+    yield from (bytes(chunk) for chunk in chunked(data, chunk_size))
 
 class SupportsFromDict(Protocol):
     @classmethod
@@ -97,6 +103,7 @@ class BaseModel(metaclass=MetaModel):
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
         busy_iter: Optional[Iterable[bool]] = None,
+        split_data_fn: Callable[[bytes], Iterator[bytes]] = split_data,
         logger: Optional[logging.Logger] = None,
     ):
         """Initialize the model.
@@ -202,6 +209,8 @@ class BaseModel(metaclass=MetaModel):
         self._odata = b""
         self._state = _FsmState.IDLE
         self.init_byte = init_byte
+
+        self.split_data_fn = split_data_fn
 
         if busy_iter is None:
             busy_iter = sample((lst := [True] * 5 + [False] * 5), k=len(lst))
