@@ -1,6 +1,6 @@
-# GENERATED ON 2024-05-03 13:32:44.960127
-# BY api_generator VERSION 1.5
-# INPUT FILE: 2C18948086D82710712C3EAC49E570E71639179BFD482B5B4802C277A475C6CA
+# GENERATED ON 2024-05-20 15:22:23.254114
+# BY internal VERSION 1.5
+# INPUT FILE: EC1CB666F440FD585F689595F7A13A7887815595A1FF83FCE03E7CFB78265D26
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -179,7 +179,7 @@ class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
         SPECT2 = 0x12
         """SPECT bank 2"""
     offset: U16Scalar  # The offset of the specific bank to write the chunk
-    data: U8Array[params(min_size=1, max_size=128)]  # The binary data to write
+    data: U8Array[params(min_size=4, max_size=248)]  # The binary data to write. Data size should be a multiple of 4.
 
 
 class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ):

@@ -1,6 +1,6 @@
-# GENERATED ON 2024-05-17 15:53:40.203540
+# GENERATED ON 2024-05-20 15:22:30.793617
 # BY internal.py VERSION 0.3
-# INPUT FILE: 9a53604569b8f7927ee6fc59814a64817b72964c69f6e2818a37ea8a26aed66f
+# INPUT FILE: 98e9e149fd468a790b20da7e92e622f47526ca9f4a67bf85a97dde06131803a2
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -137,58 +137,69 @@ class CfgUapPairingKeyRead(ConfigObjectRegister):
     Key slot 3."""
 
 
+class CfgUapPairingKeyInvalidate(ConfigObjectRegister):
+    invalidate_pkey_slot_0 = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the Pairing_Key_Invalidate L3 Command packet to
+    Pairing Key slot 0."""
+    invalidate_pkey_slot_1 = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the Pairing_Key_Invalidate L3 Command packet to
+    Pairing Key slot 1."""
+    invalidate_pkey_slot_2 = ConfigObjectField(16, 8, AccessType.W1C)
+    """Access privileges of the Pairing_Key_Invalidate L3 Command packet to
+    Pairing Key slot 2."""
+    invalidate_pkey_slot_3 = ConfigObjectField(24, 8, AccessType.W1C)
+    """Access privileges of the Pairing_Key_Invalidate L3 Command packet to
+    Pairing Key slot 3."""
+
+
 class CfgUapRConfigWrite(ConfigObjectRegister):
-    r_config_write_func = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Write L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    r_config_write_cfg = ConfigObjectField(8, 8, AccessType.W1C)
+    r_config_write_cfg = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the R_Config_Write L3 Command packet to the
     Configuration COs. Refer to the 'User Access Privileges' section in the
+    TROPIC01 Datasheet."""
+    r_config_write_func = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the R_Config_Write L3 Command packet to the
+    Functionality COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
 
 
 class CfgUapRConfigRead(ConfigObjectRegister):
-    r_config_read_func = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Read L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    r_config_read_cfg = ConfigObjectField(8, 8, AccessType.W1C)
+    r_config_read_cfg = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the R_Config_Read L3 Command packet to the
     Configuration COs. Refer to the 'User Access Privileges' section in the
+    TROPIC01 Datasheet."""
+    r_config_read_func = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the R_Config_Read L3 Command packet to the
+    Functionality COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
 
 
 class CfgUapRConfigErase(ConfigObjectRegister):
-    r_config_erase_func = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Erase L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    r_config_erase_cfg = ConfigObjectField(8, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Erase L3 Command packet to the
-    Configuration COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
+    r_config_erase = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the R_Config_Erase L3 Command packet to all COs.
+    Refer to the 'User Access Privileges' section in the TROPIC01
+    Datasheet."""
 
 
 class CfgUapIConfigWrite(ConfigObjectRegister):
-    i_config_write_func = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the I_Config_Write L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    i_config_write_cfg = ConfigObjectField(8, 8, AccessType.W1C)
+    i_config_write_cfg = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the I_Config_Write L3 Command packet to the
     Configuration COs. Refer to the 'User Access Privileges' section in the
+    TROPIC01 Datasheet."""
+    i_config_write_func = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the I_Config_Write L3 Command packet to the
+    Functionality COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
 
 
 class CfgUapIConfigRead(ConfigObjectRegister):
-    i_config_read_func = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the I_Config_Read L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    i_config_read_cfg = ConfigObjectField(8, 8, AccessType.W1C)
+    i_config_read_cfg = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the I_Config_Read L3 Command packet to the
     Configuration COs. Refer to the 'User Access Privileges' section in the
+    TROPIC01 Datasheet."""
+    i_config_read_func = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the I_Config_Read L3 Command packet to the
+    Functionality COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
 
 
@@ -198,46 +209,46 @@ class CfgUapPing(ConfigObjectRegister):
 
 
 class CfgUapRMemDataWrite(ConfigObjectRegister):
-    write_udata_slot_1_128 = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Mem_Data_Write L3 Command packet to slots 1
-    - 128 of the User Data partition in R-Memory."""
-    write_udata_slot_129_256 = ConfigObjectField(8, 8, AccessType.W1C)
+    write_udata_slot_0_127 = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the R_Mem_Data_Write L3 Command packet to slots 0
+    - 127 of the User Data partition in R-Memory."""
+    write_udata_slot_128_255 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Write L3 Command packet to slots
-    129 - 256 of the User Data partition in R-Memory."""
-    write_udata_slot_257_384 = ConfigObjectField(16, 8, AccessType.W1C)
+    128 - 255 of the User Data partition in R-Memory."""
+    write_udata_slot_256_383 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Write L3 Command packet to slots
-    257 - 384 of the User Data partition in R-Memory."""
-    write_udata_slot_385_512 = ConfigObjectField(24, 8, AccessType.W1C)
+    256 - 383 of the User Data partition in R-Memory."""
+    write_udata_slot_384_511 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Write L3 Command packet to slots
-    385 - 512 of the User Data partition in R-Memory."""
+    384 - 511 of the User Data partition in R-Memory."""
 
 
 class CfgUapRMemDataRead(ConfigObjectRegister):
-    read_udata_slot_1_128 = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 1 -
-    128 of the User Data partition in R-Memory."""
-    read_udata_slot_129_256 = ConfigObjectField(8, 8, AccessType.W1C)
-    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 129
-    - 256 of the User Data partition in R-Memory."""
-    read_udata_slot_257_384 = ConfigObjectField(16, 8, AccessType.W1C)
-    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 257
-    - 384 of the User Data partition in R-Memory."""
-    read_udata_slot_385_512 = ConfigObjectField(24, 8, AccessType.W1C)
+    read_udata_slot_0_127 = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 0 -
+    127 of the User Data partition in R-Memory."""
+    read_udata_slot_128_255 = ConfigObjectField(8, 8, AccessType.W1C)
+    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 128
+    - 255 of the User Data partition in R-Memory."""
+    read_udata_slot_256_383 = ConfigObjectField(16, 8, AccessType.W1C)
+    """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 256
+    - 383 of the User Data partition in R-Memory."""
+    read_udata_slot_384_511 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Read L3 Command packet to slots 385
     - 512 of the User Data partition in R-Memory."""
 
 
 class CfgUapRMemDataErase(ConfigObjectRegister):
-    erase_udata_slot_1_128 = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 1
-    - 128 of the User Data partition in R-Memory."""
-    erase_udata_slot_129_256 = ConfigObjectField(8, 8, AccessType.W1C)
+    erase_udata_slot_0_127 = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 0
+    - 127 of the User Data partition in R-Memory."""
+    erase_udata_slot_128_255 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Erase L3 Command packet to slots
-    129 - 256 of the User Data partition in R-Memory."""
-    erase_udata_slot_257_384 = ConfigObjectField(16, 8, AccessType.W1C)
+    128 - 255 of the User Data partition in R-Memory."""
+    erase_udata_slot_256_383 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Erase L3 Command packet to slots
-    257 - 384 of the User Data partition in R-Memory."""
-    erase_udata_slot_385_512 = ConfigObjectField(24, 8, AccessType.W1C)
+    256 - 383 of the User Data partition in R-Memory."""
+    erase_udata_slot_384_511 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the R_Mem_Data_Erase L3 Command packet to slots
     385 - 512 of the User Data partition in R-Memory."""
 
@@ -248,156 +259,156 @@ class CfgUapRandomValueGet(ConfigObjectRegister):
 
 
 class CfgUapEccKeyGenerate(ConfigObjectRegister):
-    gen_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    gen_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key
-    slots 1-8."""
-    gen_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    slots 0-7."""
+    gen_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key
-    slots 9-16."""
-    gen_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    slots 8-15."""
+    gen_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key
-    slots 17-24."""
-    gen_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    slots 16-23."""
+    gen_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key
-    slots 25-32."""
+    slots 24-31."""
 
 
 class CfgUapEccKeyStore(ConfigObjectRegister):
-    store_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    store_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Store L3 Command packet to ECC Key
-    slots 1-8."""
-    store_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    slots 0-7."""
+    store_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Store L3 Command packet to ECC Key
-    slots 9-16."""
-    store_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    slots 8-15."""
+    store_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Store L3 Command packet to ECC Key
-    slots 17-24."""
-    store_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    slots 16-23."""
+    store_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Store L3 Command packet to ECC Key
-    slots 25-32."""
+    slots 24-31."""
 
 
 class CfgUapEccKeyRead(ConfigObjectRegister):
-    read_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    read_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Read L3 Command packet to ECC Key
-    slots 1-8."""
-    read_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    slots 0-7."""
+    read_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Read L3 Command packet to ECC Key
-    slots 9-16."""
-    read_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    slots 8-15."""
+    read_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Read L3 Command packet to ECC Key
-    slots 17-24."""
-    read_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    slots 16-23."""
+    read_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Read L3 Command packet to ECC Key
-    slots 25-32."""
+    slots 24-31."""
 
 
 class CfgUapEccKeyErase(ConfigObjectRegister):
-    erase_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    erase_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key
-    slots 1-8."""
-    erase_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    slots 0-7."""
+    erase_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key
-    slots 9-16."""
-    erase_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    slots 8-15."""
+    erase_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key
-    slots 17-24."""
-    erase_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    slots 16-23."""
+    erase_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key
-    slots 25-32."""
+    slots 24-31."""
 
 
 class CfgUapEcdsaSign(ConfigObjectRegister):
-    ecdsa_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    ecdsa_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC
-    Key slots 1-8."""
-    ecdsa_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    Key slots 0-7."""
+    ecdsa_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC
-    Key slots 9-16."""
-    ecdsa_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    Key slots 8-15."""
+    ecdsa_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC
-    Key slots 17-24."""
-    ecdsa_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    Key slots 16-23."""
+    ecdsa_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC
-    Key slots 25-32."""
+    Key slots 24-31."""
 
 
 class CfgUapEddsaSign(ConfigObjectRegister):
-    eddsa_ecckey_slot_1_8 = ConfigObjectField(0, 8, AccessType.W1C)
+    eddsa_ecckey_slot_0_7 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC
-    Key slots 1-8."""
-    eddsa_ecckey_slot_9_16 = ConfigObjectField(8, 8, AccessType.W1C)
+    Key slots 0-7."""
+    eddsa_ecckey_slot_8_15 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC
-    Key slots 9-16."""
-    eddsa_ecckey_slot_17_24 = ConfigObjectField(16, 8, AccessType.W1C)
+    Key slots 8-15."""
+    eddsa_ecckey_slot_16_23 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC
-    Key slots 17-24."""
-    eddsa_ecckey_slot_25_32 = ConfigObjectField(24, 8, AccessType.W1C)
+    Key slots 16-23."""
+    eddsa_ecckey_slot_24_31 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC
-    Key slots 25-32."""
+    Key slots 24-31."""
 
 
 class CfgUapMcounterInit(ConfigObjectRegister):
-    mcounter_init_1_4 = ConfigObjectField(0, 8, AccessType.W1C)
+    mcounter_init_0_3 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the MCounter_Init L3 Command packet to Monotonic
-    counters 1-4."""
-    mcounter_init_5_8 = ConfigObjectField(8, 8, AccessType.W1C)
+    counters 0-3."""
+    mcounter_init_4_7 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the MCounter_Init L3 Command packet to Monotonic
-    counters 5-8."""
-    mcounter_init_9_12 = ConfigObjectField(16, 8, AccessType.W1C)
+    counters 4-7."""
+    mcounter_init_8_11 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the MCounter_Init L3 Command packet to Monotonic
-    counters 9-12."""
-    mcounter_init_13_16 = ConfigObjectField(24, 8, AccessType.W1C)
+    counters 8-11."""
+    mcounter_init_12_15 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the MCounter_Init L3 Command packet to Monotonic
-    counters 13-16."""
+    counters 12-15."""
 
 
 class CfgUapMcounterGet(ConfigObjectRegister):
-    mcounter_get_1_4 = ConfigObjectField(0, 8, AccessType.W1C)
+    mcounter_get_0_3 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the MCounter_Get L3 Command packet to Monotonic
-    counters 1-4."""
-    mcounter_get_5_8 = ConfigObjectField(8, 8, AccessType.W1C)
+    counters 0-3."""
+    mcounter_get_4_7 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the MCounter_Get L3 Command packet to Monotonic
-    counters 5-8."""
-    mcounter_get_9_12 = ConfigObjectField(16, 8, AccessType.W1C)
+    counters 4-7."""
+    mcounter_get_8_11 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the MCounter_Get L3 Command packet to Monotonic
-    counters 9-12."""
-    mcounter_get_13_16 = ConfigObjectField(24, 8, AccessType.W1C)
+    counters 8-11."""
+    mcounter_get_12_15 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the MCounter_Get L3 Command packet to Monotonic
-    counters 13-16."""
+    counters 12-15."""
 
 
 class CfgUapMcounterUpdate(ConfigObjectRegister):
-    mcounter_update_1_4 = ConfigObjectField(0, 8, AccessType.W1C)
+    mcounter_update_0_3 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the MCounter_Update L3 Command packet to Monotonic
-    counters 1-4."""
-    mcounter_update_5_8 = ConfigObjectField(8, 8, AccessType.W1C)
+    counters 0-3."""
+    mcounter_update_4_7 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the MCounter_Update L3 Command packet to Monotonic
-    counters 5-8."""
-    mcounter_update_9_12 = ConfigObjectField(16, 8, AccessType.W1C)
+    counters 4-7."""
+    mcounter_update_8_11 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the MCounter_Update L3 Command packet to Monotonic
-    counters 9-12."""
-    mcounter_update_13_16 = ConfigObjectField(24, 8, AccessType.W1C)
+    counters 8-11."""
+    mcounter_update_12_15 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the MCounter_Update L3 Command packet to Monotonic
-    counters 13-16."""
+    counters 12-15."""
 
 
 class CfgUapMacAndDestroy(ConfigObjectRegister):
-    macandd_1_32 = ConfigObjectField(0, 8, AccessType.W1C)
+    macandd_0_31 = ConfigObjectField(0, 8, AccessType.W1C)
     """Access privileges of the MAC_And_Destroy L3 Command packet (when
-    executing a MAC-and-Destroy sequence) to slots 1-32 of the MAC-and-Destroy
+    executing a MAC-and-Destroy sequence) to slots 0-31 of the MAC-and-Destroy
     Partition of R-Memory."""
-    macandd_33_64 = ConfigObjectField(8, 8, AccessType.W1C)
+    macandd_32_63 = ConfigObjectField(8, 8, AccessType.W1C)
     """Access privileges of the MAC_And_Destroy L3 Command packet (when
-    executing a MAC-and-Destroy sequence) to slots 33-64 of the MAC-and-
+    executing a MAC-and-Destroy sequence) to slots 32-63 of the MAC-and-
     Destroy Partition of R-Memory."""
-    macandd_65_96 = ConfigObjectField(16, 8, AccessType.W1C)
+    macandd_64_95 = ConfigObjectField(16, 8, AccessType.W1C)
     """Access privileges of the MAC_And_Destroy L3 Command packet (when
-    executing a MAC-and-Destroy sequence) to slots 65-96 of the MAC-and-
+    executing a MAC-and-Destroy sequence) to slots 64-95 of the MAC-and-
     Destroy Partition of R-Memory."""
-    macandd_97_128 = ConfigObjectField(24, 8, AccessType.W1C)
+    macandd_96_127 = ConfigObjectField(24, 8, AccessType.W1C)
     """Access privileges of the MAC_And_Destroy L3 Command packet (when
-    executing a MAC-and-Destroy sequence) to slots 97-128 of the MAC-and-
+    executing a MAC-and-Destroy sequence) to slots 96-127 of the MAC-and-
     Destroy Partition of R-Memory."""
 
 
@@ -413,6 +424,7 @@ class ConfigObjectRegisterAddressEnum(IntEnum):
     CFG_DEBUG = 0x10
     CFG_UAP_PAIRING_KEY_WRITE = 0x20
     CFG_UAP_PAIRING_KEY_READ = 0x24
+    CFG_UAP_PAIRING_KEY_INVALIDATE = 0x28
     CFG_UAP_R_CONFIG_WRITE = 0x30
     CFG_UAP_R_CONFIG_READ = 0x34
     CFG_UAP_R_CONFIG_ERASE = 0x38
@@ -444,6 +456,7 @@ class ConfigurationObjectImpl(ConfigurationObject):
         self.cfg_debug = CfgDebug(ConfigObjectRegisterAddressEnum.CFG_DEBUG, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_write = CfgUapPairingKeyWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_read = CfgUapPairingKeyRead(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ, 0xFFFFFFFF)
+        self.cfg_uap_pairing_key_invalidate = CfgUapPairingKeyInvalidate(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE, 0xFFFFFFFF)
         self.cfg_uap_r_config_write = CfgUapRConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE, 0xFFFFFFFF)
         self.cfg_uap_r_config_read = CfgUapRConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ, 0xFFFFFFFF)
         self.cfg_uap_r_config_erase = CfgUapRConfigErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE, 0xFFFFFFFF)
@@ -475,6 +488,7 @@ class ConfigurationObjectImplModel(ConfigurationObjectModel):
     cfg_debug: Optional[StrictInt]
     cfg_uap_pairing_key_write: Optional[StrictInt]
     cfg_uap_pairing_key_read: Optional[StrictInt]
+    cfg_uap_pairing_key_invalidate: Optional[StrictInt]
     cfg_uap_r_config_write: Optional[StrictInt]
     cfg_uap_r_config_read: Optional[StrictInt]
     cfg_uap_r_config_erase: Optional[StrictInt]

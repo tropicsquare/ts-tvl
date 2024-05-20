@@ -1,6 +1,6 @@
-# GENERATED ON 2024-05-03 13:32:47.844493
-# BY api_generator VERSION 1.5
-# INPUT FILE: 562B5DFEC8AA351B39DCACBC4124A623A5F85B45C438BD38336BE5D56B3F6312
+# GENERATED ON 2024-05-20 15:22:24.783062
+# BY internal VERSION 1.5
+# INPUT FILE: 299763A22BD6341ECDA080309EFC83B9D35E5F0479BAE4635666C24F5CF1B3FC
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -20,6 +20,8 @@ class L3Enum(IntEnum):
     """Write Pairing key slot"""
     PAIRING_KEY_READ = 0x11
     """Read Pairing key slot"""
+    PAIRING_KEY_INVALIDATE = 0x12
+    """Invalidate Pairing Key in a slot"""
     R_CONFIG_WRITE = 0x20
     """Write R-Config"""
     R_CONFIG_READ = 0x21
@@ -108,9 +110,34 @@ class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
 
 
 class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
+    class ResultEnum(IntEnum):
+        PAIRING_KEY_EMPTY = 0x15
+        """The Pairing key slot is in "Blank" state. A Pairing Key has not
+            been written to it yet."""
+        PAIRING_KEY_INVALID = 0x16
+        """The Pairing key slot is in "Invalidated" state. The Pairing key
+            has been invalidated."""
     s_hipub: U8Array[params(size=32)]  # Public Key
     """The X25519 public key to be written in the Pairing Key slot specified
     in the SLOT field."""
+
+
+class TsL3PairingKeyInvalidateCommand(L3Command, id=L3Enum.PAIRING_KEY_INVALIDATE):
+    slot: U8Scalar  # Slot to Invalidate
+    """The Pairing Key slot. Valid values are 0 - 3."""
+    class SlotEnum(IntEnum):
+        PAIRING_KEY_SLOT_0 = 0x00
+        """Corresponds to $S_{H0Pub}$."""
+        PAIRING_KEY_SLOT_1 = 0x01
+        """Corresponds to $S_{H1Pub}$."""
+        PAIRING_KEY_SLOT_2 = 0x02
+        """Corresponds to $S_{H2Pub}$."""
+        PAIRING_KEY_SLOT_3 = 0x03
+        """Corresponds to $S_{H3Pub}$."""
+
+
+class TsL3PairingKeyInvalidateResult(L3Result, id=L3Enum.PAIRING_KEY_INVALIDATE):
+    pass
 
 
 class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
@@ -165,7 +192,7 @@ class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
 
 class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     udata_slot: U16Scalar  # Slot to write
-    """The slot of the User Data partition. Valid values are 1 - 512."""
+    """The slot of the User Data partition. Valid values are 0 - 511."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to write
     """The data stream to be written in the slot specified in the UDATA_SLOT
     L3 field."""
@@ -181,7 +208,7 @@ class TsL3RMemDataWriteResult(L3Result, id=L3Enum.R_MEM_DATA_WRITE):
 
 class TsL3RMemDataReadCommand(L3Command, id=L3Enum.R_MEM_DATA_READ):
     udata_slot: U16Scalar  # Slot to read
-    """The slot of the User Data partition. Valid values are 1 - 512."""
+    """The slot of the User Data partition. Valid values are 0 - 511."""
 
 
 class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
@@ -192,7 +219,7 @@ class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
 
 class TsL3RMemDataEraseCommand(L3Command, id=L3Enum.R_MEM_DATA_ERASE):
     udata_slot: U16Scalar  # Slot to erase
-    """The slot of the User Data partition. Valid values are 1 - 512."""
+    """The slot of the User Data partition. Valid values are 0 - 511."""
 
 
 class TsL3RMemDataEraseResult(L3Result, id=L3Enum.R_MEM_DATA_ERASE):
@@ -212,7 +239,7 @@ class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
 
 class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
     slot: U8Scalar  # ECC Key slot
-    """The slot to write the generated key. Valid values are 1 - 32."""
+    """The slot to write the generated key. Valid values are 0 - 31."""
     curve: U8Scalar  # Elliptic Curve
     """The Elliptic Curve the key is generated from."""
     class CurveEnum(IntEnum):
@@ -228,7 +255,7 @@ class TsL3EccKeyGenerateResult(L3Result, id=L3Enum.ECC_KEY_GENERATE):
 
 class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
     slot: U8Scalar  # ECC Key slot
-    """The slot to write the K L3 Field. Valid values are 1 - 32."""
+    """The slot to write the K L3 Field. Valid values are 0 - 31."""
     curve: U8Scalar  # The type of Elliptic Curve the K L3 Field belongs to.
     """The Elliptic Curve the key is generated from."""
     class CurveEnum(IntEnum):
@@ -249,7 +276,7 @@ class TsL3EccKeyStoreResult(L3Result, id=L3Enum.ECC_KEY_STORE):
 
 class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
     slot: U8Scalar  # ECC Key slot
-    """The slot to read the public ECC Key from. Valid values are 1 - 32."""
+    """The slot to read the public ECC Key from. Valid values are 0 - 31."""
 
 
 class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
@@ -276,7 +303,7 @@ class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
 
 class TsL3EccKeyEraseCommand(L3Command, id=L3Enum.ECC_KEY_ERASE):
     slot: U8Scalar  # ECC Key slot
-    """The slot to erase. Valid values are 1 - 32."""
+    """The slot to erase. Valid values are 0 - 31."""
 
 
 class TsL3EccKeyEraseResult(L3Result, id=L3Enum.ECC_KEY_ERASE):
@@ -329,8 +356,8 @@ class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
 
 class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U8Scalar  # Index of Monotonic Counter
-    """The index of the Monotonic Counter to initialize. Valid values are 1 -
-    16."""
+    """The index of the Monotonic Counter to initialize. Valid values are 0 -
+    15."""
     mcounter_val: U32Scalar  # Initialization value.
     """The initialization value of the Monotonic Counter."""
 
@@ -341,8 +368,8 @@ class TsL3McounterInitResult(L3Result, id=L3Enum.MCOUNTER_INIT):
 
 class TsL3McounterUpdateCommand(L3Command, id=L3Enum.MCOUNTER_UPDATE):
     mcounter_index: U8Scalar  # Index of Monotonic Counter
-    """The index of the Monotonic Counter to update. Valid values are 1 -
-    16."""
+    """The index of the Monotonic Counter to update. Valid values are 0 -
+    15."""
 
 
 class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
@@ -358,7 +385,7 @@ class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
 class TsL3McounterGetCommand(L3Command, id=L3Enum.MCOUNTER_GET):
     mcounter_index: U8Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to get the value of. Valid index
-    values are 1 - 16."""
+    values are 0 - 15."""
 
 
 class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
@@ -374,7 +401,7 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
 class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
     slot: U8Scalar  # Mac-and-Destroy slot
     """The slot (from the MAC-and-Destroy data partition in R-Memory) to
-    execute the MAC_And_Destroy sequence. Valid values are 1 - 128."""
+    execute the MAC_And_Destroy sequence. Valid values are 0 - 127."""
     padding: U8Array[params(size=2)]  # Padding
     """The padding by dummy data."""
     data_in: U8Array[params(size=32)]  # Input data
@@ -431,6 +458,14 @@ class L3API(BaseModel):
         self, command: TsL3PairingKeyReadCommand
     ) -> TsL3PairingKeyReadResult:
         """Command to read the X25519 public key from a Pairing Key slot."""
+        raise NotImplementedError("TODO")
+
+    @api("l3_api")
+    def ts_l3_pairing_key_invalidate(
+        self, command: TsL3PairingKeyInvalidateCommand
+    ) -> TsL3PairingKeyInvalidateResult:
+        """Command to invalidate the X25519 public key in a Pairing Key
+		slot."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")
