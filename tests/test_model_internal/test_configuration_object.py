@@ -98,6 +98,9 @@ def test_configuration_object_and():
     c1 = ConfigurationObjectImpl()
     c2 = ConfigurationObjectImpl()
 
+    for _, register in c1.registers():
+        register.value = random.getrandbits(REGISTER_SIZE)
+
     for _, register in c2.registers():
         register.value = random.getrandbits(REGISTER_SIZE)
 
