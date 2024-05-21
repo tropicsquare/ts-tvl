@@ -226,6 +226,13 @@ class L3APIImplementation(L3API):
 
         self.logger.info("Writing r_config register.")
         self.logger.debug(f"Register address: {address:#04x}.")
+
+        current_value = self.r_config[address].value
+        if current_value == self.r_config[address].reset_value:
+            raise L3ProcessingErrorFail(
+                f"Register is not erased: {current_value:#010x}"
+            )
+
         value = command.value.value
         self.logger.debug(f"Writing value: {value:#010x}.")
         self.r_config[address].value = value
