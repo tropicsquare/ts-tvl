@@ -1,7 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import contextlib
+from itertools import chain
 from typing import List, Tuple
 
 from ...api.l3_api import (
@@ -105,6 +105,7 @@ CONFIGURATION_ACCESS_PRIVILEGES = [
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ,
+    ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE,
 ]
 
 
@@ -225,6 +226,13 @@ class L3APIImplementation(L3API):
 
         self.logger.info("Writing r_config register.")
         self.logger.debug(f"Register address: {address:#04x}.")
+
+        current_value = self.r_config[address].value
+        if current_value == self.r_config[address].reset_value:
+            raise L3ProcessingErrorFail(
+                f"Register is not erased: {current_value:#010x}"
+            )
+
         value = command.value.value
         self.logger.debug(f"Writing value: {value:#010x}.")
         self.r_config[address].value = value
@@ -253,25 +261,14 @@ class L3APIImplementation(L3API):
         self, command: TsL3RConfigEraseCommand
     ) -> TsL3RConfigEraseResult:
         config = self.config.cfg_uap_r_config_erase
+        self.check_access_privileges("r_config_erase", config.r_config_erase)
 
         self.logger.info("Erasing r_config configuration object.")
-        with contextlib.suppress(Exception):
-            self.check_access_privileges(
-                "r_config_erase_func", config.r_config_erase_func
-            )
-            self.logger.info("Erasing 'functionality' registers.")
-            for address in FUNCTIONALITY_ACCESS_PRIVILEGES:
-                self.logger.debug(f"{address!s}.")
-                self.r_config[address].reset()
-
-        with contextlib.suppress(Exception):
-            self.check_access_privileges(
-                "r_config_erase_cfg", config.r_config_erase_cfg
-            )
-            self.logger.info("Erasing 'configuration' registers.")
-            for address in CONFIGURATION_ACCESS_PRIVILEGES:
-                self.logger.debug(f"{address!s}.")
-                self.r_config[address].reset()
+        for address in chain(
+            FUNCTIONALITY_ACCESS_PRIVILEGES, CONFIGURATION_ACCESS_PRIVILEGES
+        ):
+            self.logger.debug(f"{address!s}.")
+            self.r_config[address].reset()
 
         self.logger.debug("R_config configuration object erased.")
         return TsL3RConfigEraseResult(result=L3ResultFieldEnum.OK)
@@ -333,10 +330,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (address := command.udata_slot.value),
             [
-                ("write_udata_slot_1_128", config.write_udata_slot_1_128),
-                ("write_udata_slot_129_256", config.write_udata_slot_129_256),
-                ("write_udata_slot_257_384", config.write_udata_slot_257_384),
-                ("write_udata_slot_385_512", config.write_udata_slot_385_512),
+                ("write_udata_slot_0_127", config.write_udata_slot_0_127),
+                ("write_udata_slot_128_255", config.write_udata_slot_128_255),
+                ("write_udata_slot_256_383", config.write_udata_slot_256_383),
+                ("write_udata_slot_384_511", config.write_udata_slot_384_511),
             ],
         )
 
@@ -362,10 +359,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (address := command.udata_slot.value),
             [
-                ("read_udata_slot_1_128", config.read_udata_slot_1_128),
-                ("read_udata_slot_129_256", config.read_udata_slot_129_256),
-                ("read_udata_slot_257_384", config.read_udata_slot_257_384),
-                ("read_udata_slot_385_512", config.read_udata_slot_385_512),
+                ("read_udata_slot_0_127", config.read_udata_slot_0_127),
+                ("read_udata_slot_128_255", config.read_udata_slot_128_255),
+                ("read_udata_slot_256_383", config.read_udata_slot_256_383),
+                ("read_udata_slot_384_511", config.read_udata_slot_384_511),
             ],
         )
 
@@ -383,10 +380,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (address := command.udata_slot.value),
             [
-                ("erase_udata_slot_1_128", config.erase_udata_slot_1_128),
-                ("erase_udata_slot_129_256", config.erase_udata_slot_129_256),
-                ("erase_udata_slot_257_384", config.erase_udata_slot_257_384),
-                ("erase_udata_slot_385_512", config.erase_udata_slot_385_512),
+                ("erase_udata_slot_0_127", config.erase_udata_slot_0_127),
+                ("erase_udata_slot_128_255", config.erase_udata_slot_128_255),
+                ("erase_udata_slot_256_383", config.erase_udata_slot_256_383),
+                ("erase_udata_slot_384_511", config.erase_udata_slot_384_511),
             ],
         )
 
@@ -434,10 +431,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (index := command.mcounter_index.value),
             [
-                ("mcounter_init_1_4", config.mcounter_init_1_4),
-                ("mcounter_init_5_8", config.mcounter_init_5_8),
-                ("mcounter_init_9_12", config.mcounter_init_9_12),
-                ("mcounter_init_13_16", config.mcounter_init_13_16),
+                ("mcounter_init_0_3", config.mcounter_init_0_3),
+                ("mcounter_init_4_7", config.mcounter_init_4_7),
+                ("mcounter_init_8_11", config.mcounter_init_8_11),
+                ("mcounter_init_12_15", config.mcounter_init_12_15),
             ],
         )
 
@@ -459,10 +456,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (index := command.mcounter_index.value),
             [
-                ("mcounter_update_1_4", config.mcounter_update_1_4),
-                ("mcounter_update_5_8", config.mcounter_update_5_8),
-                ("mcounter_update_9_12", config.mcounter_update_9_12),
-                ("mcounter_update_13_16", config.mcounter_update_13_16),
+                ("mcounter_update_0_3", config.mcounter_update_0_3),
+                ("mcounter_update_4_7", config.mcounter_update_4_7),
+                ("mcounter_update_8_11", config.mcounter_update_8_11),
+                ("mcounter_update_12_15", config.mcounter_update_12_15),
             ],
         )
 
@@ -488,10 +485,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (index := command.mcounter_index.value),
             [
-                ("mcounter_get_1_4", config.mcounter_get_1_4),
-                ("mcounter_get_5_8", config.mcounter_get_5_8),
-                ("mcounter_get_9_12", config.mcounter_get_9_12),
-                ("mcounter_get_13_16", config.mcounter_get_13_16),
+                ("mcounter_get_0_3", config.mcounter_get_0_3),
+                ("mcounter_get_4_7", config.mcounter_get_4_7),
+                ("mcounter_get_8_11", config.mcounter_get_8_11),
+                ("mcounter_get_12_15", config.mcounter_get_12_15),
             ],
         )
 
@@ -519,10 +516,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("gen_ecckey_slot_1_8", config.gen_ecckey_slot_1_8),
-                ("gen_ecckey_slot_9_16", config.gen_ecckey_slot_9_16),
-                ("gen_ecckey_slot_17_24", config.gen_ecckey_slot_17_24),
-                ("gen_ecckey_slot_25_32", config.gen_ecckey_slot_25_32),
+                ("gen_ecckey_slot_0_7", config.gen_ecckey_slot_0_7),
+                ("gen_ecckey_slot_8_15", config.gen_ecckey_slot_8_15),
+                ("gen_ecckey_slot_16_23", config.gen_ecckey_slot_16_23),
+                ("gen_ecckey_slot_24_31", config.gen_ecckey_slot_24_31),
             ],
         )
 
@@ -553,10 +550,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("store_ecckey_slot_1_8", config.store_ecckey_slot_1_8),
-                ("store_ecckey_slot_9_16", config.store_ecckey_slot_9_16),
-                ("store_ecckey_slot_17_24", config.store_ecckey_slot_17_24),
-                ("store_ecckey_slot_25_32", config.store_ecckey_slot_25_32),
+                ("store_ecckey_slot_0_7", config.store_ecckey_slot_0_7),
+                ("store_ecckey_slot_8_15", config.store_ecckey_slot_8_15),
+                ("store_ecckey_slot_16_23", config.store_ecckey_slot_16_23),
+                ("store_ecckey_slot_24_31", config.store_ecckey_slot_24_31),
             ],
         )
 
@@ -579,10 +576,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("read_ecckey_slot_1_8", config.read_ecckey_slot_1_8),
-                ("read_ecckey_slot_9_16", config.read_ecckey_slot_9_16),
-                ("read_ecckey_slot_17_24", config.read_ecckey_slot_17_24),
-                ("read_ecckey_slot_25_32", config.read_ecckey_slot_25_32),
+                ("read_ecckey_slot_0_7", config.read_ecckey_slot_0_7),
+                ("read_ecckey_slot_8_15", config.read_ecckey_slot_8_15),
+                ("read_ecckey_slot_16_23", config.read_ecckey_slot_16_23),
+                ("read_ecckey_slot_24_31", config.read_ecckey_slot_24_31),
             ],
         )
 
@@ -612,10 +609,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("erase_ecckey_slot_1_8", config.erase_ecckey_slot_1_8),
-                ("erase_ecckey_slot_9_16", config.erase_ecckey_slot_9_16),
-                ("erase_ecckey_slot_17_24", config.erase_ecckey_slot_17_24),
-                ("erase_ecckey_slot_25_32", config.erase_ecckey_slot_25_32),
+                ("erase_ecckey_slot_0_7", config.erase_ecckey_slot_0_7),
+                ("erase_ecckey_slot_8_15", config.erase_ecckey_slot_8_15),
+                ("erase_ecckey_slot_16_23", config.erase_ecckey_slot_16_23),
+                ("erase_ecckey_slot_24_31", config.erase_ecckey_slot_24_31),
             ],
         )
 
@@ -634,10 +631,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("ecdsa_ecckey_slot_1_8", config.ecdsa_ecckey_slot_1_8),
-                ("ecdsa_ecckey_slot_9_16", config.ecdsa_ecckey_slot_9_16),
-                ("ecdsa_ecckey_slot_17_24", config.ecdsa_ecckey_slot_17_24),
-                ("ecdsa_ecckey_slot_25_32", config.ecdsa_ecckey_slot_25_32),
+                ("ecdsa_ecckey_slot_0_7", config.ecdsa_ecckey_slot_0_7),
+                ("ecdsa_ecckey_slot_8_15", config.ecdsa_ecckey_slot_8_15),
+                ("ecdsa_ecckey_slot_16_23", config.ecdsa_ecckey_slot_16_23),
+                ("ecdsa_ecckey_slot_24_31", config.ecdsa_ecckey_slot_24_31),
             ],
         )
 
@@ -667,10 +664,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("eddsa_ecckey_slot_1_8", config.eddsa_ecckey_slot_1_8),
-                ("eddsa_ecckey_slot_9_16", config.eddsa_ecckey_slot_9_16),
-                ("eddsa_ecckey_slot_17_24", config.eddsa_ecckey_slot_17_24),
-                ("eddsa_ecckey_slot_25_32", config.eddsa_ecckey_slot_25_32),
+                ("eddsa_ecckey_slot_0_7", config.eddsa_ecckey_slot_0_7),
+                ("eddsa_ecckey_slot_8_15", config.eddsa_ecckey_slot_8_15),
+                ("eddsa_ecckey_slot_16_23", config.eddsa_ecckey_slot_16_23),
+                ("eddsa_ecckey_slot_24_31", config.eddsa_ecckey_slot_24_31),
             ],
         )
 

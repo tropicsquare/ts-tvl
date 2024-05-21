@@ -313,9 +313,7 @@ class Host:
         encrypted = L3EncryptedPacket.from_bytes(result_bytes)
 
         self.logger.info("Decrypting L3 result.")
-        result = self._decrypt_result(
-            encrypted.ciphertext.to_bytes() + encrypted.tag.to_bytes()
-        )
+        result = self._decrypt_result(encrypted.data_field_bytes)
         if result is None:
             raise SessionError("Invalid TAG.")
         self.logger.debug(f"Decrypted result: {result}.")
