@@ -33,6 +33,8 @@ class L2StatusEnum(HexReprIntEnum):
     RES_CONT = 0x04
     """Similar to REQ_CONT when splitted result is transmitted
     from TROPIC01 to the Host MCU."""
+    RESP_DISABLED = 0x78
+    """The L2 Request frame is disabled and cannot be executed."""
     HSK_ERR = 0x79
     """Secure Channel Handshake failed, and Secure Channel
     Session is not established"""
