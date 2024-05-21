@@ -25,20 +25,20 @@ from typing import (
 from typing_extensions import Self
 
 from ...constants import (
+    CHUNK_SIZE,
     ENCRYPTION_TAG_LEN,
     PADDING_BYTE,
     S_HI_PUB_NB_SLOTS,
-    CHUNK_SIZE,
     L1ChipStatusFlag,
     L2IdFieldEnum,
     L2StatusEnum,
 )
-from ...utils import chunked
 from ...crypto.encrypted_session import TropicEncryptedSession
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
 from ...messages.l3_messages import L3Command, L3Result
 from ...random_number_generator import RandomNumberGenerator
+from ...utils import chunked
 from .configuration_object_impl import ConfigurationObjectImpl
 from .exceptions import (
     L2ProcessingError,
@@ -54,8 +54,9 @@ from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
 
 
-def split_data(data: bytes, *, chunk_size: int = 252) -> Iterator[bytes]:
+def split_data(data: bytes, *, chunk_size: int = CHUNK_SIZE) -> Iterator[bytes]:
     yield from (bytes(chunk) for chunk in chunked(data, chunk_size))
+
 
 class SupportsFromDict(Protocol):
     @classmethod
