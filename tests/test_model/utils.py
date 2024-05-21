@@ -34,7 +34,7 @@ def one_outside(__iterable: Iterable[int], /, nb_bytes: int = 1) -> int:
 
 
 class UtilsEcc:
-    VALID_INDICES = list(range(1, 33))
+    VALID_INDICES = list(range(32))
     INVALID_INDICES = sorted(set(range(256)) - set(VALID_INDICES))
 
     @staticmethod
@@ -63,7 +63,7 @@ class UtilsEcc:
 
 
 class UtilsMcounter:
-    VALID_INDICES = list(range(1, 17))
+    VALID_INDICES = list(range(16))
     INVALID_INDICES = sorted(set(range(256)) - set(VALID_INDICES))
     NOTSET_VALUE = NOTSET_VALUE
 
@@ -77,7 +77,7 @@ class UtilsMcounter:
 
 
 class UtilsRMem:
-    VALID_INDICES = list(range(1, 513))
+    VALID_INDICES = list(range(512))
     INVALID_INDICES = sorted(set(range(65536)) - set(VALID_INDICES))
     INIT_VALUE = INIT_VALUE
 
