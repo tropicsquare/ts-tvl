@@ -697,10 +697,10 @@ class L3APIImplementation(L3API):
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
             [
-                ("macandd_1_32", config.macandd_1_32),
-                ("macandd_33_64", config.macandd_33_64),
-                ("macandd_65_96", config.macandd_65_96),
-                ("macandd_97_128", config.macandd_97_128),
+                ("macandd_0_31", config.macandd_0_31),
+                ("macandd_32_63", config.macandd_32_63),
+                ("macandd_64_95", config.macandd_64_95),
+                ("macandd_96_127", config.macandd_96_127),
             ],
         )
         self.logger.info("Executing Mac-and-Destroy sequence.")
