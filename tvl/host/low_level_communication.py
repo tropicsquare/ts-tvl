@@ -21,8 +21,9 @@ from typing import (
 
 from ..api.l2_api import TsL2EncryptedCmdReqRequest, TsL2EncryptedCmdReqResponse
 from ..constants import L1ChipStatusFlag, L2IdFieldEnum, L2StatusEnum
-from ..messages.l2_messages import L2Frame, L2Request, L2Response
-from ..messages.l3_messages import L3Command, L3Packet, L3Result
+from ..messages.l2_messages import L2Request, L2Response
+from ..messages.l3_messages import L3Command, L3Result
+from ..messages.message import Message
 from ..protocols import TropicProtocol
 from .protocols import LLSendL2RequestFn, LLSendL3CommandFn
 
@@ -228,24 +229,26 @@ class LowLevelFunctionFactory:
     """Factory for parametrizing the low level functions"""
 
     def __init__(self, parameters: Optional[Params] = None) -> None:
+        if parameters is None:
+            parameters = {}
         self.parameters = parameters
 
     @property
-    def parameters(self) -> Optional[Params]:
+    def parameters(self) -> Params:
         return self._parameters
 
     @parameters.setter
-    def parameters(self, parameters: Optional[Params] = None) -> None:
+    def parameters(self, parameters: Params) -> None:
         self._parameters = parameters
         self.create_ll_l2_fn.cache_clear()
         self.create_ll_l3_fn.cache_clear()
 
-    def _get_info(self, __type: type, __limit: type) -> Info:
-        if self.parameters is None:
-            return Info(None, 0)
+    def _get_info(self, __type: Optional[type], __base: type) -> Info:
+        if __type is None:
+            __type = __base
 
         for i, class_ in enumerate(
-            takewhile(lambda type_: issubclass(type_, __limit), __type.__mro__)
+            takewhile(lambda type_: issubclass(type_, __base), __type.__mro__)
         ):
             if (_params := self.parameters.get(class_)) is not None:
                 return Info(_params, i)
@@ -261,38 +264,58 @@ class LowLevelFunctionFactory:
             return tx_info.param, tx_info.param
         return tx_info.param, rx_info.param
 
-    def get_l2_params(self, tx_l2_type: Type[L2Request]) -> Tuple[OptParam, OptParam]:
-        rx_l2_type = [
-            sub
-            for sub in L2Frame.SUBCLASSES[tx_l2_type.ID]
-            if issubclass(sub, L2Response)
-        ][0]
-        return self._extract_params(
-            self._get_info(tx_l2_type, L2Request),
-            self._get_info(rx_l2_type, L2Response),
+    def _get_params(
+        self,
+        __type: Type[Message],
+        __id: Optional[int],
+        *,
+        tx: Type[Message],
+        rx: Type[Message],
+    ) -> Tuple[OptParam, OptParam]:
+        if not self.parameters:
+            return None, None
+
+        if __id is None:
+            ids = (__type.ID,)
+        else:
+            ids = (__type.ID, __id)
+
+        tx_type = next(
+            chain.from_iterable(tx.find_subclasses(id_) for id_ in ids), None
+        )
+        rx_type = next(
+            chain.from_iterable(rx.find_subclasses(id_) for id_ in ids), None
         )
 
-    def get_l3_params(self, tx_l3_type: Type[L3Command]) -> Tuple[OptParam, OptParam]:
-        rx_l3_type = [
-            sub
-            for sub in L3Packet.SUBCLASSES[tx_l3_type.ID]
-            if issubclass(sub, L3Result)
-        ][0]
         return self._extract_params(
-            self._get_info(tx_l3_type, L3Command), self._get_info(rx_l3_type, L3Result)
+            self._get_info(tx_type, tx), self._get_info(rx_type, rx)
         )
+
+    def get_l2_params(
+        self, __type: Type[L2Request], __id: Optional[int] = None
+    ) -> Tuple[OptParam, OptParam]:
+        return self._get_params(__type, __id, tx=L2Request, rx=L2Response)
+
+    def get_l3_params(
+        self, __type: Type[L3Command], __id: Optional[int] = None
+    ) -> Tuple[OptParam, OptParam]:
+        return self._get_params(__type, __id, tx=L3Command, rx=L3Result)
 
     @lru_cache
-    def create_ll_l2_fn(self, l2_type: Type[L2Request]) -> LLSendL2RequestFn:
-        tx_param, rx_param = self.get_l2_params(l2_type)
+    def create_ll_l2_fn(
+        self, __type: Type[L2Request], __id: Optional[int] = None
+    ) -> LLSendL2RequestFn:
+        tx_param, rx_param = self.get_l2_params(__type, __id)
         return partialize(
             partialize(ll_send_l2_request, tx_param),
             dict(receive_fn=partialize(ll_receive, rx_param)),
         )
 
     @lru_cache
-    def create_ll_l3_fn(self, l3_type: Type[L3Command]) -> LLSendL3CommandFn:
-        tx_param, rx_param = self.get_l3_params(l3_type)
+    def create_ll_l3_fn(
+        self, __type: Type[L3Command], __id: Optional[int] = None
+    ) -> LLSendL3CommandFn:
+        tx_param, rx_param = self.get_l3_params(__type, __id)
         return partialize(
             partialize(ll_send_l3_command, tx_param),
             dict(
