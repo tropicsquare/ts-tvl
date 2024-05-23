@@ -202,26 +202,34 @@ class Message(BaseMessage):
     """id of the class"""
 
     def __init_subclass__(
-        cls, *, id: Optional[int] = None, is_base: Optional[bool] = False
+        cls, *, id: Optional[int] = None, is_base: bool = False, register: bool = True
     ) -> None:
         """Associate an id to the subclasses of Message.
 
         Args:
             id (int, optional): ID associated to the subclass.
                 Defaults to None.
-            is_base (bool, optional): the subclass is independent from
+            is_base (bool): the subclass is independent from
                 the current class and is a base to its own subclass tree.
                 Defaults to False.
+            register (bool): add the new subclass to `SUBCLASSES` if
+                id is a positive integer. Defaults to True.
         """
         if is_base:
             cls.SUBCLASSES = defaultdict(list)
         if id is not None:
             cls.ID = id
-            cls.SUBCLASSES[id].append(cls)
+            if register:
+                cls.SUBCLASSES[id].append(cls)
+
+    @classmethod
+    def find_subclasses(cls, id: int) -> List[Type[Self]]:
+        """Find all the subclasses with the specified id."""
+        return [s for s in cls.SUBCLASSES[id] if issubclass(s, cls)]
 
     @classmethod
     def instantiate_subclass(cls, id: int, data: bytes) -> Self:
-        """Find a subclass matching the enter id and deserialize the data
+        """Find a subclass with the specified id and deserialize the data
         according to its structure.
 
         Args:
@@ -236,17 +244,18 @@ class Message(BaseMessage):
         Returns:
             an instance of a subclass with the deserialized data
         """
-        subclasses = [s for s in cls.SUBCLASSES[id] if issubclass(s, cls)]
-        if not subclasses:
+        if not (subclasses := cls.find_subclasses(id)):
             raise SubclassNotFoundError(
-                f"No subclass of {cls.__name__} with {id=} was found."
+                f"No subclass of {cls.__name__} with {id=:#x} was found."
             )
 
-        for type_ in subclasses:
+        for subclass in subclasses:
             with contextlib.suppress(Exception):
-                return type_.from_bytes(data)
+                return subclass.from_bytes(data)
 
-        raise NoValidSubclassError(f"No valid subclass of {cls.__name__} with {id=}.")
+        raise NoValidSubclassError(
+            f"No valid subclass of {cls.__name__} with {id=:#x}."
+        )
 
     @classmethod
     def with_data_length(cls, length: int) -> Type[Self]:
@@ -267,7 +276,7 @@ class Message(BaseMessage):
         else:
             namespace = {}
 
-        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1)  # type: ignore
+        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1, register=False)  # type: ignore
 
     @classmethod
     def with_length(cls, length: int) -> Type[Self]:

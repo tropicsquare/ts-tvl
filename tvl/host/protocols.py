@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from typing import Any, List, Protocol, Type
+from typing import Any, List, Optional, Protocol, Type
 
 from typing_extensions import Self
 
@@ -36,10 +36,14 @@ class LLSendL3CommandFn(Protocol):
 
 
 class FunctionFactory(Protocol):
-    def create_ll_l2_fn(self, l2_type: Type[L2Request]) -> LLSendL2RequestFn:
+    def create_ll_l2_fn(
+        self, __type: Type[L2Request], __id: Optional[int] = None
+    ) -> LLSendL2RequestFn:
         ...
 
-    def create_ll_l3_fn(self, l3_type: Type[L3Command]) -> LLSendL3CommandFn:
+    def create_ll_l3_fn(
+        self, __type: Type[L3Command], __id: Optional[int] = None
+    ) -> LLSendL3CommandFn:
         ...
 
 

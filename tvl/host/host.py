@@ -180,10 +180,12 @@ class Host:
     def _ll_send_l2(self, l2request: L2Request) -> Tuple[L2Response, bytes]:
         self.logger.debug(f"L2 request: {l2request}.")
 
-        raw = self.target_driver.send_l2_request(
-            self.function_factory.create_ll_l2_fn(type(l2request)),
-            l2request.to_bytes(),
+        ll_l2_fn = self.function_factory.create_ll_l2_fn(
+            type(l2request), l2request.id.value
         )
+        self.logger.debug(f"{ll_l2_fn = }.")
+
+        raw = self.target_driver.send_l2_request(ll_l2_fn, l2request.to_bytes())
 
         try:
             l2response = L2Response.instantiate_subclass(l2request.ID, raw)
@@ -292,10 +294,12 @@ class Host:
             command_chunks.append(chunk.to_bytes())
 
         self.logger.info("Sending command chunks.")
-        raw_result_chunks = self.target_driver.send_l3_command(
-            self.function_factory.create_ll_l3_fn(type(l3command)),
-            command_chunks,
+        ll_l3_fn = self.function_factory.create_ll_l3_fn(
+            type(l3command), l3command.id.value
         )
+        self.logger.debug(f"{ll_l3_fn = }.")
+
+        raw_result_chunks = self.target_driver.send_l3_command(ll_l3_fn, command_chunks)
         nb_res_chunks = len(raw_result_chunks)
 
         self.logger.info("Parsing result chunks.")
