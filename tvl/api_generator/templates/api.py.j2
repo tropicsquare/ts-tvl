@@ -36,7 +36,6 @@
 
 
 {% block content %}
-from enum import IntEnum
 {%- if BUILTIN_IMPORT %}
 {{BUILTIN_IMPORT}}
 {%- endif %}
@@ -55,6 +54,7 @@ from tvl.messages.datafield import (
 {{INTERNAL_IMPORT}}
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
+from tvl.typing_utils import HexReprIntEnum
 
 {% for define in defines %}
 {{define.name | upper}} = {{define.value}}
@@ -63,7 +63,7 @@ from tvl.targets.model.meta_model import api
 {%- endif %}
 {%- endfor %}
 
-class {{ENUM_NAME}}(IntEnum):
+class {{ENUM_NAME}}(HexReprIntEnum):
 {%- for element in enum_class.elements %}
     {{element.name}} = {{to_hex(element.message_id)}}
     {%- if element.description %}
@@ -85,7 +85,7 @@ class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}
     {%- set print_placeholder = True %}
     {%- if verify_result_choices and message.result_choices %}
         {%- set print_placeholder = False %}
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         {%- for choice in message.result_choices %}
         {{choice.name | upper}} = {{to_hex(choice.value)}}
             {%- if choice.description %}
@@ -117,7 +117,7 @@ class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}
     {{['"""', argument.description_long, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
             {%- endif %}
             {%- if argument.choices %}
-    class {{to_camelcase(argument.name)}}Enum(IntEnum):
+    class {{to_camelcase(argument.name)}}Enum(HexReprIntEnum):
                 {%- for choice in argument.choices %}
         {{choice.name | upper}} = {{to_hex(choice.value)}}
                     {%- if choice.description %}

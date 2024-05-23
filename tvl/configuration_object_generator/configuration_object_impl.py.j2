@@ -17,7 +17,6 @@
 
 {%- set ENUM_CLASS = "ConfigObjectRegisterAddressEnum" -%}
 
-from enum import IntEnum
 from typing import Optional
 
 from pydantic import StrictInt
@@ -29,6 +28,7 @@ from tvl.targets.model.internal.configuration_object import (
     ConfigurationObject,
     ConfigurationObjectModel,
 )
+from tvl.typing_utils import HexReprIntEnum
 
 {% for register_name, register in context.items() %}
 class {{to_camelcase(register_name)}}(ConfigObjectRegister):
@@ -38,7 +38,7 @@ class {{to_camelcase(register_name)}}(ConfigObjectRegister):
     {%- endfor %}
 
 {% endfor %}
-class {{ENUM_CLASS}}(IntEnum):
+class {{ENUM_CLASS}}(HexReprIntEnum):
 {%- for register_name, register in context.items() %}
     {{register_name | upper}} = {{"0x%02X" | format(register.baseaddr)}}
 {%- endfor %}
