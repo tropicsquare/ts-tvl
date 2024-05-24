@@ -1,11 +1,10 @@
-# GENERATED ON 2024-05-20 15:22:30.793617
+# GENERATED ON 2024-05-24 14:06:21.046497
 # BY internal.py VERSION 0.3
-# INPUT FILE: 98e9e149fd468a790b20da7e92e622f47526ca9f4a67bf85a97dde06131803a2
+# INPUT FILE: d429cb7eacdf2c1887722d8c25f768f409ddb23c44fe769c6bc534375eef6f95
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import IntEnum
 from typing import Optional
 
 from pydantic import StrictInt
@@ -17,6 +16,7 @@ from tvl.targets.model.internal.configuration_object import (
     ConfigurationObject,
     ConfigurationObjectModel,
 )
+from tvl.typing_utils import HexReprIntEnum
 
 
 class CfgStartUp(ConfigObjectRegister):
@@ -152,14 +152,10 @@ class CfgUapPairingKeyInvalidate(ConfigObjectRegister):
     Pairing Key slot 3."""
 
 
-class CfgUapRConfigWrite(ConfigObjectRegister):
-    r_config_write_cfg = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Write L3 Command packet to the
-    Configuration COs. Refer to the 'User Access Privileges' section in the
-    TROPIC01 Datasheet."""
-    r_config_write_func = ConfigObjectField(8, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Write L3 Command packet to the
-    Functionality COs. Refer to the 'User Access Privileges' section in the
+class CfgUapRConfigWriteErase(ConfigObjectRegister):
+    r_config_write_erase = ConfigObjectField(0, 8, AccessType.W1C)
+    """Access privileges of the R_Config_Write and R_Config_Erase L3 Command
+    packets to all COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
 
 
@@ -172,13 +168,6 @@ class CfgUapRConfigRead(ConfigObjectRegister):
     """Access privileges of the R_Config_Read L3 Command packet to the
     Functionality COs. Refer to the 'User Access Privileges' section in the
     TROPIC01 Datasheet."""
-
-
-class CfgUapRConfigErase(ConfigObjectRegister):
-    r_config_erase = ConfigObjectField(0, 8, AccessType.W1C)
-    """Access privileges of the R_Config_Erase L3 Command packet to all COs.
-    Refer to the 'User Access Privileges' section in the TROPIC01
-    Datasheet."""
 
 
 class CfgUapIConfigWrite(ConfigObjectRegister):
@@ -417,7 +406,7 @@ class CfgUapSerialCodeGet(ConfigObjectRegister):
     """Access privileges of the Serial_Code_Get L3 Command packet."""
 
 
-class ConfigObjectRegisterAddressEnum(IntEnum):
+class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
     CFG_START_UP = 0x00
     CFG_SLEEP_MODE = 0x04
     CFG_SENSORS = 0x08
@@ -425,9 +414,8 @@ class ConfigObjectRegisterAddressEnum(IntEnum):
     CFG_UAP_PAIRING_KEY_WRITE = 0x20
     CFG_UAP_PAIRING_KEY_READ = 0x24
     CFG_UAP_PAIRING_KEY_INVALIDATE = 0x28
-    CFG_UAP_R_CONFIG_WRITE = 0x30
+    CFG_UAP_R_CONFIG_WRITE_ERASE = 0x30
     CFG_UAP_R_CONFIG_READ = 0x34
-    CFG_UAP_R_CONFIG_ERASE = 0x38
     CFG_UAP_I_CONFIG_WRITE = 0x40
     CFG_UAP_I_CONFIG_READ = 0x44
     CFG_UAP_PING = 0x100
@@ -457,9 +445,8 @@ class ConfigurationObjectImpl(ConfigurationObject):
         self.cfg_uap_pairing_key_write = CfgUapPairingKeyWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_read = CfgUapPairingKeyRead(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ, 0xFFFFFFFF)
         self.cfg_uap_pairing_key_invalidate = CfgUapPairingKeyInvalidate(ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE, 0xFFFFFFFF)
-        self.cfg_uap_r_config_write = CfgUapRConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE, 0xFFFFFFFF)
+        self.cfg_uap_r_config_write_erase = CfgUapRConfigWriteErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE, 0xFFFFFFFF)
         self.cfg_uap_r_config_read = CfgUapRConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ, 0xFFFFFFFF)
-        self.cfg_uap_r_config_erase = CfgUapRConfigErase(ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE, 0xFFFFFFFF)
         self.cfg_uap_i_config_write = CfgUapIConfigWrite(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE, 0xFFFFFFFF)
         self.cfg_uap_i_config_read = CfgUapIConfigRead(ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ, 0xFFFFFFFF)
         self.cfg_uap_ping = CfgUapPing(ConfigObjectRegisterAddressEnum.CFG_UAP_PING, 0xFFFFFFFF)
@@ -489,9 +476,8 @@ class ConfigurationObjectImplModel(ConfigurationObjectModel):
     cfg_uap_pairing_key_write: Optional[StrictInt]
     cfg_uap_pairing_key_read: Optional[StrictInt]
     cfg_uap_pairing_key_invalidate: Optional[StrictInt]
-    cfg_uap_r_config_write: Optional[StrictInt]
+    cfg_uap_r_config_write_erase: Optional[StrictInt]
     cfg_uap_r_config_read: Optional[StrictInt]
-    cfg_uap_r_config_erase: Optional[StrictInt]
     cfg_uap_i_config_write: Optional[StrictInt]
     cfg_uap_i_config_read: Optional[StrictInt]
     cfg_uap_ping: Optional[StrictInt]
