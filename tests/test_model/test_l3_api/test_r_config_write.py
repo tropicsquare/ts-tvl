@@ -29,7 +29,7 @@ def set_configuration_objects(
 ):
     pki = host_configuration["pairing_key_index"]
     bit = 2**pki
-    val = bit << 24 + bit << 16 + bit << 8 + bit
+    val = (bit << 24) + (bit << 16) + (bit << 8) + bit
     model_configuration["r_config"] = {
         reg_addr.name.lower(): _get_value() | val
         for reg_addr in ConfigObjectRegisterAddressEnum
