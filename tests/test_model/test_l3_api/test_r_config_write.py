@@ -15,7 +15,7 @@ from tvl.targets.model.tropic01_model import Tropic01Model
 
 
 def _get_value() -> int:
-    return random.randint(0, 2**32 - 2)
+    return random.getrandbits(32)
 
 
 def _get_value_iter() -> Iterator[int]:

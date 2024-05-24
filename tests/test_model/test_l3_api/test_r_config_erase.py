@@ -23,7 +23,7 @@ R_CONFIG_CFG = {
         + CONFIGURATION_ACCESS_PRIVILEGES
     },
     # ensure that the users have the rights to erase all the r-config registers
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE: 0x0000_FFFF,
+    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE: 0x0000_FFFF,
 }
 
 

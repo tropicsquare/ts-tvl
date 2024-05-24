@@ -1,20 +1,20 @@
-# GENERATED ON 2024-05-20 15:22:23.254114
+# GENERATED ON 2024-05-24 14:06:20.077402
 # BY internal VERSION 1.5
 # INPUT FILE: EC1CB666F440FD585F689595F7A13A7887815595A1FF83FCE03E7CFB78265D26
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import IntEnum
 from typing import List, Union
 
 from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, params
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
+from tvl.typing_utils import HexReprIntEnum
 
 
-class L2Enum(IntEnum):
+class L2Enum(HexReprIntEnum):
     GET_INFO_REQ = 0x01
     """Obtain information about TROPIC01"""
     HANDSHAKE_REQ = 0x02
@@ -40,7 +40,7 @@ class L2Enum(IntEnum):
 class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
     object_id: U8Scalar
     """The Identifier of the requested object."""
-    class ObjectIdEnum(IntEnum):
+    class ObjectIdEnum(HexReprIntEnum):
         X509_CERTIFICATE = 0x00
         """The X.509 chip certificate read from I-Memory and signed by Tropic
         Square (max length of 512B)."""
@@ -56,7 +56,7 @@ class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
         Supported only in Start-up mode."""
     block_index: U8Scalar
     """The index of the 128 Byte long block to request"""
-    class BlockIndexEnum(IntEnum):
+    class BlockIndexEnum(HexReprIntEnum):
         DATA_CHUNK_0_127 = 0x00
         """Request for data bytes 0-127 of the object."""
         DATA_CHUNK_128_255 = 0x01
@@ -83,7 +83,7 @@ class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
     """The index of the Pairing Key slot to establish a Secure Channel Session
     with (TROPIC01 fetches $S_{HiPub}$ from the Pairing Key slot specified in
     this field)."""
-    class PkeyIndexEnum(IntEnum):
+    class PkeyIndexEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
         """Corresponds to $S_{H0Pub}$."""
         PAIRING_KEY_SLOT_1 = 0x01
@@ -121,7 +121,7 @@ class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
 
 class TsL2EncryptedCmdAbtRequest(L2Request, id=L2Enum.ENCRYPTED_CMD_ABT):
     options: U8Scalar  # Command options
-    class OptionsEnum(IntEnum):
+    class OptionsEnum(HexReprIntEnum):
         INVALIDATE_SEC_CHANNEL = 0x01
         """Bit 0 - If configured, TROPIC01 invalidates the current Secure
         Channel Session and moves to Idle Mode."""
@@ -142,7 +142,7 @@ class TsL2ResendReqResponse(L2Response, id=L2Enum.RESEND_REQ):
 class TsL2SleepReqRequest(L2Request, id=L2Enum.SLEEP_REQ):
     sleep_kind: U8Scalar  # Sleep Kind
     """The type of Sleep mode TROPIC01 moves to."""
-    class SleepKindEnum(IntEnum):
+    class SleepKindEnum(HexReprIntEnum):
         SLEEP_MODE = 0x05
         """Sleep Mode"""
         DEEP_SLEEP_MODE = 0x0A
@@ -155,7 +155,7 @@ class TsL2SleepReqResponse(L2Response, id=L2Enum.SLEEP_REQ):
 
 class TsL2StartupReqRequest(L2Request, id=L2Enum.STARTUP_REQ):
     startup_id: U8Scalar  # The request ID
-    class StartupIdEnum(IntEnum):
+    class StartupIdEnum(HexReprIntEnum):
         REBOOT = 0x01
         """Restart, then initialize as if a power-cycle was applied."""
         MAINTENANCE_REBOOT = 0x03
@@ -169,7 +169,7 @@ class TsL2StartupReqResponse(L2Response, id=L2Enum.STARTUP_REQ):
 
 class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
     bank_id: U8Scalar  # The Identifier of the bank to write in.
-    class BankIdEnum(IntEnum):
+    class BankIdEnum(HexReprIntEnum):
         FW1 = 0x01
         """Firmware bank 1."""
         FW2 = 0x02
@@ -188,7 +188,7 @@ class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ
 
 class TsL2MutableFwEraseReqRequest(L2Request, id=L2Enum.MUTABLE_FW_ERASE_REQ):
     bank_id: U8Scalar  # The Identifier of the bank to erase. The same choices as above.
-    class BankIdEnum(IntEnum):
+    class BankIdEnum(HexReprIntEnum):
         FW1 = 0x01
         """Firmware bank 1."""
         FW2 = 0x02

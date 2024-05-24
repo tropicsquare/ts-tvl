@@ -100,9 +100,8 @@ FUNCTIONALITY_ACCESS_PRIVILEGES = [
 CONFIGURATION_ACCESS_PRIVILEGES = [
     ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE,
+    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_ERASE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE,
@@ -193,22 +192,26 @@ class L3APIImplementation(L3API):
             result=L3ResultFieldEnum.OK, s_hipub=s_hipub_bytes
         )
 
+    @staticmethod
+    def _check_config_object_address(address: int) -> None:
+        try:
+            ConfigObjectRegisterAddressEnum(address)
+        except ValueError:
+            raise L3ProcessingErrorFail(
+                f"No configuration register at {address=:#04x}."
+            ) from None
+
     def _check_config_access_privileges(
         self,
         address: int,
         functionality_access_privileges: Tuple[str, int],
         configuration_access_privileges: Tuple[str, int],
     ) -> None:
-        try:
-            address_enum = ConfigObjectRegisterAddressEnum(address)
-        except ValueError:
-            raise L3ProcessingErrorFail(
-                f"No configuration register at {address=:#04x}."
-            ) from None
-        if address_enum in FUNCTIONALITY_ACCESS_PRIVILEGES:
+        self._check_config_object_address(address)
+        if address in FUNCTIONALITY_ACCESS_PRIVILEGES:
             self.logger.debug("'Functionality' register.")
             self.check_access_privileges(*functionality_access_privileges)
-        elif address_enum in CONFIGURATION_ACCESS_PRIVILEGES:
+        elif address in CONFIGURATION_ACCESS_PRIVILEGES:
             self.logger.debug("'Configuration' register.")
             self.check_access_privileges(*configuration_access_privileges)
         else:
@@ -217,11 +220,10 @@ class L3APIImplementation(L3API):
     def ts_l3_r_config_write(
         self, command: TsL3RConfigWriteCommand
     ) -> TsL3RConfigWriteResult:
-        config = self.config.cfg_uap_r_config_write
-        self._check_config_access_privileges(
-            (address := command.address.value),
-            ("r_config_write_func", config.r_config_write_func),
-            ("r_config_write_cfg", config.r_config_write_cfg),
+        self._check_config_object_address(address := command.address.value)
+        self.check_access_privileges(
+            "r_config_write_erase",
+            self.config.cfg_uap_r_config_write_erase.r_config_write_erase,
         )
 
         self.logger.info("Writing r_config register.")
@@ -260,8 +262,10 @@ class L3APIImplementation(L3API):
     def ts_l3_r_config_erase(
         self, command: TsL3RConfigEraseCommand
     ) -> TsL3RConfigEraseResult:
-        config = self.config.cfg_uap_r_config_erase
-        self.check_access_privileges("r_config_erase", config.r_config_erase)
+        self.check_access_privileges(
+            "r_config_write_erase",
+            self.config.cfg_uap_r_config_write_erase.r_config_write_erase,
+        )
 
         self.logger.info("Erasing r_config configuration object.")
         for address in chain(

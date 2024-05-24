@@ -1,19 +1,19 @@
-# GENERATED ON 2024-05-20 15:22:24.783062
+# GENERATED ON 2024-05-24 14:06:20.604310
 # BY internal VERSION 1.5
 # INPUT FILE: 299763A22BD6341ECDA080309EFC83B9D35E5F0479BAE4635666C24F5CF1B3FC
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import IntEnum
 
 from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, U32Scalar, params
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
+from tvl.typing_utils import HexReprIntEnum
 
 
-class L3Enum(IntEnum):
+class L3Enum(HexReprIntEnum):
     PING = 0x01
     """Ping"""
     PAIRING_KEY_WRITE = 0x10
@@ -77,7 +77,7 @@ class TsL3PingResult(L3Result, id=L3Enum.PING):
 class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
     slot: U8Scalar  # Slot to write in
     """The Pairing Key slot. Valid values are 0 - 3."""
-    class SlotEnum(IntEnum):
+    class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
         """Corresponds to $S_{H0Pub}$."""
         PAIRING_KEY_SLOT_1 = 0x01
@@ -98,7 +98,7 @@ class TsL3PairingKeyWriteResult(L3Result, id=L3Enum.PAIRING_KEY_WRITE):
 class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
     slot: U8Scalar  # Slot to Read
     """The Pairing Key slot. Valid values are 0 - 3."""
-    class SlotEnum(IntEnum):
+    class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
         """Corresponds to $S_{H0Pub}$."""
         PAIRING_KEY_SLOT_1 = 0x01
@@ -110,7 +110,7 @@ class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
 
 
 class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         PAIRING_KEY_EMPTY = 0x15
         """The Pairing key slot is in "Blank" state. A Pairing Key has not
             been written to it yet."""
@@ -125,7 +125,7 @@ class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
 class TsL3PairingKeyInvalidateCommand(L3Command, id=L3Enum.PAIRING_KEY_INVALIDATE):
     slot: U8Scalar  # Slot to Invalidate
     """The Pairing Key slot. Valid values are 0 - 3."""
-    class SlotEnum(IntEnum):
+    class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
         """Corresponds to $S_{H0Pub}$."""
         PAIRING_KEY_SLOT_1 = 0x01
@@ -199,7 +199,7 @@ class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
 
 
 class TsL3RMemDataWriteResult(L3Result, id=L3Enum.R_MEM_DATA_WRITE):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         WRITE_FAIL = 0x10
         """The slot is already written in."""
         SLOT_EXPIRED = 0x11
@@ -242,7 +242,7 @@ class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
     """The slot to write the generated key. Valid values are 0 - 31."""
     curve: U8Scalar  # Elliptic Curve
     """The Elliptic Curve the key is generated from."""
-    class CurveEnum(IntEnum):
+    class CurveEnum(HexReprIntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
@@ -258,7 +258,7 @@ class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
     """The slot to write the K L3 Field. Valid values are 0 - 31."""
     curve: U8Scalar  # The type of Elliptic Curve the K L3 Field belongs to.
     """The Elliptic Curve the key is generated from."""
-    class CurveEnum(IntEnum):
+    class CurveEnum(HexReprIntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
@@ -282,14 +282,14 @@ class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
 class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
     curve: U8Scalar  # Elliptic Curve
     """The type of Elliptic Curve public key returned."""
-    class CurveEnum(IntEnum):
+    class CurveEnum(HexReprIntEnum):
         P256 = 0x01
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
         """Ed25519 Curve - 32-byte long public key."""
     origin: U8Scalar  # Origin of the key.
     """The origin of the key."""
-    class OriginEnum(IntEnum):
+    class OriginEnum(HexReprIntEnum):
         ECC_KEY_GENERATE = 0x01
         """The key is from key generation on the device."""
         ECC_KEY_STORE = 0x02
@@ -321,7 +321,7 @@ class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
 
 
 class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
     padding: U8Array[params(size=15)]  # Padding
@@ -343,7 +343,7 @@ class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
 
 
 class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
     padding: U8Array[params(size=15)]  # Padding
@@ -373,7 +373,7 @@ class TsL3McounterUpdateCommand(L3Command, id=L3Enum.MCOUNTER_UPDATE):
 
 
 class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         UPDATE_ERR = 0x13
         """Failure to update the specified Monotonic Counter. The
             Monotonic Counter is already at 0."""
@@ -389,7 +389,7 @@ class TsL3McounterGetCommand(L3Command, id=L3Enum.MCOUNTER_GET):
 
 
 class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
-    class ResultEnum(IntEnum):
+    class ResultEnum(HexReprIntEnum):
         COUNTER_INVALID = 0x14
         """The Monotonic Counter detects an attack and is locked. The
             counter must be reinitialized."""
