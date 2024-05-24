@@ -1,0 +1,24 @@
+default:
+  tags:
+    - shell
+
+stages:
+  - test
+
+non-regression tests:
+  stage: test
+  before_script:
+    - poetry env use python3.8
+    - poetry install --no-root
+    - source $(poetry env info --path)/bin/activate
+  script:
+    - pytest -v --color=no --cov-report=xml:report.xml
+  coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
+  artifacts:
+    when: always
+    name: tvl_coverage
+    paths:
+      - htmlcov
+    expose_as: tests coverage report
+    reports:
+      junit: report.xml
