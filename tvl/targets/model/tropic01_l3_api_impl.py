@@ -230,7 +230,7 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"Register address: {address:#04x}.")
 
         current_value = self.r_config[address].value
-        if current_value == self.r_config[address].reset_value:
+        if current_value != self.r_config[address].reset_value:
             raise L3ProcessingErrorFail(
                 f"Register is not erased: {current_value:#010x}"
             )
