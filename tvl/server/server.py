@@ -143,7 +143,7 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
     s_t_pub: Optional[Union[StrictBytes, FilePath]]
     x509_certificate: Union[StrictBytes, FilePath]
 
-    @root_validator
+    @root_validator  # type: ignore
     def process_values(cls, values: Dict[str, Union[bytes, Path]]):
         # process public key
         if (s_t_pub := values.get("s_t_pub")) is not None:
@@ -238,9 +238,10 @@ class Buffer:
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
-        assert (_l := len(data)) >= (
-            _m := cls.TAG_SIZE + cls.LENGTH_SIZE
-        ), f"Should have received at least {_m} bytes; got {_l}. Report to development team."
+        if (_l := len(data)) < (_m := cls.TAG_SIZE + cls.LENGTH_SIZE):
+            raise RuntimeError(
+                f"Should have received at least {_m} bytes; got {_l}. Report to development team."
+            )
         return cls(
             tag=data[: (i := cls.TAG_SIZE)],
             length=_from_bytes(data[i : (i := i + cls.LENGTH_SIZE)]),
@@ -288,20 +289,21 @@ def receive(connection: Connection) -> Optional[Buffer]:
 
     buffer = Buffer.from_bytes(rx)
 
-    # Fill payload field of the buffer
-    _LOGGER.debug("Buffer length = %(ln)d (%(ln)#x)", {"ln": buffer.length})
+    _LOGGER.debug("Buffer length field = %(ln)d (%(ln)#x).", {"ln": buffer.length})
+    expected_size = buffer.length + Buffer.TAG_SIZE + Buffer.LENGTH_SIZE
+    _LOGGER.debug("Expected size: %d bytes.", expected_size)
+    received_size = len(rx)
+    _LOGGER.debug("Received size: %d bytes.", received_size)
 
-    if buffer.length == 0:
+    # Return if no more data are expected
+    if (yet_to_receive := expected_size - received_size) <= 0:
         return buffer
 
-    rx = _receive(buffer.length)
-    assert (
-        _l := len(rx)
-    ) > 0, f"Should have received a positive number of bytes, got {_l}. Report to development team."
-    buffer.payload += rx
-    assert (_p := len(buffer.payload)) == (
-        _l := buffer.length
-    ), f"Payload size is {_p} bytes, should be {_l} bytes. Report to development team."
+    buffer.payload += _receive(yet_to_receive)
+    if (_p := len(buffer.payload)) != (_l := buffer.length):
+        raise RuntimeError(
+            f"Payload size is {_p} bytes, should be {_l} bytes. Report to development team."
+        )
     return buffer
 
 
@@ -337,7 +339,15 @@ class TCPConnection:
         pass
 
     def receive(self, size: Optional[int] = None) -> bytes:
-        return self.client.recv(TCP_BUFFER_SIZE)
+        if size is None:
+            return self.client.recv(TCP_BUFFER_SIZE)
+
+        _LOGGER.debug("Expecting %d byte(s).", size)
+        data = b""
+        while len(data) < size:
+            data += self.client.recv(TCP_BUFFER_SIZE)
+            _LOGGER.debug("Already got %d byte(s).", len(data))
+        return data
 
     def send(self, data: bytes) -> None:
         self.client.sendall(data)
