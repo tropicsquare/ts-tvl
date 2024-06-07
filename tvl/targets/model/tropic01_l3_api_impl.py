@@ -708,7 +708,7 @@ class L3APIImplementation(L3API):
             ],
         )
         self.logger.info("Executing Mac-and-Destroy sequence.")
-        slot_bytes = command.slot.to_bytes()
+        slot_bytes = bytes([command.slot.value])
         data_in = command.data_in.to_bytes()
         self.logger.debug("Data_in: %s", data_in)
 
