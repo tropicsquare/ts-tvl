@@ -1,6 +1,6 @@
-# GENERATED ON 2024-05-24 14:06:20.604310
+# GENERATED ON 2024-06-07 13:43:22.742778
 # BY internal VERSION 1.5
-# INPUT FILE: 299763A22BD6341ECDA080309EFC83B9D35E5F0479BAE4635666C24F5CF1B3FC
+# INPUT FILE: F0CBEB517E1717A0264E49DBB0A29C61935AA14FB7397B853CDCB7AE670EC127
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -75,7 +75,7 @@ class TsL3PingResult(L3Result, id=L3Enum.PING):
 
 
 class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
-    slot: U8Scalar  # Slot to write in
+    slot: U16Scalar  # Slot to write in
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
@@ -96,7 +96,7 @@ class TsL3PairingKeyWriteResult(L3Result, id=L3Enum.PAIRING_KEY_WRITE):
 
 
 class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
-    slot: U8Scalar  # Slot to Read
+    slot: U16Scalar  # Slot to Read
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
@@ -123,7 +123,7 @@ class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
 
 
 class TsL3PairingKeyInvalidateCommand(L3Command, id=L3Enum.PAIRING_KEY_INVALIDATE):
-    slot: U8Scalar  # Slot to Invalidate
+    slot: U16Scalar  # Slot to Invalidate
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
         PAIRING_KEY_SLOT_0 = 0x00
@@ -238,7 +238,7 @@ class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
 
 
 class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot to write the generated key. Valid values are 0 - 31."""
     curve: U8Scalar  # Elliptic Curve
     """The Elliptic Curve the key is generated from."""
@@ -254,7 +254,7 @@ class TsL3EccKeyGenerateResult(L3Result, id=L3Enum.ECC_KEY_GENERATE):
 
 
 class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot to write the K L3 Field. Valid values are 0 - 31."""
     curve: U8Scalar  # The type of Elliptic Curve the K L3 Field belongs to.
     """The Elliptic Curve the key is generated from."""
@@ -263,7 +263,7 @@ class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
         """Ed25519 Curve - 32-byte long public key."""
-    padding: U8Array[params(size=13)]  # Padding
+    padding: U8Array[params(size=12)]  # Padding
     """The padding by dummy data."""
     k: U8Array[params(size=32)]  # Key to store
     """The ECC Key to store. The key must be a member of the field given by
@@ -275,7 +275,7 @@ class TsL3EccKeyStoreResult(L3Result, id=L3Enum.ECC_KEY_STORE):
 
 
 class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot to read the public ECC Key from. Valid values are 0 - 31."""
 
 
@@ -302,7 +302,7 @@ class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
 
 
 class TsL3EccKeyEraseCommand(L3Command, id=L3Enum.ECC_KEY_ERASE):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot to erase. Valid values are 0 - 31."""
 
 
@@ -311,10 +311,10 @@ class TsL3EccKeyEraseResult(L3Result, id=L3Enum.ECC_KEY_ERASE):
 
 
 class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     ECDSA signing."""
-    padding: U8Array[params(size=14)]  # Padding
+    padding: U8Array[params(size=13)]  # Padding
     """The padding by dummy data."""
     msg_hash: U8Array[params(size=32)]  # Hash of the Message to sign.
     """The hash of the message to sign (max size of 32 bytes)."""
@@ -333,10 +333,10 @@ class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
 
 
 class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
-    slot: U8Scalar  # ECC Key slot
+    slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     EdDSA signing."""
-    padding: U8Array[params(size=14)]  # Padding
+    padding: U8Array[params(size=13)]  # Padding
     """The padding by dummy data."""
     msg: U8Array[params(min_size=1, max_size=4096)]  # Message to sign.
     """The message to sign (max size of 4096 bytes)."""
@@ -355,7 +355,7 @@ class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
 
 
 class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
-    mcounter_index: U8Scalar  # Index of Monotonic Counter
+    mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
     15."""
     mcounter_val: U32Scalar  # Initialization value.
@@ -367,7 +367,7 @@ class TsL3McounterInitResult(L3Result, id=L3Enum.MCOUNTER_INIT):
 
 
 class TsL3McounterUpdateCommand(L3Command, id=L3Enum.MCOUNTER_UPDATE):
-    mcounter_index: U8Scalar  # Index of Monotonic Counter
+    mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to update. Valid values are 0 -
     15."""
 
@@ -383,7 +383,7 @@ class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
 
 
 class TsL3McounterGetCommand(L3Command, id=L3Enum.MCOUNTER_GET):
-    mcounter_index: U8Scalar  # Index of Monotonic Counter
+    mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to get the value of. Valid index
     values are 0 - 15."""
 
@@ -399,10 +399,10 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
 
 
 class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
-    slot: U8Scalar  # Mac-and-Destroy slot
+    slot: U16Scalar  # Mac-and-Destroy slot
     """The slot (from the MAC-and-Destroy data partition in R-Memory) to
     execute the MAC_And_Destroy sequence. Valid values are 0 - 127."""
-    padding: U8Array[params(size=2)]  # Padding
+    padding: U8Scalar  # Padding
     """The padding by dummy data."""
     data_in: U8Array[params(size=32)]  # Input data
     """The data input for the MAC-and-Destroy sequence."""
