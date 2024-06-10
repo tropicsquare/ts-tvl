@@ -1,6 +1,6 @@
-# GENERATED ON 2024-06-07 13:43:22.742778
+# GENERATED ON 2024-06-10 13:30:56.703254
 # BY internal VERSION 1.5
-# INPUT FILE: F0CBEB517E1717A0264E49DBB0A29C61935AA14FB7397B853CDCB7AE670EC127
+# INPUT FILE: EAF49C75B50A20E4E00C1DFEA0EA65F2203290E3F2228405155BB65E2A58FD8E
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -294,7 +294,7 @@ class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
         """The key is from key generation on the device."""
         ECC_KEY_STORE = 0x02
         """The key is from key storage in the device."""
-    padding: U8Array[params(size=14)]  # Padding
+    padding: U8Array[params(size=13)]  # Padding
     """The padding by dummy data."""
     pub_key: U8Array[params(min_size=32, max_size=64)]  # Public Key
     """The public key from the ECC Key slot as specified in the SLOT L3
