@@ -3,3 +3,8 @@
 {% extends "api.h.j2" %}
 
 {%- set PREFIX = "ts_l3" %}
+
+{%- macro prepend_base_fields(structs) -%}
+    {%- do structs["input"]["members"].insert(0, {'name': 'command', 'type': 'u8', 'size': 1, 'description': 'Command Identifier'}) -%}
+    {%- do structs["output"]["members"].insert(0, {'name': 'result', 'type': 'u8', 'size': 1, 'description': 'Result status indication'}) -%}
+{%- endmacro -%}
