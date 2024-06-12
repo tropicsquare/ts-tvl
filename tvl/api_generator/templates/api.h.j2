@@ -4,6 +4,11 @@
 
 {%- set PREFIX = PREFIX | default("ts_l2") %}
 
+{%- if not prepend_base_fields -%}
+    {%- macro prepend_base_fields(structs) -%}
+    {%- endmacro -%}
+{%- endif -%}
+
 {% block content %}
 
 {%- set RESULT_TYPE = [PREFIX, "result_t"] | join("_") | lower %}
@@ -32,6 +37,7 @@
 
 // {{tag.description}}
 #define {{PREFIX | upper}}_{{tag.name | upper}} {{"%#04x" | format(tag.message_id)}}
+    {%- set _dontuse = prepend_base_fields(tag.structs) %}
     {% for io in tag.structs.values() %}
         {%- if io.name %}
         {%- set struct_name = [PREFIX, tag.name | lower, io.name] | join("_") %}

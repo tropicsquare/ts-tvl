@@ -7,14 +7,16 @@ from dataclasses import InitVar, dataclass, field
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, TypedDict
+from pprint import pformat
+from shutil import get_terminal_size
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, TypedDict
 
 import jinja2
 import yaml
 
 from tvl.api_generator.grammar import InoutTypeEnum, InputFileModel
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 TOOL = Path(__file__)
 TEMPLATE_DIR = TOOL.parent / "templates"
@@ -24,6 +26,14 @@ __logger = logging.getLogger(TOOL.stem.lower())
 
 class APIGeneratorError(Exception):
     pass
+
+
+class LogMapping:
+    def __init__(self, __mapping: Mapping[Any, Any]) -> None:
+        self.mapping = __mapping
+
+    def __str__(self) -> str:
+        return "\n" + pformat(self.mapping, width=get_terminal_size()[0])
 
 
 def get_suffix(filename: Path) -> str:
@@ -298,7 +308,7 @@ def generate(header: HeaderDict, model: InputFileModel, params: Params) -> None:
         __logger.info("Using custom template file %s.", template_file)
 
     api = params.language_info.generate_fn(model, params.output_file)
-    __logger.debug("api = %s", api)
+    __logger.debug("api = %s", LogMapping(api))
 
     if (key := "header") in api:
         raise APIGeneratorError(f"Unauthorized key: '{key}' is reserved.")
@@ -307,6 +317,7 @@ def generate(header: HeaderDict, model: InputFileModel, params: Params) -> None:
         trim_blocks=False,
         lstrip_blocks=True,
         loader=jinja2.FileSystemLoader(template_file.parent),
+        extensions=["jinja2.ext.do"],
     ).get_template(template_file.name)
 
     content = template.render(
@@ -341,7 +352,7 @@ def create_param_list(
     output_file_mapping = {
         file: output_file_extensions[get_suffix(file)] for file in output_files
     }
-    __logger.debug("output_file_mapping = %s", output_file_mapping)
+    __logger.debug("output_file_mapping = %s", LogMapping(output_file_mapping))
 
     if templates is None:
         template_mapping = {}
@@ -351,7 +362,7 @@ def create_param_list(
         template_mapping = {
             template_extensions[get_suffix(file)]: file for file in templates
         }
-    __logger.debug("template_mapping = %s", template_mapping)
+    __logger.debug("template_mapping = %s", LogMapping(template_mapping))
 
     return [
         Params(
@@ -384,7 +395,7 @@ def generate_api_files(
 
     __logger.info("Generating header.")
     header = prepare_header(input_file)
-    __logger.debug("header= %s", header)
+    __logger.debug("header= %s", LogMapping(header))
 
     __logger.info("Generating API files.")
     for params in param_list:
