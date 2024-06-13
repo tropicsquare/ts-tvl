@@ -19,10 +19,11 @@ from tvl.targets.model.internal.user_data_partition import (
 
 
 @pytest.mark.parametrize(
-    "init_free, init_value, write_value, context, expected_free, expected_value",
+    "init_free, init_value, read_value, write_value, context, expected_free, expected_value",
     [
         pytest.param(
             True,
+            os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
             b"",
             v := os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
             nullcontext(),
@@ -32,6 +33,7 @@ from tvl.targets.model.internal.user_data_partition import (
         ),
         pytest.param(
             f := True,
+            os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
             b"",
             v := os.urandom(SLOT_SIZE_BYTES),
             nullcontext(),
@@ -43,6 +45,7 @@ from tvl.targets.model.internal.user_data_partition import (
             True,
             v := os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
             b"",
+            b"",
             nullcontext(),
             False,
             v,
@@ -51,6 +54,7 @@ from tvl.targets.model.internal.user_data_partition import (
         pytest.param(
             f := False,
             v := os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
+            v,
             b"",
             pytest.raises(SlotAlreadyWrittenError),
             f,
@@ -60,6 +64,7 @@ from tvl.targets.model.internal.user_data_partition import (
         pytest.param(
             f := True,
             v := b"",
+            b"",
             os.urandom(SLOT_SIZE_BYTES + 1),
             pytest.raises(DataLengthOverflow),
             f,
@@ -71,12 +76,14 @@ from tvl.targets.model.internal.user_data_partition import (
 def test_write(
     init_free: bool,
     init_value: bytes,
+    read_value: bytes,
     write_value: bytes,
     context: ContextManager[Any],
     expected_free: bool,
     expected_value: bytes,
 ):
     user_data_slot = UserDataSlot(free=init_free, value=init_value)
+    assert user_data_slot.read() == read_value
     with context:
         user_data_slot.write(write_value)
     assert user_data_slot.free is expected_free
