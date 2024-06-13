@@ -63,7 +63,7 @@ macandd_command_slot = randint(1, 128)
 macandd_command_data_in = os.urandom(32)
 
 macandd_command = TsL3MacAndDestroyCommand(
-    slot=macandd_command_slot, padding=[], data_in=macandd_command_data_in
+    slot=macandd_command_slot, data_in=macandd_command_data_in
 )
 macandd_result = host.send_command(macandd_command)
 

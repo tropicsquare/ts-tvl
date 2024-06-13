@@ -1,6 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
+from contextlib import nullcontext
 from typing import Any, ContextManager, Type
 
 from typing_extensions import Annotated, Self
@@ -42,7 +43,20 @@ class L3EncryptedPacket(BaseMessage):
 class L3Packet(Message, is_base=True):
     """Base class for L3 messages"""
 
-    pass
+    def set_padding_if_auto(self) -> ContextManager[None]:
+        """Fill the `padding` field of the message if set to AUTO."""
+        try:
+            padding_field = getattr(self, "padding")
+        except AttributeError:
+            return nullcontext()
+
+        if (padding_save := padding_field.value) is AUTO:
+            padding_field.value = []
+        return self._restore(padding_field, padding_save)
+
+    def to_bytes(self) -> bytes:
+        with self.set_padding_if_auto():
+            return super().to_bytes()
 
 
 class L3Command(L3Packet):

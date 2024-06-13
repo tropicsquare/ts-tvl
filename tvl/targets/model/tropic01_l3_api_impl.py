@@ -602,7 +602,6 @@ class L3APIImplementation(L3API):
             result=L3ResultFieldEnum.OK,
             curve=curve,
             origin=origin,
-            padding=[],
             pub_key=pub_key,
         )
 
@@ -661,7 +660,7 @@ class L3APIImplementation(L3API):
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Signed message hash with ECDSA: {r=}; {s=}.")
-        return TsL3EcdsaSignResult(result=L3ResultFieldEnum.OK, padding=[], r=r, s=s)
+        return TsL3EcdsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_eddsa_sign(self, command: TsL3EddsaSignCommand) -> TsL3EddsaSignResult:
         config = self.config.cfg_uap_eddsa_sign
@@ -692,7 +691,7 @@ class L3APIImplementation(L3API):
             ) from None
 
         self.logger.debug(f"Signed message with EdDSA: {r=}; {s=}.")
-        return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, padding=[], r=r, s=s)
+        return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand
@@ -728,5 +727,5 @@ class L3APIImplementation(L3API):
         data_out = f2.compute()
         self.logger.debug("Data_out: %s", data_out)
         return TsL3MacAndDestroyResult(
-            result=L3ResultFieldEnum.OK, padding=[], data_out=data_out
+            result=L3ResultFieldEnum.OK, data_out=data_out
         )

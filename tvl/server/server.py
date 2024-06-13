@@ -567,7 +567,9 @@ def get_input_arguments():
         help="Serial port baudrate. Defaults to %(default)s.",
         metavar="INT",
     )
-    return vars(parser.parse_args())
+    if kwargs := vars(parser.parse_args()):
+        return kwargs
+    parser.print_usage()
 
 
 def configure_logging(verbose: int) -> None:
@@ -579,7 +581,8 @@ def configure_logging(verbose: int) -> None:
 
 
 def main() -> None:
-    kwargs = get_input_arguments()
+    if (kwargs := get_input_arguments()) is None:
+        return
     configure_logging(kwargs["verbose"])
     _LOGGER.debug("Arguments:%s", LogDict(kwargs))
     run_server(kwargs["function"](**kwargs), kwargs["configuration"])

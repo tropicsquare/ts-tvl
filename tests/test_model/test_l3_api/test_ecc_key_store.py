@@ -22,7 +22,6 @@ def test_storing_ok(host: Host, model: Tropic01Model, slot: int):
     command = TsL3EccKeyStoreCommand(
         slot=slot,
         curve=one_of(TsL3EccKeyStoreCommand.CurveEnum),
-        padding=b"",
         k=os.urandom(KEY_SIZE),
     )
     result = host.send_command(command)
@@ -46,7 +45,6 @@ def test_key_already_exists(slot: int, host: Host, model: Tropic01Model):
     command = TsL3EccKeyStoreCommand(
         slot=slot,
         curve=one_of(TsL3EccKeyStoreCommand.CurveEnum),
-        padding=b"",
         k=os.urandom(KEY_SIZE),
     )
     result = host.send_command(command)
@@ -62,7 +60,6 @@ def test_invalid_curve(host: Host, model: Tropic01Model, slot: int):
     command = TsL3EccKeyStoreCommand(
         slot=slot,
         curve=one_outside(TsL3EccKeyStoreCommand.CurveEnum),
-        padding=b"",
         k=os.urandom(KEY_SIZE),
     )
     result = host.send_command(command)
@@ -78,7 +75,6 @@ def test_invalid_slot(host: Host, model: Tropic01Model, slot: int):
     command = TsL3EccKeyStoreCommand(
         slot=slot,
         curve=one_of(TsL3EccKeyStoreCommand.CurveEnum),
-        padding=b"",
         k=os.urandom(KEY_SIZE),
     )
     result = host.send_command(command)

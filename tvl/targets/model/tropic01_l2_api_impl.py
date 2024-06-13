@@ -7,10 +7,10 @@ from typing import List, NoReturn, cast
 from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk
 from ...api.l2_api import (
     L2API,
-    TsL2EncryptedCmdAbtRequest,
-    TsL2EncryptedCmdAbtResponse,
     TsL2EncryptedCmdReqRequest,
     TsL2EncryptedCmdReqResponse,
+    TsL2EncryptedSessionAbtRequest,
+    TsL2EncryptedSessionAbtResponse,
     TsL2GetInfoReqRequest,
     TsL2GetInfoReqResponse,
     TsL2GetLogReqRequest,
@@ -184,9 +184,7 @@ class L2APIImplementation(L2API):
         self.logger.info("Creating L2 response(s).")
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
 
-        result_chunks = list(
-            self.split_data_fn(encrypted_result.to_bytes())
-        )
+        result_chunks = list(self.split_data_fn(encrypted_result.to_bytes()))
 
         for i, chunk in enumerate(result_chunks, start=1):
             if i != len(result_chunks):
@@ -201,24 +199,14 @@ class L2APIImplementation(L2API):
         return cast(List[TsL2EncryptedCmdReqResponse], chunks)
 
     def ts_l2_encrypted_cmd_abt(
-        self, request: TsL2EncryptedCmdAbtRequest
-    ) -> TsL2EncryptedCmdAbtResponse:
-        request_options = request.options.value
-        try:
-            options = TsL2EncryptedCmdAbtRequest.OptionsEnum(request_options)
-        except ValueError:
-            raise L2ProcessingErrorGeneric(
-                f"Unexpected value: {request_options}."
-            ) from None
-
+        self, request: TsL2EncryptedSessionAbtRequest
+    ) -> TsL2EncryptedSessionAbtResponse:
         self.logger.info("Aborting L3 command execution.")
         self.command_buffer.reset()
-
-        if options is TsL2EncryptedCmdAbtRequest.OptionsEnum.INVALIDATE_SEC_CHANNEL:
-            self.invalidate_session()
+        self.invalidate_session()
 
         self.logger.debug("L3 command execution aborted.")
-        return TsL2EncryptedCmdAbtResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
         if self.response_buffer.latest():

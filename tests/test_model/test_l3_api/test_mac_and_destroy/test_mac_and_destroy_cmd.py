@@ -83,7 +83,6 @@ def test(vector: Vector, host: Host):
 
         command = TsL3MacAndDestroyCommand(
             slot=vector.slot,
-            padding=[],
             data_in=data_in,
         )
         result = host.send_command(command)
