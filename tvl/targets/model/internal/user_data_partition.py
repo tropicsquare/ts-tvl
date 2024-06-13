@@ -41,8 +41,10 @@ class UserDataSlot(BaseSlot):
         """Read the data in the slot.
 
         Returns:
-            the data contained in the slot
+            the data contained in the slot if the slot is written
         """
+        if self.free:
+            return b""
         return self.value
 
     def write(self, value: bytes) -> None:
