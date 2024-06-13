@@ -7,12 +7,21 @@ stages:
 
 non-regression tests:
   stage: test
+  cache:
+    - key:
+        files:
+          - poetry.lock
+      paths:
+        - .venv
   before_script:
-    - poetry env use python3.8
-    - poetry install --no-root
-    - source $(poetry env info --path)/bin/activate
+    - python3.8 -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
+    - pip install poetry
+    - poetry config virtualenvs.in-project true
+    - poetry install --no-root --no-interaction --with=dev
   script:
-    - pytest -v --color=no --cov-report=xml:report.xml
+    - pytest -v --color=no --junit-xml=results.xml --cov-report=html:htmlcov
   coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
   artifacts:
     when: always
@@ -21,4 +30,4 @@ non-regression tests:
       - htmlcov
     expose_as: tests coverage report
     reports:
-      junit: report.xml
+      junit: results.xml
