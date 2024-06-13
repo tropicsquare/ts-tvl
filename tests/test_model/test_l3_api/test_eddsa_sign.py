@@ -31,7 +31,6 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
 def test_ecdsa_signature_ok(slot: int, host: Host):
     command = TsL3EddsaSignCommand(
         slot=slot,
-        padding=b"",
         msg=_get_msg(),
     )
     result = host.send_command(command)
@@ -46,7 +45,6 @@ def test_ecdsa_signature_ok(slot: int, host: Host):
 def test_no_key_and_bad_curve(host: Host, slot: int):
     command = TsL3EddsaSignCommand(
         slot=slot,
-        padding=b"",
         msg=_get_msg(),
     )
     result = host.send_command(command)
@@ -59,7 +57,6 @@ def test_no_key_and_bad_curve(host: Host, slot: int):
 def test_invalid_slot(host: Host, slot: int):
     command = TsL3EddsaSignCommand(
         slot=slot,
-        padding=b"",
         msg=_get_msg(),
     )
     result = host.send_command(command)

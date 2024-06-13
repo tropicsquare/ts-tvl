@@ -11,7 +11,6 @@ from tvl.host.host import Host
 def test(host: Host):
     command = TsL3MacAndDestroyCommand(
         slot=os.urandom(1),
-        padding=os.urandom(1),
         data_in=os.urandom(32),
     )
     result = host.send_command(command)

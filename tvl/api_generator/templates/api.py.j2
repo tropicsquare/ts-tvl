@@ -41,6 +41,7 @@
 {%- endif %}
 
 from tvl.messages.datafield import (
+    AUTO,
     U8Array,
     U8Scalar,
     U16Array,
@@ -108,11 +109,18 @@ class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}
             {%- else %}
                 {%- set annotations = argument.dtype %}
             {%- endif %}
-            {%- if argument.description %}
-    {{argument.name}}: {{annotations}}  # {{argument.description}}
-            {%- else %}
-    {{argument.name}}: {{annotations}}
+            {%- if argument.name == "padding" %}
+                {%- set annotations = annotations ~ " = AUTO" %}
             {%- endif %}
+            {%- if argument.description %}
+                {%- set trailer = "  # %s" | format(argument.description) %}
+            {%- else %}
+                {%- set trailer = "" %}
+            {%- endif %}
+            {%- if argument.name == "padding" %}
+                {%- set trailer = trailer ~ "  # type: ignore" %}
+            {%- endif %}
+    {{argument.name}}: {{annotations}}{{trailer}}
             {%- if argument.description_long %}
     {{['"""', argument.description_long, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
             {%- endif %}

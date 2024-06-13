@@ -189,7 +189,7 @@ class L3APIImplementation(L3API):
 
         self.logger.debug(f"Read pairing key: {s_hipub_bytes}")
         return TsL3PairingKeyReadResult(
-            result=L3ResultFieldEnum.OK, padding=[], s_hipub=s_hipub_bytes
+            result=L3ResultFieldEnum.OK, s_hipub=s_hipub_bytes
         )
 
     @staticmethod
@@ -257,9 +257,7 @@ class L3APIImplementation(L3API):
         value = self.r_config[address].value
 
         self.logger.debug(f"Read value: {value:#010x}.")
-        return TsL3RConfigReadResult(
-            result=L3ResultFieldEnum.OK, padding=[], value=value
-        )
+        return TsL3RConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
 
     def ts_l3_r_config_erase(
         self, command: TsL3RConfigEraseCommand
@@ -317,9 +315,7 @@ class L3APIImplementation(L3API):
         value = self.i_config[address].value
 
         self.logger.debug(f"Read value: {value:#010x}.")
-        return TsL3IConfigReadResult(
-            result=L3ResultFieldEnum.OK, padding=[], value=value
-        )
+        return TsL3IConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
 
     def _check_ranged_access_privileges(
         self, address: int, access_privileges_list: List[Tuple[str, int]]
@@ -379,9 +375,7 @@ class L3APIImplementation(L3API):
         data = self.r_user_data[address].read()
 
         self.logger.debug(f"Read value: {data}.")
-        return TsL3RMemDataReadResult(
-            result=L3ResultFieldEnum.OK, padding=[], data=data
-        )
+        return TsL3RMemDataReadResult(result=L3ResultFieldEnum.OK, data=data)
 
     def ts_l3_r_mem_data_erase(
         self, command: TsL3RMemDataEraseCommand
@@ -419,7 +413,7 @@ class L3APIImplementation(L3API):
         random_data = self.trng2.urandom(n_bytes)
         self.logger.debug(f"Random data: {random_data}.")
         return TsL3RandomValueGetResult(
-            result=L3ResultFieldEnum.OK, padding=[], random_data=random_data
+            result=L3ResultFieldEnum.OK, random_data=random_data
         )
 
     def ts_l3_serial_code_get(
@@ -431,7 +425,7 @@ class L3APIImplementation(L3API):
         self.logger.info("Get chip unique serial code.")
         self.logger.debug(f"Serial code: {self.serial_code}.")
         return TsL3SerialCodeGetResult(
-            result=L3ResultFieldEnum.OK, padding=[], serial_code=self.serial_code
+            result=L3ResultFieldEnum.OK, serial_code=self.serial_code
         )
 
     def ts_l3_mcounter_init(
@@ -511,7 +505,7 @@ class L3APIImplementation(L3API):
 
         self.logger.debug(f"Read value: {mcounter_val}.")
         return TsL3McounterGetResult(
-            result=L3ResultFieldEnum.OK, padding=[], mcounter_val=mcounter_val
+            result=L3ResultFieldEnum.OK, mcounter_val=mcounter_val
         )
 
     def ts_l3_ecc_key_generate(
@@ -608,7 +602,6 @@ class L3APIImplementation(L3API):
             result=L3ResultFieldEnum.OK,
             curve=curve,
             origin=origin,
-            padding=[],
             pub_key=pub_key,
         )
 
@@ -667,7 +660,7 @@ class L3APIImplementation(L3API):
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Signed message hash with ECDSA: {r=}; {s=}.")
-        return TsL3EcdsaSignResult(result=L3ResultFieldEnum.OK, padding=[], r=r, s=s)
+        return TsL3EcdsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_eddsa_sign(self, command: TsL3EddsaSignCommand) -> TsL3EddsaSignResult:
         config = self.config.cfg_uap_eddsa_sign
@@ -698,7 +691,7 @@ class L3APIImplementation(L3API):
             ) from None
 
         self.logger.debug(f"Signed message with EdDSA: {r=}; {s=}.")
-        return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, padding=[], r=r, s=s)
+        return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand

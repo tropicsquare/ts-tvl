@@ -1,12 +1,12 @@
-# GENERATED ON 2024-06-13 11:05:42.529918
-# BY internal VERSION 1.5
+# GENERATED ON 2024-06-13 14:07:54.549509
+# BY internal VERSION 1.6
 # INPUT FILE: 6EBDCFFE889A3EEF62E9231DED08CC3607D44DC69D7A0BA04F832A5A409BDF95
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 
-from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, U32Scalar, params
+from tvl.messages.datafield import AUTO, U8Array, U8Scalar, U16Scalar, U32Scalar, params
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -86,7 +86,7 @@ class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
         """Corresponds to $S_{H2Pub}$."""
         PAIRING_KEY_SLOT_3 = 0x03
         """Corresponds to $S_{H3Pub}$."""
-    padding: U8Scalar  # Padding
+    padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     s_hipub: U8Array[params(size=32)]  # Public Key
     """The X25519 public key to be written in the Pairing Key slot specified
@@ -119,7 +119,7 @@ class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
         PAIRING_KEY_INVALID = 0x16
         """The Pairing key slot is in "Invalidated" state. The Pairing key
             has been invalidated."""
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     s_hipub: U8Array[params(size=32)]  # Public Key
     """The X25519 public key to be written in the Pairing Key slot specified
@@ -147,7 +147,7 @@ class TsL3PairingKeyInvalidateResult(L3Result, id=L3Enum.PAIRING_KEY_INVALIDATE)
 class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
-    padding: U8Scalar  # Padding
+    padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value to write in the computed address."""
@@ -163,7 +163,7 @@ class TsL3RConfigReadCommand(L3Command, id=L3Enum.R_CONFIG_READ):
 
 
 class TsL3RConfigReadResult(L3Result, id=L3Enum.R_CONFIG_READ):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
@@ -194,7 +194,7 @@ class TsL3IConfigReadCommand(L3Command, id=L3Enum.I_CONFIG_READ):
 
 
 class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
@@ -203,7 +203,7 @@ class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
 class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     udata_slot: U16Scalar  # Slot to write
     """The slot of the User Data partition. Valid values are 0 - 511."""
-    padding: U8Scalar  # Padding
+    padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to write
     """The data stream to be written in the slot specified in the UDATA_SLOT
@@ -224,7 +224,7 @@ class TsL3RMemDataReadCommand(L3Command, id=L3Enum.R_MEM_DATA_READ):
 
 
 class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to read
     """The data stream read from the slot specified in the UDATA_SLOT L3
@@ -246,7 +246,7 @@ class TsL3RandomValueGetCommand(L3Command, id=L3Enum.RANDOM_VALUE_GET):
 
 
 class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     random_data: U8Array[params(min_size=0, max_size=255)]  # Random data
     """The random data from TRNG2 in the number of bytes specified in the
@@ -279,7 +279,7 @@ class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
         """P256 Curve - 64-byte long public key."""
         ED25519 = 0x02
         """Ed25519 Curve - 32-byte long public key."""
-    padding: U8Array[params(size=12)]  # Padding
+    padding: U8Array[params(size=12)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     k: U8Array[params(size=32)]  # Key to store
     """The ECC Key to store. The key must be a member of the field given by
@@ -310,7 +310,7 @@ class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
         """The key is from key generation on the device."""
         ECC_KEY_STORE = 0x02
         """The key is from key storage in the device."""
-    padding: U8Array[params(size=13)]  # Padding
+    padding: U8Array[params(size=13)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     pub_key: U8Array[params(min_size=32, max_size=64)]  # Public Key
     """The public key from the ECC Key slot as specified in the SLOT L3
@@ -330,7 +330,7 @@ class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
     slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     ECDSA signing."""
-    padding: U8Array[params(size=13)]  # Padding
+    padding: U8Array[params(size=13)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     msg_hash: U8Array[params(size=32)]  # Hash of the Message to sign.
     """The hash of the message to sign (max size of 32 bytes)."""
@@ -340,7 +340,7 @@ class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
-    padding: U8Array[params(size=15)]  # Padding
+    padding: U8Array[params(size=15)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     r: U8Array[params(size=32)]  # ECDSA Signature - R part
     """ECDSA signature - The R part"""
@@ -352,7 +352,7 @@ class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
     slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     EdDSA signing."""
-    padding: U8Array[params(size=13)]  # Padding
+    padding: U8Array[params(size=13)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     msg: U8Array[params(min_size=1, max_size=4096)]  # Message to sign.
     """The message to sign (max size of 4096 bytes)."""
@@ -362,7 +362,7 @@ class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
-    padding: U8Array[params(size=15)]  # Padding
+    padding: U8Array[params(size=15)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     r: U8Array[params(size=32)]  # EDDSA Signature - R part
     """EdDSA signature - The R part"""
@@ -374,7 +374,7 @@ class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
     15."""
-    padding: U8Scalar  # Padding
+    padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     mcounter_val: U32Scalar  # Initialization value.
     """The initialization value of the Monotonic Counter."""
@@ -411,7 +411,7 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
         COUNTER_INVALID = 0x14
         """The Monotonic Counter detects an attack and is locked. The
             counter must be reinitialized."""
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     mcounter_val: U32Scalar  # Initialization value.
     """The value of the Monotonic Counter specified by the MCOUNTER_INDEX L3
@@ -422,14 +422,14 @@ class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
     slot: U16Scalar  # Mac-and-Destroy slot
     """The slot (from the MAC-and-Destroy data partition in R-Memory) to
     execute the MAC_And_Destroy sequence. Valid values are 0 - 127."""
-    padding: U8Scalar  # Padding
+    padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     data_in: U8Array[params(size=32)]  # Input data
     """The data input for the MAC-and-Destroy sequence."""
 
 
 class TsL3MacAndDestroyResult(L3Result, id=L3Enum.MAC_AND_DESTROY):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     data_out: U8Array[params(size=32)]  # Output data
     """The data output from the MAC-and-Destroy sequence."""
@@ -440,7 +440,7 @@ class TsL3SerialCodeGetCommand(L3Command, id=L3Enum.SERIAL_CODE_GET):
 
 
 class TsL3SerialCodeGetResult(L3Result, id=L3Enum.SERIAL_CODE_GET):
-    padding: U8Array[params(size=3)]  # Padding
+    padding: U8Array[params(size=3)] = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
     serial_code: U8Array[params(size=32)]  # Serial code
     """The unique per-chip identifier."""
