@@ -1,6 +1,6 @@
-# GENERATED ON 2024-06-10 13:30:56.703254
+# GENERATED ON 2024-06-13 11:05:42.529918
 # BY internal VERSION 1.5
-# INPUT FILE: EAF49C75B50A20E4E00C1DFEA0EA65F2203290E3F2228405155BB65E2A58FD8E
+# INPUT FILE: 6EBDCFFE889A3EEF62E9231DED08CC3607D44DC69D7A0BA04F832A5A409BDF95
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -86,6 +86,8 @@ class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
         """Corresponds to $S_{H2Pub}$."""
         PAIRING_KEY_SLOT_3 = 0x03
         """Corresponds to $S_{H3Pub}$."""
+    padding: U8Scalar  # Padding
+    """The padding by dummy data."""
     s_hipub: U8Array[params(size=32)]  # Public Key
     """The X25519 public key to be written in the Pairing Key slot specified
     in the SLOT field."""
@@ -117,6 +119,8 @@ class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
         PAIRING_KEY_INVALID = 0x16
         """The Pairing key slot is in "Invalidated" state. The Pairing key
             has been invalidated."""
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     s_hipub: U8Array[params(size=32)]  # Public Key
     """The X25519 public key to be written in the Pairing Key slot specified
     in the SLOT field."""
@@ -143,6 +147,8 @@ class TsL3PairingKeyInvalidateResult(L3Result, id=L3Enum.PAIRING_KEY_INVALIDATE)
 class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
+    padding: U8Scalar  # Padding
+    """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value to write in the computed address."""
 
@@ -157,6 +163,8 @@ class TsL3RConfigReadCommand(L3Command, id=L3Enum.R_CONFIG_READ):
 
 
 class TsL3RConfigReadResult(L3Result, id=L3Enum.R_CONFIG_READ):
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
 
@@ -186,6 +194,8 @@ class TsL3IConfigReadCommand(L3Command, id=L3Enum.I_CONFIG_READ):
 
 
 class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
 
@@ -193,6 +203,8 @@ class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
 class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     udata_slot: U16Scalar  # Slot to write
     """The slot of the User Data partition. Valid values are 0 - 511."""
+    padding: U8Scalar  # Padding
+    """The padding by dummy data."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to write
     """The data stream to be written in the slot specified in the UDATA_SLOT
     L3 field."""
@@ -212,6 +224,8 @@ class TsL3RMemDataReadCommand(L3Command, id=L3Enum.R_MEM_DATA_READ):
 
 
 class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     data: U8Array[params(min_size=0, max_size=444)]  # Data to read
     """The data stream read from the slot specified in the UDATA_SLOT L3
     field."""
@@ -232,6 +246,8 @@ class TsL3RandomValueGetCommand(L3Command, id=L3Enum.RANDOM_VALUE_GET):
 
 
 class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     random_data: U8Array[params(min_size=0, max_size=255)]  # Random data
     """The random data from TRNG2 in the number of bytes specified in the
     N_BYTES L3 Field."""
@@ -358,6 +374,8 @@ class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
     15."""
+    padding: U8Scalar  # Padding
+    """The padding by dummy data."""
     mcounter_val: U32Scalar  # Initialization value.
     """The initialization value of the Monotonic Counter."""
 
@@ -393,6 +411,8 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
         COUNTER_INVALID = 0x14
         """The Monotonic Counter detects an attack and is locked. The
             counter must be reinitialized."""
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     mcounter_val: U32Scalar  # Initialization value.
     """The value of the Monotonic Counter specified by the MCOUNTER_INDEX L3
     Field."""
@@ -420,6 +440,8 @@ class TsL3SerialCodeGetCommand(L3Command, id=L3Enum.SERIAL_CODE_GET):
 
 
 class TsL3SerialCodeGetResult(L3Result, id=L3Enum.SERIAL_CODE_GET):
+    padding: U8Array[params(size=3)]  # Padding
+    """The padding by dummy data."""
     serial_code: U8Array[params(size=32)]  # Serial code
     """The unique per-chip identifier."""
 

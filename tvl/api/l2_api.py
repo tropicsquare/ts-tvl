@@ -1,6 +1,6 @@
-# GENERATED ON 2024-06-07 13:43:21.426562
+# GENERATED ON 2024-06-13 11:05:42.000699
 # BY internal VERSION 1.5
-# INPUT FILE: EC1CB666F440FD585F689595F7A13A7887815595A1FF83FCE03E7CFB78265D26
+# INPUT FILE: 20402444E43870FE5FEA170E6AADDC8A15CFA812CA74D39EEC3A8B75FA10ED56
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -21,8 +21,8 @@ class L2Enum(HexReprIntEnum):
     """Start new Secure Channel Handshake"""
     ENCRYPTED_CMD_REQ = 0x04
     """Execute L3 Command."""
-    ENCRYPTED_CMD_ABT = 0x08
-    """Abort execution of L3 Command."""
+    ENCRYPTED_SESSION_ABT = 0x08
+    """Abort current Secure Channel Session."""
     RESEND_REQ = 0x10
     """Resend last Response."""
     SLEEP_REQ = 0x20
@@ -119,15 +119,11 @@ class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
     """The L3 Result Authentication Tag."""
 
 
-class TsL2EncryptedCmdAbtRequest(L2Request, id=L2Enum.ENCRYPTED_CMD_ABT):
-    options: U8Scalar  # Command options
-    class OptionsEnum(HexReprIntEnum):
-        INVALIDATE_SEC_CHANNEL = 0x01
-        """Bit 0 - If configured, TROPIC01 invalidates the current Secure
-        Channel Session and moves to Idle Mode."""
+class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
+    pass
 
 
-class TsL2EncryptedCmdAbtResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_ABT):
+class TsL2EncryptedSessionAbtResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
@@ -254,11 +250,11 @@ class L2API(BaseModel):
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_cmd_abt(
-        self, request: TsL2EncryptedCmdAbtRequest
-    ) -> Union[TsL2EncryptedCmdAbtResponse, List[TsL2EncryptedCmdAbtResponse]]:
-        """Request to stop the L3 Command execution and optionally invalidate
-		the current Secure Channel Session (TROPIC01 moves to Idle Mode)."""
+    def ts_l2_encrypted_session_abt(
+        self, request: TsL2EncryptedSessionAbtRequest
+    ) -> Union[TsL2EncryptedSessionAbtResponse, List[TsL2EncryptedSessionAbtResponse]]:
+        """Request to abort current Secure Channel Session and execution of L3
+		command (TROPIC01 moves to Idle Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
