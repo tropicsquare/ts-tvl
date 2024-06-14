@@ -71,7 +71,6 @@ addopts = """
 --cov=tvl
 --cov-branch
 --cov-report=term
---cov-report=html:htmlcov
 """
 
 [tool.coverage.run]

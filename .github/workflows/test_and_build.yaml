@@ -1,4 +1,4 @@
-name: CI
+name: Test and build
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
             echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
 
       - name: run tests
-        run: pytest tests/test_random_number_generator.py --junit-xml=test-results.xml
+        run: pytest -k 'not slow' --junit-xml=test-results.xml --cov-report=html:htmlcov
 
       - name: upload test report
         uses: actions/upload-artifact@v4
