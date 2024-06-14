@@ -12,7 +12,7 @@ from tvl.api.l3_api import TsL3EddsaSignCommand, TsL3EddsaSignResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 
-from ..utils import UtilsEcc
+from ..utils import UtilsEcc, as_slow
 
 
 def _get_msg() -> bytes:
@@ -27,7 +27,7 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
     yield val
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10), indirect=True)
 def test_ecdsa_signature_ok(slot: int, host: Host):
     command = TsL3EddsaSignCommand(
         slot=slot,
@@ -41,7 +41,7 @@ def test_ecdsa_signature_ok(slot: int, host: Host):
 
 
 # TODO diff between no key and curve mismatch
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_no_key_and_bad_curve(host: Host, slot: int):
     command = TsL3EddsaSignCommand(
         slot=slot,
@@ -53,7 +53,7 @@ def test_no_key_and_bad_curve(host: Host, slot: int):
     assert not isinstance(result, TsL3EddsaSignResult)
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.INVALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))
 def test_invalid_slot(host: Host, slot: int):
     command = TsL3EddsaSignCommand(
         slot=slot,

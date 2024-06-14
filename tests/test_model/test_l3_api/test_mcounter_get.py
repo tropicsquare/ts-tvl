@@ -11,7 +11,7 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import UtilsMcounter
+from ..utils import UtilsMcounter, as_slow
 
 
 @pytest.fixture()
@@ -28,7 +28,11 @@ def index_and_value(model_configuration: Dict[str, Any], request: SubRequest):
     yield idx, val
 
 
-@pytest.mark.parametrize("index_and_value", UtilsMcounter.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize(
+    "index_and_value",
+    as_slow(UtilsMcounter.VALID_INDICES, 10),
+    indirect=True,
+)
 def test_get_initialized_counter(
     index_and_value: Tuple[int, int], host: Host, model: Tropic01Model
 ):
@@ -45,7 +49,7 @@ def test_get_initialized_counter(
     assert result.mcounter_val.value == value
 
 
-@pytest.mark.parametrize("mcounter_index", UtilsMcounter.VALID_INDICES)
+@pytest.mark.parametrize("mcounter_index", as_slow(UtilsMcounter.VALID_INDICES, 10))
 def test_get_notset_counter(host: Host, model: Tropic01Model, mcounter_index: int):
     assert model.r_mcounters[mcounter_index].value == UtilsMcounter.NOTSET_VALUE
 
@@ -58,7 +62,7 @@ def test_get_notset_counter(host: Host, model: Tropic01Model, mcounter_index: in
     assert model.r_mcounters[mcounter_index].value == UtilsMcounter.NOTSET_VALUE
 
 
-@pytest.mark.parametrize("mcounter_index", UtilsMcounter.INVALID_INDICES)
+@pytest.mark.parametrize("mcounter_index", as_slow(UtilsMcounter.INVALID_INDICES, 10))
 def test_invalid_index(host: Host, mcounter_index: int):
     command = TsL3McounterGetCommand(
         mcounter_index=mcounter_index,

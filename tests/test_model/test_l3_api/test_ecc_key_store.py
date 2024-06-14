@@ -13,10 +13,10 @@ from tvl.host.host import Host
 from tvl.targets.model.internal.ecc_keys import KEY_SIZE
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import UtilsEcc, one_of, one_outside
+from ..utils import UtilsEcc, as_slow, one_of, one_outside
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_storing_ok(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     command = TsL3EccKeyStoreCommand(
@@ -39,7 +39,7 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
     yield val
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10), indirect=True)
 def test_key_already_exists(slot: int, host: Host, model: Tropic01Model):
     assert (before := model.r_ecc_keys.slots[slot]) is not None
     command = TsL3EccKeyStoreCommand(
@@ -54,7 +54,7 @@ def test_key_already_exists(slot: int, host: Host, model: Tropic01Model):
     assert model.r_ecc_keys.slots[slot] == before
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_invalid_curve(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     command = TsL3EccKeyStoreCommand(
@@ -69,7 +69,7 @@ def test_invalid_curve(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.INVALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))
 def test_invalid_slot(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     command = TsL3EccKeyStoreCommand(
