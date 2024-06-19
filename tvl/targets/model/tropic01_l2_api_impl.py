@@ -169,9 +169,12 @@ class L2APIImplementation(L2API):
                 L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
                 req_data,
             )
-        except (SubclassNotFoundError, NoValidSubclassError) as exc:
+        except SubclassNotFoundError as exc:
             self.logger.debug(exc)
             result = L3Result(result=L3ResultFieldEnum.INVALID_CMD)
+        except NoValidSubclassError as exc:
+            self.logger.debug(exc)
+            result = L3Result(result=L3ResultFieldEnum.FAIL)
         else:
             self.logger.debug(f"L3 command: {command}")
             self.logger.info("Processing L3 command.")

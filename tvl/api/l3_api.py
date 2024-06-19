@@ -1,6 +1,6 @@
-# GENERATED ON 2024-06-13 14:07:54.549509
+# GENERATED ON 2024-06-24 09:50:34.525473
 # BY internal VERSION 1.6
-# INPUT FILE: 6EBDCFFE889A3EEF62E9231DED08CC3607D44DC69D7A0BA04F832A5A409BDF95
+# INPUT FILE: 083F399F97F15AE1AE599E910C5F47186EED1E76EDE4839D2D7AFA1E149879F9
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -205,7 +205,7 @@ class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     """The slot of the User Data partition. Valid values are 0 - 511."""
     padding: U8Scalar = AUTO  # Padding  # type: ignore
     """The padding by dummy data."""
-    data: U8Array[params(min_size=0, max_size=444)]  # Data to write
+    data: U8Array[params(min_size=1, max_size=444)]  # Data to write
     """The data stream to be written in the slot specified in the UDATA_SLOT
     L3 field."""
 

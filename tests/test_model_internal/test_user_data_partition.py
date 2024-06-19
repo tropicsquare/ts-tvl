@@ -11,7 +11,6 @@ import pytest
 from tvl.targets.model.internal.user_data_partition import (
     INIT_VALUE,
     SLOT_SIZE_BYTES,
-    DataLengthOverflow,
     SlotAlreadyWrittenError,
     UserDataPartition,
     UserDataSlot,
@@ -42,16 +41,6 @@ from tvl.targets.model.internal.user_data_partition import (
             id="maxlength_data-ok",
         ),
         pytest.param(
-            True,
-            v := os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
-            b"",
-            b"",
-            nullcontext(),
-            False,
-            v,
-            id="empty_data-ok",
-        ),
-        pytest.param(
             f := False,
             v := os.urandom(random.randint(1, SLOT_SIZE_BYTES)),
             v,
@@ -60,16 +49,6 @@ from tvl.targets.model.internal.user_data_partition import (
             f,
             v,
             id="already_written-error",
-        ),
-        pytest.param(
-            f := True,
-            v := b"",
-            b"",
-            os.urandom(SLOT_SIZE_BYTES + 1),
-            pytest.raises(DataLengthOverflow),
-            f,
-            v,
-            id="overflow-error",
         ),
     ],
 )
@@ -87,7 +66,7 @@ def test_write(
     with context:
         user_data_slot.write(write_value)
     assert user_data_slot.free is expected_free
-    assert user_data_slot.read() == user_data_slot.value == expected_value
+    assert user_data_slot.read() == expected_value
 
 
 def test_erase():

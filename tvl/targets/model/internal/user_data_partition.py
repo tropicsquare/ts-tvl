@@ -17,10 +17,6 @@ class UserDataError(Exception):
     pass
 
 
-class DataLengthOverflow(UserDataError):
-    pass
-
-
 class SlotAlreadyWrittenError(UserDataError):
     pass
 
@@ -55,17 +51,13 @@ class UserDataSlot(BaseSlot):
 
         Raises:
             SlotAlreadyWrittenError: some data are already in the slot
-            DataLengthOverflow: too much data to fit in the slot
         """
         if not self.free:
             raise SlotAlreadyWrittenError(
                 "Slot already written, erase before writing again."
             )
-        if len(value) > SLOT_SIZE_BYTES:
-            raise DataLengthOverflow(f"Slot max size is {SLOT_SIZE_BYTES}.")
         self.free = False
-        if value:
-            self.value = value
+        self.value = value
 
 
 class UserDataPartition(GenericPartition[UserDataSlot]):

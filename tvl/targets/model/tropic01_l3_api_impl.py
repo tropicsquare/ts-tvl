@@ -75,7 +75,7 @@ from .internal.mcounter import (
     MCounterWrongInitValueError,
 )
 from .internal.pairing_keys import InvalidatedSlotError
-from .internal.user_data_partition import DataLengthOverflow, SlotAlreadyWrittenError
+from .internal.user_data_partition import SlotAlreadyWrittenError
 
 FUNCTIONALITY_ACCESS_PRIVILEGES = [
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_WRITE,
@@ -347,7 +347,7 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"Writing value: {data}.")
         try:
             self.r_user_data[address].write(data)
-        except (SlotAlreadyWrittenError, DataLengthOverflow) as exc:
+        except SlotAlreadyWrittenError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
                 result=TsL3RMemDataWriteResult.ResultEnum.WRITE_FAIL
