@@ -81,6 +81,7 @@ omit = [
     "tvl/targets/model/configuration_object_impl.py",
     "tvl/api_generator/*",
     "tvl/configuration_object_generator/*",
+    "tvl/server/*",
 ]
 
 [tool.coverage.report]
