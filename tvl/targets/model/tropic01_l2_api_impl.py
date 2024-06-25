@@ -33,7 +33,9 @@ from ...constants import (
     RISCV_FW_VERSION_SIZE,
     SPECT_FW_VERSION_SIZE,
     L2StatusEnum,
+    L3ResultFieldEnum,
 )
+from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Response
 from ...messages.l3_messages import L3Command, L3EncryptedPacket, L3Result
 from .exceptions import (
@@ -162,17 +164,25 @@ class L2APIImplementation(L2API):
         self.logger.debug(f"Decrypted command: {req_data}")
 
         self.logger.info("Parsing L3 command.")
-        command = L3Command.instantiate_subclass(
-            L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
-            req_data,
-        )
-        self.logger.debug(f"L3 command: {command}")
-
-        self.logger.info("Processing L3 command.")
         try:
-            result = self.process_l3_command(command)
-        except L3ProcessingError as exc:
-            result = L3Result(result=exc.result)
+            command = L3Command.instantiate_subclass(
+                L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
+                req_data,
+            )
+        except SubclassNotFoundError as exc:
+            self.logger.debug(exc)
+            result = L3Result(result=L3ResultFieldEnum.INVALID_CMD)
+        except NoValidSubclassError as exc:
+            self.logger.debug(exc)
+            result = L3Result(result=L3ResultFieldEnum.FAIL)
+        else:
+            self.logger.debug(f"L3 command: {command}")
+            self.logger.info("Processing L3 command.")
+            try:
+                result = self.process_l3_command(command)
+            except L3ProcessingError as exc:
+                result = L3Result(result=exc.result)
+
         self.logger.debug(f"L3 result: {result}")
 
         self.logger.info("Encrypting L3 result.")

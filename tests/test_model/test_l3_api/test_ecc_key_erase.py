@@ -11,7 +11,7 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import UtilsEcc
+from ..utils import UtilsEcc, as_slow
 
 
 @pytest.fixture()
@@ -22,7 +22,7 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
     yield val
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10), indirect=True)
 def test_erasing_ok(slot: int, host: Host, model: Tropic01Model):
     assert model.r_ecc_keys.slots[slot] is not None
     result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
@@ -32,7 +32,7 @@ def test_erasing_ok(slot: int, host: Host, model: Tropic01Model):
     assert model.r_ecc_keys.slots[slot] is None
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.VALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_no_key(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
@@ -42,7 +42,7 @@ def test_no_key(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
 
 
-@pytest.mark.parametrize("slot", UtilsEcc.INVALID_INDICES)
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))
 def test_invalid_slot(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))

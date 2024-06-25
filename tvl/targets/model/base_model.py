@@ -497,11 +497,11 @@ class BaseModel(metaclass=MetaModel):
         raise NotImplementedError(f"{type(request)} not supported")
 
     @base("l3_api")
-    def process_l3_command(self, request: L3Command) -> L3Result:
+    def process_l3_command(self, command: L3Command) -> L3Result:
         """Process the L3 command.
 
         Args:
-            request (L3Command): the received L3 command
+            command (L3Command): the received L3 command
 
         Raises:
             NotImplementedError: unknown command
@@ -509,7 +509,7 @@ class BaseModel(metaclass=MetaModel):
         Returns:
             the result after processing
         """
-        raise NotImplementedError(f"{type(request)} not supported")
+        raise NotImplementedError(f"{type(command)} not supported")
 
     def power_on(self) -> None:
         self.logger.info("Switching the model on.")

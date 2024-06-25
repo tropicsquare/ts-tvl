@@ -12,7 +12,7 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import UtilsRMem
+from ..utils import UtilsRMem, as_slow
 
 
 @pytest.fixture()
@@ -30,7 +30,11 @@ def prepare_data_ok(model_configuration: Dict[str, Any], request: SubRequest):
     yield slot, val
 
 
-@pytest.mark.parametrize("prepare_data_ok", UtilsRMem.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize(
+    "prepare_data_ok",
+    as_slow(UtilsRMem.VALID_INDICES, 10),
+    indirect=True,
+)
 def test_valid_udata_slot(
     prepare_data_ok: Tuple[int, bytes], host: Host, model: Tropic01Model
 ):
@@ -48,7 +52,9 @@ def test_valid_udata_slot(
     assert result.data.to_bytes() == value
 
 
-@pytest.mark.parametrize("udata_slot", sample(UtilsRMem.INVALID_INDICES, k=32))
+@pytest.mark.parametrize(
+    "udata_slot", as_slow(sample(UtilsRMem.INVALID_INDICES, k=32), 10)
+)
 def test_invalid_udata_slot(host: Host, udata_slot: int):
     command = TsL3RMemDataReadCommand(
         udata_slot=udata_slot,

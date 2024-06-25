@@ -11,7 +11,7 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import UtilsMcounter
+from ..utils import UtilsMcounter, as_slow
 
 
 @pytest.fixture()
@@ -28,7 +28,11 @@ def prepare_data_ok(model_configuration: Dict[str, Any], request: SubRequest):
     yield idx, val
 
 
-@pytest.mark.parametrize("prepare_data_ok", UtilsMcounter.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize(
+    "prepare_data_ok",
+    as_slow(UtilsMcounter.VALID_INDICES, 10),
+    indirect=True,
+)
 def test_initialized(
     prepare_data_ok: Tuple[int, int], host: Host, model: Tropic01Model
 ):
@@ -45,7 +49,7 @@ def test_initialized(
     assert model.r_mcounters[index].value == previous_value - 1
 
 
-@pytest.mark.parametrize("index", UtilsMcounter.VALID_INDICES)
+@pytest.mark.parametrize("index", as_slow(UtilsMcounter.VALID_INDICES, 10))
 def test_uninitialized(index: int, host: Host, model: Tropic01Model):
     assert model.r_mcounters[index].value == UtilsMcounter.NOTSET_VALUE
 
@@ -65,7 +69,9 @@ def index(model_configuration: Dict[str, Any], request: SubRequest):
     yield idx
 
 
-@pytest.mark.parametrize("index", UtilsMcounter.VALID_INDICES, indirect=True)
+@pytest.mark.parametrize(
+    "index", as_slow(UtilsMcounter.VALID_INDICES, 10), indirect=True
+)
 def test_null(index: int, host: Host, model: Tropic01Model):
     assert model.r_mcounters[index].value == 0
 
@@ -79,7 +85,7 @@ def test_null(index: int, host: Host, model: Tropic01Model):
     assert model.r_mcounters[index].value == 0
 
 
-@pytest.mark.parametrize("mcounter_index", UtilsMcounter.INVALID_INDICES)
+@pytest.mark.parametrize("mcounter_index", as_slow(UtilsMcounter.INVALID_INDICES, 10))
 def test_invalid_index(host: Host, mcounter_index: int):
     command = TsL3McounterUpdateCommand(
         mcounter_index=mcounter_index,

@@ -1,0 +1,61 @@
+name: Test and build
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository content
+        uses: actions/checkout@v4
+
+      - name: setup python
+        id: setup_python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: cache virtual environment
+        uses: actions/cache@v4
+        with:
+          key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version}}-${{ hashFiles('poetry.lock') }}
+          path: .venv
+
+      - name: install dependencies
+        run: |
+            python3.8 -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip
+            pip install poetry
+            poetry config virtualenvs.in-project true
+            poetry install --no-root --no-interaction --with=dev
+            echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+            echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+
+      - name: run tests
+        run: pytest -k 'not slow' --junit-xml=test-results.xml --cov-report=html:htmlcov
+
+      - name: upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
+        if: ${{ !cancelled() }}
+
+      - name: upload test coverage report
+        uses: actions/upload-artifact@v4
+        with:
+            name: test-coverage-report
+            path: htmlcov/
+        if: ${{ !cancelled() }}
+
+      - name: build package
+        run: poetry build --format=wheel
+
+      - name: upload package
+        uses: actions/upload-artifact@v4
+        with:
+            name: ts-tvl-package
+            path: dist/*.whl
