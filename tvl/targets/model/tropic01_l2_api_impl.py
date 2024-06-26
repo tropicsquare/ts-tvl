@@ -208,14 +208,14 @@ class L2APIImplementation(L2API):
         # TsL2EncryptedCmdReqResponse and L2EncryptedResChunk are compatible
         return cast(List[TsL2EncryptedCmdReqResponse], chunks)
 
-    def ts_l2_encrypted_cmd_abt(
+    def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest
     ) -> TsL2EncryptedSessionAbtResponse:
-        self.logger.info("Aborting L3 command execution.")
+        self.logger.info("Aborting encrypted session.")
         self.command_buffer.reset()
         self.invalidate_session()
 
-        self.logger.debug("L3 command execution aborted.")
+        self.logger.debug("Encrypted session aborted.")
         return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
