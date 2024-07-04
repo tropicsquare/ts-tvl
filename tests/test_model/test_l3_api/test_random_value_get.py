@@ -12,7 +12,7 @@ from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 
 N_BYTES = random.randint(1, 256)
-RANDOM_VALUE = os.urandom(N_BYTES)
+RANDOM_VALUE = os.urandom(4)
 
 
 @pytest.fixture()
@@ -27,4 +27,6 @@ def test(host: Host):
 
     assert result.result.value == L3ResultFieldEnum.OK
     assert isinstance(result, TsL3RandomValueGetResult)
-    assert result.random_data.to_bytes() == RANDOM_VALUE
+    assert (
+        result.random_data.to_bytes() == (RANDOM_VALUE * (N_BYTES // 4 + 1))[:N_BYTES]
+    )

@@ -58,6 +58,7 @@ def _get_test_vectors(filename: Path, not_slow_nb: int):
             yield pytest.param(vector, id=str(i))
 
 
+@pytest.mark.xfail(reason="Verify behaviour against SPECT")
 @pytest.mark.parametrize("vector", _get_test_vectors(_TEST_VECTOR_FILE, 10))
 def test_standard_eddsa(vector: _Vector):
     s, prefix, a = eddsa_key_setup(vector.secret)

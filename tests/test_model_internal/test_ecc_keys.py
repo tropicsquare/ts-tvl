@@ -20,6 +20,11 @@ from tvl.targets.model.internal.ecc_keys import (
 )
 
 
+class RandomSource:
+    def urandom(self, size: int, /, *, swap_endianness: bool = False) -> bytes:
+        return os.urandom(size)
+
+
 def _gen_key() -> bytes:
     return os.urandom(KEY_SIZE)
 
@@ -61,11 +66,10 @@ def test_store():
 
     slot_0 = _get_int()
     assert ecc.slots[slot_0] is None
-    ecc.store(
+    ecc.generate(
         slot_0,
         (curve_type_0 := ECDSAKeyMemLayout).CURVE,
-        _gen_key(),
-        Origins.Ecc_Key_Generate,
+        RandomSource(),
     )
     assert isinstance(ecc.slots[slot_0], curve_type_0)
 
@@ -74,23 +78,21 @@ def test_store():
             slot_0,
             ECDSAKeyMemLayout.CURVE,
             _gen_key(),
-            Origins.Ecc_Key_Generate,
         )
     assert isinstance(ecc.slots[slot_0], curve_type_0)
 
     slot_1 = slot_0 + 1
     assert ecc.slots[slot_1] is None
-    ecc.store(
+    ecc.generate(
         slot_1,
         (curve_type_1 := EdDSAKeyMemLayout).CURVE,
-        _gen_key(),
-        Origins.Ecc_Key_Generate,
+        RandomSource(),
     )
     assert isinstance(ecc.slots[slot_0], curve_type_0)
     assert isinstance(ecc.slots[slot_1], curve_type_1)
 
 
-def test_read():
+def test_read_stored():
     ecc = EccKeys()
 
     slot_0 = _get_int()
@@ -98,7 +100,25 @@ def test_read():
         slot_0,
         (curve_type_0 := ECDSAKeyMemLayout).CURVE,
         _gen_key(),
-        Origins.Ecc_Key_Generate,
+    )
+
+    curve, a, origin = ecc.read(slot_0)
+    assert origin == Origins.Ecc_Key_Store
+    assert curve == curve_type_0.CURVE
+    assert isinstance(a, bytes)
+
+    with pytest.raises(ECCKeyDoesNotExistInSlotError):
+        ecc.read(slot_0 + 1)
+
+
+def test_read_generated():
+    ecc = EccKeys()
+
+    slot_0 = _get_int()
+    ecc.generate(
+        slot_0,
+        (curve_type_0 := ECDSAKeyMemLayout).CURVE,
+        RandomSource(),
     )
 
     curve, a, origin = ecc.read(slot_0)
@@ -119,7 +139,6 @@ def test_erase():
         slot_0,
         (curve_type_0 := ECDSAKeyMemLayout).CURVE,
         _gen_key(),
-        Origins.Ecc_Key_Generate,
     )
     assert isinstance(ecc.slots[slot_0], curve_type_0)
 
@@ -128,8 +147,7 @@ def test_erase():
 
     slot_1 = slot_0 + 1
     assert ecc.slots[slot_1] is None
-    with pytest.raises(ECCKeyDoesNotExistInSlotError):
-        ecc.erase(slot_1)
+    ecc.erase(slot_1)
     assert ecc.slots[slot_1] is None
 
 
@@ -140,13 +158,11 @@ def test_signing():
         slot_0 := _get_int(),
         ECDSAKeyMemLayout.CURVE,
         _gen_key(),
-        Origins.Ecc_Key_Generate,
     )
     ecc.store(
         slot_1 := slot_0 + 1,
         EdDSAKeyMemLayout.CURVE,
         _gen_key(),
-        Origins.Ecc_Key_Generate,
     )
 
     ecc.ecdsa_sign(slot_0, b"message_hash", b"handshake_hash", b"nonce")
