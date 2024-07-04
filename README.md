@@ -42,13 +42,16 @@ python3.8 -m venv myvenv
 source myvenv/bin/activate
 ```
 
+The TVL is automatically packaged by github actions. It is available at
+[https://github.com/tropicsquare/ts-tvl/actions/workflows/test_and_build.yaml](https://github.com/tropicsquare/ts-tvl/actions/workflows/test_and_build.yaml).
+To download it, click on the latest workflow run then scroll down
+to the section `Artifacts` and download the `ts-tvl-package` artifact.
+
 The installation of the TVL:
 
 ```shell
-pip install tvl-1.0.0-py3-none-any.whl
+pip install tvl-0.9.0-py3-none-any.whl
 ```
-
-> The wheel file is not yet available, it should be created by the CI.
 
 ## How to use
 

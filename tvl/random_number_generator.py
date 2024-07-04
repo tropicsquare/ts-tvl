@@ -23,17 +23,26 @@ class RandomNumberGenerator:
             debug_random_value (bytes, optional): debug random value.
                 Defaults to None.
         """
+        if debug_random_value is not None and len(debug_random_value) != 4:
+            raise ValueError("debug_random_value has to be 4 byte long.")
+
         self.debug_random_value = debug_random_value
 
-    def urandom(self, size: int, /) -> bytes:
+    def urandom(self, size: int, /, *, swap_endianness: bool = False) -> bytes:
         """Read random bytes from the random number generator.
 
         Args:
             size (int): the number of bytes to generate.
+            swap_endianness (bool): revert bytes of the debug random value if used.
+                Defaults to False.
 
         Returns:
-            an array of random values
+            an array of random bytes
         """
-        if self.debug_random_value is None:
+        if (debug_random_value := self.debug_random_value) is None:
             return os.urandom(size)
-        return bytes(islice(cycle(self.debug_random_value), size))
+
+        if swap_endianness:
+            debug_random_value = reversed(debug_random_value)
+
+        return bytes(islice(cycle(debug_random_value), size))
