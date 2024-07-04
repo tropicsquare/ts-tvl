@@ -266,7 +266,6 @@ class EccKeys:
         Args:
             slot (int): the slot to erase the key
         """
-        self._get_key(slot)
         self.slots[slot] = None
 
     def to_dict(self) -> Dict[int, Any]:

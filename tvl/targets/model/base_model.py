@@ -194,6 +194,9 @@ class BaseModel(metaclass=MetaModel):
         self.activate_encryption = activate_encryption
         """Encrypt L3-layer messages"""
 
+        if debug_random_value is not None and len(debug_random_value) != 4:
+            raise ValueError("debug_random_value has to be 4 byte long.")
+
         self.trng2 = RandomNumberGenerator(debug_random_value)
         """Random number generator"""
 

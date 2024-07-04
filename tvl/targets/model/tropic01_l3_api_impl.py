@@ -612,10 +612,7 @@ class L3APIImplementation(L3API):
 
         self.logger.info("Erasing ECC Key.")
         self.logger.debug(f"ECC key slot: {slot}.")
-        try:
-            self.r_ecc_keys.erase(slot)
-        except ECCKeyDoesNotExistInSlotError as exc:
-            raise L3ProcessingErrorFail(exc) from None
+        self.r_ecc_keys.erase(slot)
 
         self.logger.debug(f"Erased ECC key in {slot=}.")
         return TsL3EccKeyEraseResult(result=L3ResultFieldEnum.OK)

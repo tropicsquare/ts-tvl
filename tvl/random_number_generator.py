@@ -23,9 +23,6 @@ class RandomNumberGenerator:
             debug_random_value (bytes, optional): debug random value.
                 Defaults to None.
         """
-        if debug_random_value is not None and len(debug_random_value) != 4:
-            raise ValueError("debug_random_value has to be 4 byte long.")
-
         self.debug_random_value = debug_random_value
 
     def urandom(self, size: int, /, *, swap_endianness: bool = False) -> bytes:

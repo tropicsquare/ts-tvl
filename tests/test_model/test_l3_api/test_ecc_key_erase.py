@@ -37,7 +37,7 @@ def test_no_key(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     result = host.send_command(TsL3EccKeyEraseCommand(slot=slot))
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.OK
     assert isinstance(result, TsL3EccKeyEraseResult)
     assert model.r_ecc_keys.slots[slot] is None
 
