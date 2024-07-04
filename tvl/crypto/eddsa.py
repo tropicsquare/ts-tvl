@@ -23,6 +23,7 @@ class ED25519_PARAMETERS:
 
 
 EDDSA_B = EccPoint(*ED25519_PARAMETERS.G, curve="ed25519")
+EDDSA_KEY_SIZE = 32
 
 
 EdDSAComputeRFn = Callable[[bytes, bytes, bytes, bytes, bytes, bytes], bytes]
@@ -77,7 +78,7 @@ def eddsa_sign(
         the signature (r, s)
     """
     r = compute_r_fn(s, prefix, a, m, h, n)
-    r_int = int.from_bytes(r, byteorder="little") % ED25519_PARAMETERS.q
+    r_int = int.from_bytes(r, byteorder="big") % ED25519_PARAMETERS.q
 
     b_ = EDDSA_B * r_int
     r_ = b_.y | ((b_.x & 1) << 255)

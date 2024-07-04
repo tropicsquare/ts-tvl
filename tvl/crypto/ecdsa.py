@@ -23,6 +23,7 @@ class P256_PARAMETERS:
 
 
 ECDSA_G = EccPoint(*P256_PARAMETERS.G, curve="secp256r1")
+ECDSA_KEY_SIZE = 64
 
 
 class SignatureError(Exception):
@@ -45,12 +46,14 @@ def ecdsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
     Returns:
         private key 1, private key 2, public key
     """
-    private_key = ec.derive_private_key(
-        int.from_bytes(k, byteorder="big"), ec.SECP256R1()
-    )
+    # For ECC_Generate SPECT uses 64 bytes of private_value to increase entropy
+    k_reduce = int.from_bytes(k, byteorder="big") % P256_PARAMETERS.q
+    private_key = ec.derive_private_key(k_reduce, ec.SECP256R1())
 
+    # SPECT uses little endian format of d for w calculation
     d = private_key.private_numbers().private_value.to_bytes(32, byteorder="big")
-    w = tmac(d, b"", b"\x0A")
+
+    w = tmac(d[::-1], b"", b"\x0A")
 
     a = private_key.public_key().public_bytes(
         Encoding.X962, PublicFormat.UncompressedPoint

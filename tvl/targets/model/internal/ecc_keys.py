@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Mapping,
     Optional,
+    Protocol,
     Tuple,
     Type,
     Union,
@@ -20,8 +21,8 @@ from typing import (
 from pydantic import BaseModel
 from typing_extensions import Self
 
-from ....crypto.ecdsa import SignatureError, ecdsa_key_setup, ecdsa_sign
-from ....crypto.eddsa import eddsa_key_setup, eddsa_sign
+from ....crypto.ecdsa import ECDSA_KEY_SIZE, SignatureError, ecdsa_key_setup, ecdsa_sign
+from ....crypto.eddsa import EDDSA_KEY_SIZE, eddsa_key_setup, eddsa_sign
 from ....typing_utils import FixedSizeBytes
 from .generic_partition import GenericModel
 
@@ -74,6 +75,11 @@ class Origins(IntEnum):
     """Ecc Key randomly generated"""
     Ecc_Key_Store = 2
     """Ecc Key imported from host"""
+
+
+class _RandomSource(Protocol):
+    def urandom(self, size: int, /, *, swap_endianness: bool = False) -> bytes:
+        ...
 
 
 ECCKeySubClass = Union["ECDSAKeyMemLayout", "EdDSAKeyMemLayout"]
@@ -134,6 +140,10 @@ class EccKey:
     def from_key(cls, key: bytes, origin: Origins) -> Self:
         raise NotImplementedError("TODO")
 
+    @classmethod
+    def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
+        raise NotImplementedError("TODO")
+
 
 @dataclass
 class ECDSAKeyMemLayout(EccKey, curve=CurveTypes.P256):
@@ -151,6 +161,10 @@ class ECDSAKeyMemLayout(EccKey, curve=CurveTypes.P256):
             origin=origin,
         )
 
+    @classmethod
+    def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
+        return cls.from_key(rng.urandom(ECDSA_KEY_SIZE, swap_endianness=True), origin)
+
 
 @dataclass
 class EdDSAKeyMemLayout(EccKey, curve=CurveTypes.ED25519):
@@ -167,6 +181,10 @@ class EdDSAKeyMemLayout(EccKey, curve=CurveTypes.ED25519):
             a=tup[2],
             origin=origin,
         )
+
+    @classmethod
+    def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
+        return cls.from_key(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False), origin)
 
 
 class EccKeys:
@@ -193,7 +211,26 @@ class EccKeys:
             )
         return key
 
-    def store(self, slot: int, curve: int, k: bytes, origin: Origins) -> None:
+    def generate(self, slot: int, curve: int, rng: _RandomSource) -> None:
+        """Generate a new key from the given random source.
+
+        Args:
+            slot (int): the slot to save the key
+            curve (int): the type of the curve to generate
+            rng (bytes): the random source
+
+        Raises:
+            ECCKeyExistsInSlotError: a key already exists in the slot.
+        """
+        if self.slots[slot] is not None:
+            raise ECCKeyExistsInSlotError(
+                "Generate: an ECC key already exists in the requested slot."
+            )
+        self.slots[slot] = EccKey.find_subclass_from_curve(curve).from_random_source(
+            rng, Origins.Ecc_Key_Generate
+        )
+
+    def store(self, slot: int, curve: int, k: bytes) -> None:
         """Generate a new key from the given private key.
 
         Args:
@@ -206,9 +243,11 @@ class EccKeys:
         """
         if self.slots[slot] is not None:
             raise ECCKeyExistsInSlotError(
-                "An ECC key already exists in the requested slot."
+                "Store: an ECC key already exists in the requested slot."
             )
-        self.slots[slot] = EccKey.find_subclass_from_curve(curve).from_key(k, origin)
+        self.slots[slot] = EccKey.find_subclass_from_curve(curve).from_key(
+            k, Origins.Ecc_Key_Store
+        )
 
     def read(self, slot: int) -> Tuple[int, bytes, int]:
         """Read the given slot.
@@ -234,7 +273,7 @@ class EccKeys:
         """dump a dict configuration of the Ecc object
 
         Returns:
-            _description_
+            the content of the Ecc object as a dictionary
         """
         return {k: v.to_dict() for k, v in self.slots.items() if v is not None}
 
@@ -246,7 +285,7 @@ class EccKeys:
             __mapping (Mapping[int, Any]): the configuration dict of the slots
 
         Returns:
-            _description_
+            the Ecc object
         """
         instance = cls()
         for k, v in __mapping.items():
@@ -307,14 +346,14 @@ class EccKeys:
 class ECDSAKeyMemLayoutModel(BaseModel):
     d: FixedSizeBytes[KEY_SIZE]
     w: FixedSizeBytes[KEY_SIZE]
-    a: FixedSizeBytes[KEY_SIZE * 2]
+    a: FixedSizeBytes[ECDSA_KEY_SIZE]
     origin: Origins
 
 
 class EdDSAKeyMemLayoutModel(BaseModel):
     s: FixedSizeBytes[KEY_SIZE]
     prefix: FixedSizeBytes[KEY_SIZE]
-    a: FixedSizeBytes[KEY_SIZE]
+    a: FixedSizeBytes[EDDSA_KEY_SIZE]
     origin: Origins
 
 

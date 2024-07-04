@@ -62,11 +62,9 @@ from .exceptions import (
     L3ProcessingErrorUnauthorized,
 )
 from .internal.ecc_keys import (
-    KEY_SIZE,
     CurveMismatchError,
     ECCKeyDoesNotExistInSlotError,
     ECCKeyExistsInSlotError,
-    Origins,
     SignatureFailedError,
 )
 from .internal.mcounter import (
@@ -530,12 +528,7 @@ class L3APIImplementation(L3API):
         self.logger.info("Generating ECC key.")
         self.logger.debug(f"ECC key slot: {slot}.")
         try:
-            self.r_ecc_keys.store(
-                slot,
-                curve,
-                self.trng2.urandom(KEY_SIZE),
-                Origins.Ecc_Key_Generate,
-            )
+            self.r_ecc_keys.generate(slot, curve, self.trng2)
         except ECCKeyExistsInSlotError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
@@ -564,9 +557,7 @@ class L3APIImplementation(L3API):
         self.logger.info("Storing ECC key.")
         self.logger.debug(f"ECC key slot: {slot}.")
         try:
-            self.r_ecc_keys.store(
-                slot, curve, command.k.to_bytes(), Origins.Ecc_Key_Store
-            )
+            self.r_ecc_keys.store(slot, curve, command.k.to_bytes())
         except ECCKeyExistsInSlotError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
@@ -649,7 +640,14 @@ class L3APIImplementation(L3API):
                 slot,
                 msg_hash,
                 self.session.handshake_hash,
-                self.session.nonce_cmd.to_bytes(4, byteorder="big"),
+                # CMD nonce is incremented right after the L3 command is received but
+                # according to the datasheet the nonce has to be incremented
+                # after processing an L3 Command packet and encrypting an L3 Result packet.
+                # It's not clear why the model holds two NONCEs but the SPECT needs
+                # to get the one which is incremented after L3 response is encrypted.
+                # SPECT takes the SCN in little-endian form, it will be discussed
+                # and probably fixed in SPECT, for now hotfixed in model.
+                self.session.nonce_resp.to_bytes(4, byteorder="little"),
             )
         except (ECCKeyDoesNotExistInSlotError, CurveMismatchError) as exc:
             self.logger.info(exc)
@@ -682,7 +680,14 @@ class L3APIImplementation(L3API):
                 slot,
                 msg_bytes,
                 self.session.handshake_hash,
-                self.session.nonce_cmd.to_bytes(4, byteorder="big"),
+                # CMD nonce is incremented right after the L3 command is received but
+                # according to the datasheet the nonce has to be incremented
+                # after processing an L3 Command packet and encrypting an L3 Result packet.
+                # It's not clear why the model holds two NONCEs but the SPECT needs
+                # to get the one which is incremented after L3 response is encrypted.
+                # SPECT takes the SCN in little-endian form, it will be discussed
+                # and probably fixed in SPECT, for now hotfixed in model.
+                self.session.nonce_resp.to_bytes(4, byteorder="little"),
             )
         except (ECCKeyDoesNotExistInSlotError, CurveMismatchError) as exc:
             self.logger.info(exc)
