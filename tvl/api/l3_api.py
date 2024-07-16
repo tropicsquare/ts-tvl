@@ -1,6 +1,6 @@
-# GENERATED ON 2024-06-24 09:50:34.525473
+# GENERATED ON 2024-07-16 14:16:42.914874
 # BY internal VERSION 1.6
-# INPUT FILE: 083F399F97F15AE1AE599E910C5F47186EED1E76EDE4839D2D7AFA1E149879F9
+# INPUT FILE: 00C671449AFC726579F38A3055D3702F0AE393D7B036D6A525CD097863562904
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -296,6 +296,9 @@ class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
 
 
 class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
+    class ResultEnum(HexReprIntEnum):
+        INVALID_KEY = 0x12
+        """The key in the requested slot does not exist."""
     curve: U8Scalar  # Elliptic Curve
     """The type of Elliptic Curve public key returned."""
     class CurveEnum(HexReprIntEnum):

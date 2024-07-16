@@ -630,7 +630,9 @@ class L3APIImplementation(L3API):
         try:
             curve, pub_key, origin = self.r_ecc_keys.read(slot)
         except ECCKeyDoesNotExistInSlotError as exc:
-            raise L3ProcessingErrorFail(exc) from None
+            raise L3ProcessingError(
+                exc, result=TsL3EccKeyReadResult.ResultEnum.INVALID_KEY
+            ) from None
         self.logger.debug(
             f"Read ECC key from {slot=}: {curve=}; {pub_key=}; "
             f"randomly generated={origin}."

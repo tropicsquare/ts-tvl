@@ -45,6 +45,11 @@ class PairingKeySlot(BaseSlot):
     value: bytes = b""
     state: SlotState = SlotState.BLANK
 
+    def __post_init__(self) -> None:
+        # Enforce state attribute being enumerated.
+        # `from_dict` method might initialize slot with str.
+        self.state = SlotState(self.state)
+
     def write(self, value: bytes) -> None:
         """Write a new value.
 
@@ -97,10 +102,9 @@ class PairingKeySlot(BaseSlot):
 
     @classmethod
     def from_dict(cls, __mapping: Mapping[str, Any], /) -> Self:
-        value = __mapping.get("value", None)
-        state = __mapping.get("state", None)
+        value = __mapping.get("value")
 
-        if value is not None and state is None:
+        if value is not None and __mapping.get("state") is None:
             return super().from_dict(
                 {
                     "value": value,
