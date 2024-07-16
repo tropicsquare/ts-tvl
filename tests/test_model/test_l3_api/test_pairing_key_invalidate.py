@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import pytest
 
-from tvl.api.l3_api import TsL3PairingKeyWriteCommand
+from tvl.api.l3_api import TsL3PairingKeyInvalidateCommand
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.internal.pairing_keys import KEY_SIZE, SlotState
@@ -14,7 +14,7 @@ from tvl.targets.model.tropic01_model import Tropic01Model
 
 from ..utils import sample_from, sample_outside
 
-KEY_SLOTS = sample_from((lst := TsL3PairingKeyWriteCommand.SlotEnum), k=4)
+KEY_SLOTS = sample_from((lst := TsL3PairingKeyInvalidateCommand.SlotEnum), k=4)
 SECURE_CHANNEL_KEY_IDX, SET_KEY_IDX, BLANK_KEY_IDX, INVALID_KEY_IDX = KEY_SLOTS
 
 SET_KEY = os.urandom(KEY_SIZE)
@@ -34,42 +34,37 @@ def configuration(configuration: Dict[str, Any]):
 
 
 @pytest.mark.parametrize(
-    "slot, value, result_field, expected_new_value",
+    "slot, expected_new_value, result_field",
     [
         pytest.param(
             BLANK_KEY_IDX,
-            (v_ := os.urandom(KEY_SIZE)),
-            L3ResultFieldEnum.OK,
-            v_,
+            b"",
+            L3ResultFieldEnum.FAIL,
             id="blank_slot",
         ),
         pytest.param(
             SET_KEY_IDX,
-            os.urandom(KEY_SIZE),
-            L3ResultFieldEnum.FAIL,
-            SET_KEY,
+            b"",
+            L3ResultFieldEnum.OK,
             id="already_set_slot",
         ),
         pytest.param(
             INVALID_KEY_IDX,
-            (v_ := os.urandom(KEY_SIZE)),
-            L3ResultFieldEnum.FAIL,
             b"",
+            L3ResultFieldEnum.OK,
             id="invalid_slot",
         ),
     ],
 )
-def test_write_key(
+def test_invalidate(
     host: Host,
     model: Tropic01Model,
     slot: int,
-    value: bytes,
-    result_field: int,
     expected_new_value: bytes,
+    result_field: int,
 ):
-    command = TsL3PairingKeyWriteCommand(
+    command = TsL3PairingKeyInvalidateCommand(
         slot=slot,
-        s_hipub=value,
     )
     result = host.send_command(command)
 
@@ -78,12 +73,11 @@ def test_write_key(
 
 
 @pytest.mark.parametrize(
-    "slot", sample_outside(TsL3PairingKeyWriteCommand.SlotEnum, 1, k=10)
+    "slot", sample_outside(TsL3PairingKeyInvalidateCommand.SlotEnum, 1, k=10)
 )
-def test_write_out_of_range_key_slot(host: Host, slot: int):
-    command = TsL3PairingKeyWriteCommand(
+def test_invalidate_out_of_range_key_slot(host: Host, slot: int):
+    command = TsL3PairingKeyInvalidateCommand(
         slot=slot,
-        s_hipub=os.urandom(KEY_SIZE),
     )
     result = host.send_command(command)
 

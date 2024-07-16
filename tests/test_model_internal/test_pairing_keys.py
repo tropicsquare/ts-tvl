@@ -9,72 +9,85 @@ from typing import Any, ContextManager
 import pytest
 
 from tvl.targets.model.internal.pairing_keys import (
-    BLANK_VALUE,
-    INVALID_VALUE,
     KEY_SIZE,
-    InvalidatedSlotError,
     PairingKeys,
     PairingKeySlot,
+    SlotState,
+    WrittenSlotError,
 )
 
 
-def _and(x: bytes, y: bytes) -> bytes:
-    return (
-        int.from_bytes(x, byteorder="big") & int.from_bytes(y, byteorder="big")
-    ).to_bytes(KEY_SIZE, byteorder="big")
-
-
 @pytest.mark.parametrize(
-    "init_value, write_value, context, expected_value",
+    "init_value, init_state, write_value, context, expected_value",
     [
         pytest.param(
             a := os.urandom(KEY_SIZE),
+            SlotState.BLANK,
             b := os.urandom(KEY_SIZE),
             nullcontext(),
-            _and(a, b),
+            b,
             id="ok",
         ),
         pytest.param(
-            0,
+            a := os.urandom(KEY_SIZE),
+            SlotState.BLANK,
             os.urandom(KEY_SIZE - 1),
             pytest.raises(ValueError),
-            0,
+            a,
             id="wrong_size",
         ),
         pytest.param(
-            INVALID_VALUE,
+            a := os.urandom(KEY_SIZE),
+            SlotState.WRITTEN,
+            b := os.urandom(KEY_SIZE),
+            pytest.raises(WrittenSlotError),
+            a,
+            id="already_written",
+        ),
+        pytest.param(
+            a := os.urandom(KEY_SIZE),
+            SlotState.INVALID,
             os.urandom(KEY_SIZE),
-            pytest.raises(InvalidatedSlotError),
-            INVALID_VALUE,
+            pytest.raises(WrittenSlotError),
+            a,
             id="invalidated",
         ),
     ],
 )
 def test_write(
     init_value: bytes,
+    init_state: SlotState,
     write_value: bytes,
     context: ContextManager[Any],
     expected_value: bytes,
 ):
-    pairing_key = PairingKeySlot(init_value)
+    pairing_key = PairingKeySlot(init_value, init_state)
     with context:
         pairing_key.write(write_value)
-    assert pairing_key.read() == expected_value
+    assert pairing_key.value == expected_value
+
+
+@pytest.mark.skip(reason="TODO")
+def test_read():
+    pass
+
+
+@pytest.mark.skip(reason="TODO")
+def test_invalidate():
+    pass
 
 
 def test_state():
     pairing_key = PairingKeySlot()
-    pairing_key.value = BLANK_VALUE
-    assert pairing_key.is_blank()
-    assert not pairing_key.is_invalidated()
-
-    pairing_key.value = INVALID_VALUE
-    assert not pairing_key.is_blank()
-    assert pairing_key.is_invalidated()
+    pairing_key.value = b""
+    assert pairing_key.state is SlotState.BLANK
 
 
 def test_dict():
-    pairing_key_slot_dict = {"value": os.urandom(KEY_SIZE)}
+    pairing_key_slot_dict = {
+        "value": os.urandom(KEY_SIZE),
+        "state": random.choice(list(SlotState)),
+    }
     pairing_key_dict = {(slot := random.randint(0, 10)): pairing_key_slot_dict}
 
     pairing_keys = PairingKeys.from_dict(pairing_key_dict)

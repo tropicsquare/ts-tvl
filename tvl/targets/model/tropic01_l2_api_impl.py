@@ -103,13 +103,9 @@ class L2APIImplementation(L2API):
 
         s_h_pubkey = self.i_pairing_keys[pkey_index]
 
-        if s_h_pubkey.is_blank():
+        if not s_h_pubkey.is_valid():
             raise L2ProcessingErrorHandshake(
-                f"Pairing key slot #{pkey_index} is blank."
-            )
-        if s_h_pubkey.is_invalidated():
-            raise L2ProcessingErrorHandshake(
-                f"Pairing key slot #{pkey_index} is invalidated."
+                f"Pairing key slot #{pkey_index} is blank or invalidated."
             )
 
         if self.s_t_priv is None:

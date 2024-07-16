@@ -30,6 +30,8 @@ from ...api.l3_api import (
     TsL3McounterInitResult,
     TsL3McounterUpdateCommand,
     TsL3McounterUpdateResult,
+    TsL3PairingKeyInvalidateCommand,
+    TsL3PairingKeyInvalidateResult,
     TsL3PairingKeyReadCommand,
     TsL3PairingKeyReadResult,
     TsL3PairingKeyWriteCommand,
@@ -72,7 +74,11 @@ from .internal.mcounter import (
     MCounterUpdateError,
     MCounterWrongInitValueError,
 )
-from .internal.pairing_keys import InvalidatedSlotError
+from .internal.pairing_keys import (
+    BlankSlotError,
+    InvalidatedSlotError,
+    WrittenSlotError,
+)
 from .internal.user_data_partition import SlotAlreadyWrittenError
 
 FUNCTIONALITY_ACCESS_PRIVILEGES = [
@@ -150,13 +156,12 @@ class L3APIImplementation(L3API):
         self.logger.info(f"Writing pairing key to slot #{pkey_slot}.")
         s_hipub_bytes = command.s_hipub.to_bytes()
         self.logger.debug(f"Writing pairing key: {s_hipub_bytes}")
+
         try:
             self.i_pairing_keys[pkey_slot].write(s_hipub_bytes)
-        except InvalidatedSlotError as exc:
+        except WrittenSlotError as exc:
             self.logger.info(exc)
-            raise L3ProcessingErrorFail(
-                f"Pairing key slot #{pkey_slot} is invalidated"
-            ) from None
+            raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Pairing key slot #{pkey_slot} written.")
         return TsL3PairingKeyWriteResult(result=L3ResultFieldEnum.OK)
@@ -183,12 +188,54 @@ class L3APIImplementation(L3API):
         )
 
         self.logger.info(f"Reading pairing key from slot #{pkey_slot}.")
-        s_hipub_bytes = self.i_pairing_keys[pkey_slot].read()
+        try:
+            s_hipub_bytes = self.i_pairing_keys[pkey_slot].read()
+        except BlankSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_EMPTY
+            ) from None
+        except InvalidatedSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_INVALID
+            ) from None
 
         self.logger.debug(f"Read pairing key: {s_hipub_bytes}")
         return TsL3PairingKeyReadResult(
             result=L3ResultFieldEnum.OK, s_hipub=s_hipub_bytes
         )
+
+    def ts_l3_pairing_key_invalidate(
+        self, command: TsL3PairingKeyInvalidateCommand
+    ) -> TsL3PairingKeyInvalidateResult:
+        pkey_slot = command.slot.value
+        try:
+            pkey_slot = TsL3PairingKeyInvalidateCommand.SlotEnum(pkey_slot)
+        except ValueError:
+            raise L3ProcessingErrorUnauthorized(f"Invalid {pkey_slot = }") from None
+        self.logger.debug(f"{pkey_slot = }")
+
+        config = self.config.cfg_uap_pairing_key_invalidate
+        self._check_pairing_key_slot_access_privileges(
+            pkey_slot,
+            [
+                ("invalidate_pkey_slot_0", config.invalidate_pkey_slot_0),
+                ("invalidate_pkey_slot_1", config.invalidate_pkey_slot_1),
+                ("invalidate_pkey_slot_2", config.invalidate_pkey_slot_2),
+                ("invalidate_pkey_slot_3", config.invalidate_pkey_slot_3),
+            ],
+        )
+
+        self.logger.info(f"Invalidating pairing key in slot #{pkey_slot}.")
+        try:
+            self.i_pairing_keys[pkey_slot].invalidate()
+        except BlankSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingErrorFail(exc) from None
+
+        self.logger.debug(f"Invalidated pairing key in slot #{pkey_slot}.")
+        return TsL3PairingKeyInvalidateResult(result=L3ResultFieldEnum.OK)
 
     @staticmethod
     def _check_config_object_address(address: int) -> None:
