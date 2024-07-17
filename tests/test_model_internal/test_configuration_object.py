@@ -6,82 +6,40 @@ import string
 
 import pytest
 
-from tvl.targets.model.configuration_object_impl import ConfigurationObjectImpl
-from tvl.targets.model.internal.configuration_object import (
-    REGISTER_SIZE,
-    AccessType,
+from tvl.targets.model.configuration_object_impl import (
+    ConfigObjectRegisterAddressEnum,
+    ConfigurationObjectImpl,
+)
+from tvl.targets.model.internal.configuration_object import (  # AccessType,
+    CONFIG_OBJECT_SIZE_BYTES,
+    REGISTER_SIZE_BITS,
+    REGISTER_SIZE_BYTES,
+    AddressOutOfRangeError,
     ConfigObjectField,
     ConfigObjectRegister,
+    ConfigurationObject,
 )
-
-
-@pytest.mark.parametrize(
-    "access_type, current, expected",
-    [
-        pytest.param((ac := AccessType.RW), (a := 0b0101), a, id=f"{ac}"),
-        pytest.param((ac := AccessType.RO), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.WO), a, 0, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1C), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0C), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1S), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0S), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1T), a, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0T), a, a, id=f"{ac}"),
-    ],
-)
-def test_access_types_read(access_type: AccessType, current: int, expected: int):
-    assert access_type.read(current) == expected
-
-
-@pytest.mark.parametrize(
-    "access_type, current, new, expected",
-    [
-        pytest.param(
-            (ac := AccessType.RW), (a := 0b0101), (b := 0b1100), b, id=f"{ac}"
-        ),
-        pytest.param((ac := AccessType.RO), a, b, a, id=f"{ac}"),
-        pytest.param((ac := AccessType.WO), a, b, b, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1C), a, b, 0b0001, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0C), a, b, 0b0100, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1S), a, b, 0b1101, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0S), a, b, 0b0111, id=f"{ac}"),
-        pytest.param((ac := AccessType.W1T), a, b, 0b1001, id=f"{ac}"),
-        pytest.param((ac := AccessType.W0T), a, b, 0b0110, id=f"{ac}"),
-    ],
-)
-def test_access_types_write(
-    access_type: AccessType, current: int, new: int, expected: int
-):
-    assert access_type.write(current, new, 0b1111) == expected
 
 
 @pytest.mark.parametrize("iteration", range(5))
 def test_configuration_register(iteration: int):
-    width = random.randint(1, REGISTER_SIZE)
-    offset = random.randint(0, REGISTER_SIZE - width)
-    while (ac := random.choice(list(iter(AccessType)))) is AccessType.WO:
-        pass
-    reg_value = random.getrandbits(REGISTER_SIZE)
-
+    width = random.randint(1, REGISTER_SIZE_BITS)
+    offset = random.randint(0, REGISTER_SIZE_BITS - width)
+    reg_value = random.getrandbits(REGISTER_SIZE_BITS)
     mask = 2**width - 1
-    field_mask = ~(mask << offset) & 0xFFFF_FFFF
 
     class _Register(ConfigObjectRegister):
-        x = ConfigObjectField(offset, width, ac)
+        x = ConfigObjectField(offset, width)
 
-    reg = _Register(0, reg_value)
+    class _ConfigObject(ConfigurationObject):
+        def __init__(self, **kwargs: int) -> None:
+            self.reg = _Register(self, 0)
+            super().__init__(**kwargs)
 
-    assert reg.value == reg_value
-    assert reg.x == ac.read(reg_value) >> offset & mask
-    field_value = reg_value >> offset & mask
+    co = _ConfigObject(reg=reg_value)
 
-    value = random.getrandbits(width)
-    new_field_value = ac.write(field_value, value, mask)
-    reg.x = value
-    assert reg.x == new_field_value
-
-    new_reg_value = reg_value & field_mask | new_field_value << offset
-    assert reg.value == new_reg_value
+    assert co.reg.value == reg_value
+    assert co.reg.x == reg_value >> offset & mask
 
 
 def test_configuration_object_equalities():
@@ -93,16 +51,25 @@ def test_configuration_object_equalities():
     assert c1 == c1
     assert c1 == c2
 
+    reg_addr = random.choice(list(ConfigObjectRegisterAddressEnum))
+    reg_value = c2.read(reg_addr)
+    while (new_value := random.getrandbits(REGISTER_SIZE_BITS)) == reg_value:
+        pass
+    c2.write(reg_addr, new_value)
+
+    assert c2 == c2
+    assert c1 != c2
+
 
 def test_configuration_object_and():
     c1 = ConfigurationObjectImpl()
     c2 = ConfigurationObjectImpl()
 
     for _, register in c1.registers():
-        register.value = random.getrandbits(REGISTER_SIZE)
+        c1.write(register.address, random.getrandbits(REGISTER_SIZE_BITS))
 
     for _, register in c2.registers():
-        register.value = random.getrandbits(REGISTER_SIZE)
+        c2.write(register.address, random.getrandbits(REGISTER_SIZE_BITS))
 
     ref_dict = {
         regname: getattr(c1, regname).value & getattr(c2, regname).value
@@ -122,14 +89,14 @@ def test_configuration_object_getitem():
 
     # test existing address
     reg = random.choice([reg for _, reg in c.registers()])
-    assert reg is c[reg.address]
+    assert reg.value == c.read(reg.address)
 
     # test non-existing address
-    possible_addresses = [reg.address for _, reg in c.registers()]
-    while (dummy_address := random.getrandbits(8)) in possible_addresses:
+    while (dummy_address := random.getrandbits(16)) < CONFIG_OBJECT_SIZE_BYTES:
         pass
-    with pytest.raises(IndexError):
-        c[dummy_address]
+    dummy_address += -dummy_address % REGISTER_SIZE_BYTES
+    with pytest.raises(AddressOutOfRangeError):
+        c.read(dummy_address)
 
 
 def test_configuration_object_dict():
@@ -141,7 +108,7 @@ def test_configuration_object_dict():
     assert ConfigurationObjectImpl.from_dict(c1d1) == c1
 
     for _, register in c1.registers():
-        register.value = random.getrandbits(REGISTER_SIZE)
+        c1.write(register.address, random.getrandbits(REGISTER_SIZE_BITS))
 
     c1d2 = c1.to_dict()
     assert c1d2 != c1d1
@@ -151,7 +118,7 @@ def test_configuration_object_dict():
         name for name, _ in c1.registers()
     }:
         pass
-    while (dummy_value := random.getrandbits(REGISTER_SIZE)) in default_values:
+    while (dummy_value := random.getrandbits(REGISTER_SIZE_BITS)) in default_values:
         pass
 
     c2 = ConfigurationObjectImpl.from_dict({dummy_key: dummy_value})
@@ -164,7 +131,7 @@ def test_configuration_object_bytes():
     c1b1 = c1.to_bytes()
 
     for _, register in c1.registers():
-        register.value = random.getrandbits(REGISTER_SIZE)
+        c1.write(register.address, random.getrandbits(REGISTER_SIZE_BITS))
 
     c1b2 = c1.to_bytes()
 

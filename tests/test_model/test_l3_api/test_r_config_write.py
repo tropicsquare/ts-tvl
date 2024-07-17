@@ -11,6 +11,12 @@ from tvl.api.l3_api import TsL3RConfigWriteCommand, TsL3RConfigWriteResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
+from tvl.targets.model.internal.configuration_object import (
+    CONFIG_OBJECT_SIZE_BYTES,
+    ENDIANESS,
+    REGISTER_RESET_VALUE,
+    REGISTER_SIZE_BYTES,
+)
 from tvl.targets.model.tropic01_model import Tropic01Model
 
 
@@ -24,6 +30,14 @@ def _get_value() -> int:
 def _get_value_iter() -> Iterator[int]:
     while True:
         yield _get_value()
+
+
+def _valid_addresses() -> Iterator[int]:
+    yield from range(0, CONFIG_OBJECT_SIZE_BYTES, REGISTER_SIZE_BYTES)
+
+
+def _invalid_addresses() -> Iterator[int]:
+    yield from sample_outside(_valid_addresses(), 2, k=10)
 
 
 @pytest.fixture()
@@ -42,14 +56,16 @@ def set_configuration_objects(
 @pytest.mark.parametrize(
     "address, value",
     (
-        pytest.param(a, v, id=f"{a!s}-{v:#x}")
-        for a, v in zip(ConfigObjectRegisterAddressEnum, _get_value_iter())
+        pytest.param(a, v, id=f"{a:#x}-{v:#x}")
+        for a, v in zip(_valid_addresses(), _get_value_iter())
     ),
 )
 def test_valid_address_slot_set_to_reset_value(
     address: int, value: int, host: Host, model: Tropic01Model
 ):
-    assert (_r := model.r_config[address]).value == _r.reset_value
+    assert model.r_config.read(address) == int.from_bytes(
+        REGISTER_RESET_VALUE, ENDIANESS
+    )
 
     command = TsL3RConfigWriteCommand(
         address=address,
@@ -59,7 +75,7 @@ def test_valid_address_slot_set_to_reset_value(
 
     assert result.result.value == L3ResultFieldEnum.OK
     assert isinstance(result, TsL3RConfigWriteResult)
-    assert model.r_config[address].value == value
+    assert model.r_config.read(address) == value
 
 
 @pytest.mark.usefixtures(set_configuration_objects.__name__)
@@ -71,9 +87,8 @@ def test_valid_address_slot_set_to_reset_value(
     ),
 )
 def test_valid_address(address: int, value: int, host: Host, model: Tropic01Model):
-    register = model.r_config[address]
-    previous_value = register.value
-    assert previous_value != register.reset_value
+    previous_value = model.r_config.read(address)
+    assert previous_value != int.from_bytes(REGISTER_RESET_VALUE, ENDIANESS)
 
     command = TsL3RConfigWriteCommand(
         address=address,
@@ -82,22 +97,23 @@ def test_valid_address(address: int, value: int, host: Host, model: Tropic01Mode
     result = host.send_command(command)
 
     assert result.result.value == L3ResultFieldEnum.FAIL
-    assert register.value == previous_value
+    assert model.r_config.read(address) == previous_value
 
 
 @pytest.mark.parametrize(
     "address, value",
     (
-        pytest.param(a, v, id=f"{a!s}-{v:#x}")
-        for a, v in zip(
-            sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10), _get_value_iter()
-        )
+        pytest.param(a, v, id=f"{a:#x}-{v:#x}")
+        for a, v in zip(_invalid_addresses(), _get_value_iter())
     ),
 )
 def test_invalid_address_slot_set_to_reset_value(
     address: int, value: int, host: Host, model: Tropic01Model
 ):
-    assert all(reg.value == reg.reset_value for _, reg in model.r_config.registers())
+    assert all(
+        reg.value == int.from_bytes(REGISTER_RESET_VALUE, ENDIANESS)
+        for _, reg in model.r_config.registers()
+    )
 
     command = TsL3RConfigWriteCommand(
         address=address,
@@ -112,14 +128,15 @@ def test_invalid_address_slot_set_to_reset_value(
 @pytest.mark.parametrize(
     "address, value",
     (
-        pytest.param(a, v, id=f"{a!s}-{v:#x}")
-        for a, v in zip(
-            sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10), _get_value_iter()
-        )
+        pytest.param(a, v, id=f"{a:#x}-{v:#x}")
+        for a, v in zip(_invalid_addresses(), _get_value_iter())
     ),
 )
 def test_invalid_address(address: int, value: int, host: Host, model: Tropic01Model):
-    assert all(reg.value != reg.reset_value for _, reg in model.r_config.registers())
+    assert all(
+        reg.value != int.from_bytes(REGISTER_RESET_VALUE, ENDIANESS)
+        for _, reg in model.r_config.registers()
+    )
 
     command = TsL3RConfigWriteCommand(
         address=address,
