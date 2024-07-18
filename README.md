@@ -94,3 +94,49 @@ print(response)
 ```
 
 More examples in the [`examples`](examples/) directory.
+
+# Model server
+
+Along with the TVL comes a command-line tool that exposes a `Tropic01Model`
+behind a TCP/IP server or a serial port.
+
+Once the TVL package is installed, the model server is available in the terminal.
+For example:
+
+```shell
+model_server --help
+```
+
+For more information about the TCP/IP server:
+
+```shell
+model_server tcp --help
+```
+
+For more information about the serial port server:
+
+```shell
+model_server serial --help
+```
+
+## Configuration file
+
+It is possible (and recommended) to provide a [yaml](https://yaml.org/)
+configuration file to the model_server to configure the `Tropic01Model`.
+This file is parsed by model_server using
+[pydantic](https://pypi.org/project/pydantic/1.10.13/).
+
+For more information about the configuration file syntax, have a look
+[here](tvl/server/configuration.py) and [here](tvl/configuration_file_model.py).
+
+This repository offers the user a basic configuration file available
+[here](tvl/server/model_config/).
+To use it, just copy the content of the directory to your working directory and
+specify the option `--configuration` when running the model server.
+
+```shell
+# in the case the TCP/ interface is used
+model_server tcp --configuration=model_config.yml
+# or
+model_server tcp -c model_config.yml
+```
