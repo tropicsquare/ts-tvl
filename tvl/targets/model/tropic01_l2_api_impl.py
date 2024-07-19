@@ -220,10 +220,6 @@ class L2APIImplementation(L2API):
         raise L2ProcessingErrorGeneric("No latest response to send.")
 
     def ts_l2_sleep_req(self, request: TsL2SleepReqRequest) -> TsL2SleepReqResponse:
-        self.check_access_privileges(
-            "sleep_mode_en", self.config.cfg_sleep_mode.sleep_mode_en
-        )
-
         request_sleep_kind = request.sleep_kind.value
         try:
             sleep_kind = TsL2SleepReqRequest.SleepKindEnum(request_sleep_kind)
@@ -231,12 +227,29 @@ class L2APIImplementation(L2API):
             raise L2ProcessingErrorGeneric(
                 f"Unexpected value: {request_sleep_kind}."
             ) from None
+        self.logger.debug(f"{sleep_kind = }")
+
+        if (
+            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.SLEEP_MODE
+            and self.config.cfg_sleep_mode.sleep_mode_en == 0
+        ):
+            self.logger.debug("Sleep mode disabled.")
+            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
+
+        if (
+            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE
+            and self.config.cfg_sleep_mode.deep_sleep_mode_en == 0
+        ):
+            self.logger.debug("Deep sleep mode disabled.")
+            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
 
         self.logger.info("Entering in sleep mode.")
-        if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.SLEEP_MODE:
-            self.invalidate_session()
-            self.command_buffer.reset()
+        self.invalidate_session()
+        self.command_buffer.reset()
+
+        if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE:
             self.response_buffer.reset()
+            self._config = None
 
         self.logger.debug("Entered in sleep mode.")
         return TsL2SleepReqResponse(status=L2StatusEnum.REQ_OK)
