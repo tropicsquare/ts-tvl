@@ -20,7 +20,7 @@ def _known_startup_ids() -> List[int]:
 
 
 def _unknown_startup_ids() -> List[int]:
-    return [i for i in range(256) if i not in set(TsL2StartupReqRequest.StartupIdEnum)]
+    return [i for i in range(256) if i not in set(_known_startup_ids())]
 
 
 @pytest.fixture()

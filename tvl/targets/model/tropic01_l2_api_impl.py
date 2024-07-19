@@ -154,7 +154,7 @@ class L2APIImplementation(L2API):
         self.logger.debug(encrypted_command)
 
         self.logger.info("Decrypting L3 command.")
-        req_data = self._decrypt_command(encrypted_command.data_field_bytes)
+        req_data = self.decrypt_command(encrypted_command.data_field_bytes)
         if req_data is None:
             raise L2ProcessingErrorTag("Invalid TAG in encrypted command request")
         self.logger.debug(f"Decrypted command: {req_data}")
@@ -183,7 +183,7 @@ class L2APIImplementation(L2API):
 
         self.logger.info("Encrypting L3 result.")
         encrypted_result = L3EncryptedPacket.from_encrypted(
-            self._encrypt_result(result.to_bytes())
+            self.encrypt_result(result.to_bytes())
         )
         self.logger.debug(f"Encrypted result: {encrypted_result}")
 

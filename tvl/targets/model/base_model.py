@@ -568,7 +568,7 @@ class BaseModel(metaclass=MetaModel):
         self.pairing_key_slot = -1
         self.logger.debug("Done.")
 
-    def _encrypt_result(self, result: bytes) -> bytes:
+    def encrypt_result(self, result: bytes) -> bytes:
         """Encrypt the raw result to be sent.
 
         Args:
@@ -581,7 +581,7 @@ class BaseModel(metaclass=MetaModel):
             return self.session.encrypt_response(result)
         return result + b"\x00" * ENCRYPTION_TAG_LEN
 
-    def _decrypt_command(self, command: bytes) -> Optional[bytes]:
+    def decrypt_command(self, command: bytes) -> Optional[bytes]:
         """Decrypt the received raw command.
 
         Args:
