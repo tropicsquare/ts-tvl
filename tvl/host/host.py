@@ -278,7 +278,7 @@ class Host:
 
         self.logger.info("Encrypting L3 command.")
         encrypted_command = L3EncryptedPacket.from_encrypted(
-            self._encrypt_command(l3command.to_bytes())
+            self.encrypt_command(l3command.to_bytes())
         )
         self.logger.debug(f"Encrypted command: {encrypted_command}.")
 
@@ -317,7 +317,7 @@ class Host:
         encrypted = L3EncryptedPacket.from_bytes(result_bytes)
 
         self.logger.info("Decrypting L3 result.")
-        result = self._decrypt_result(encrypted.data_field_bytes)
+        result = self.decrypt_result(encrypted.data_field_bytes)
         if result is None:
             raise SessionError("Invalid TAG.")
         self.logger.debug(f"Decrypted result: {result}.")
@@ -358,14 +358,14 @@ class Host:
         self.logger.info("++++++ Returning L3 result ++++++")
         return l3result
 
-    def _encrypt_command(self, command: bytes) -> bytes:
+    def encrypt_command(self, command: bytes) -> bytes:
         if not self.activate_encryption:
             return command + b"\x00" * ENCRYPTION_TAG_LEN
         if not self.session.is_session_valid():
             raise SessionError("Cannot encrypt command: no valid session.")
         return self.session.encrypt_command(command)
 
-    def _decrypt_result(self, result: bytes) -> Optional[bytes]:
+    def decrypt_result(self, result: bytes) -> Optional[bytes]:
         if not self.activate_encryption:
             return result[:-ENCRYPTION_TAG_LEN]
         if not self.session.is_session_valid():
