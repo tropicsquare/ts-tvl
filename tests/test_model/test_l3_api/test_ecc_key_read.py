@@ -38,7 +38,7 @@ def test_reading_ok(slot: int, host: Host, model: Tropic01Model):
     assert model.r_ecc_keys.slots[slot] == before
 
 
-@pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_no_key(host: Host, model: Tropic01Model, slot: int):
     assert model.r_ecc_keys.slots[slot] is None
     command = TsL3EccKeyReadCommand(
@@ -46,7 +46,7 @@ def test_no_key(host: Host, model: Tropic01Model, slot: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == TsL3EccKeyReadResult.ResultEnum.INVALID_KEY
 
 
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))

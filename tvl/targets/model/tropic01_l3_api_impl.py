@@ -1,7 +1,6 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from itertools import chain
 from typing import List, Tuple
 
 from ...api.l3_api import (
@@ -30,6 +29,8 @@ from ...api.l3_api import (
     TsL3McounterInitResult,
     TsL3McounterUpdateCommand,
     TsL3McounterUpdateResult,
+    TsL3PairingKeyInvalidateCommand,
+    TsL3PairingKeyInvalidateResult,
     TsL3PairingKeyReadCommand,
     TsL3PairingKeyReadResult,
     TsL3PairingKeyWriteCommand,
@@ -60,6 +61,12 @@ from .exceptions import (
     L3ProcessingErrorFail,
     L3ProcessingErrorUnauthorized,
 )
+from .internal.configuration_object import (
+    AddressNotAlignedError,
+    AddressOutOfRangeError,
+    BitIndexOutOfBoundError,
+    NoFreeSpaceError,
+)
 from .internal.ecc_keys import (
     CurveMismatchError,
     ECCKeyDoesNotExistInSlotError,
@@ -72,10 +79,14 @@ from .internal.mcounter import (
     MCounterUpdateError,
     MCounterWrongInitValueError,
 )
-from .internal.pairing_keys import InvalidatedSlotError
+from .internal.pairing_keys import (
+    BlankSlotError,
+    InvalidatedSlotError,
+    WrittenSlotError,
+)
 from .internal.user_data_partition import SlotAlreadyWrittenError
 
-FUNCTIONALITY_ACCESS_PRIVILEGES = [
+FUNCTIONALITY_ACCESS_PRIVILEGES = {
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_READ,
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_ERASE,
@@ -92,10 +103,10 @@ FUNCTIONALITY_ACCESS_PRIVILEGES = [
     ConfigObjectRegisterAddressEnum.CFG_UAP_MAC_AND_DESTROY,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PING,
     ConfigObjectRegisterAddressEnum.CFG_UAP_SERIAL_CODE_GET,
-]
+}
 
 
-CONFIGURATION_ACCESS_PRIVILEGES = [
+CONFIGURATION_ACCESS_PRIVILEGES = {
     ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ,
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE,
@@ -103,7 +114,7 @@ CONFIGURATION_ACCESS_PRIVILEGES = [
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ,
     ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE,
-]
+}
 
 
 class L3APIImplementation(L3API):
@@ -150,13 +161,12 @@ class L3APIImplementation(L3API):
         self.logger.info(f"Writing pairing key to slot #{pkey_slot}.")
         s_hipub_bytes = command.s_hipub.to_bytes()
         self.logger.debug(f"Writing pairing key: {s_hipub_bytes}")
+
         try:
             self.i_pairing_keys[pkey_slot].write(s_hipub_bytes)
-        except InvalidatedSlotError as exc:
+        except WrittenSlotError as exc:
             self.logger.info(exc)
-            raise L3ProcessingErrorFail(
-                f"Pairing key slot #{pkey_slot} is invalidated"
-            ) from None
+            raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Pairing key slot #{pkey_slot} written.")
         return TsL3PairingKeyWriteResult(result=L3ResultFieldEnum.OK)
@@ -183,21 +193,54 @@ class L3APIImplementation(L3API):
         )
 
         self.logger.info(f"Reading pairing key from slot #{pkey_slot}.")
-        s_hipub_bytes = self.i_pairing_keys[pkey_slot].read()
+        try:
+            s_hipub_bytes = self.i_pairing_keys[pkey_slot].read()
+        except BlankSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_EMPTY
+            ) from None
+        except InvalidatedSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_INVALID
+            ) from None
 
         self.logger.debug(f"Read pairing key: {s_hipub_bytes}")
         return TsL3PairingKeyReadResult(
             result=L3ResultFieldEnum.OK, s_hipub=s_hipub_bytes
         )
 
-    @staticmethod
-    def _check_config_object_address(address: int) -> None:
+    def ts_l3_pairing_key_invalidate(
+        self, command: TsL3PairingKeyInvalidateCommand
+    ) -> TsL3PairingKeyInvalidateResult:
+        pkey_slot = command.slot.value
         try:
-            ConfigObjectRegisterAddressEnum(address)
+            pkey_slot = TsL3PairingKeyInvalidateCommand.SlotEnum(pkey_slot)
         except ValueError:
-            raise L3ProcessingErrorFail(
-                f"No configuration register at {address=:#04x}."
-            ) from None
+            raise L3ProcessingErrorUnauthorized(f"Invalid {pkey_slot = }") from None
+        self.logger.debug(f"{pkey_slot = }")
+
+        config = self.config.cfg_uap_pairing_key_invalidate
+        self._check_pairing_key_slot_access_privileges(
+            pkey_slot,
+            [
+                ("invalidate_pkey_slot_0", config.invalidate_pkey_slot_0),
+                ("invalidate_pkey_slot_1", config.invalidate_pkey_slot_1),
+                ("invalidate_pkey_slot_2", config.invalidate_pkey_slot_2),
+                ("invalidate_pkey_slot_3", config.invalidate_pkey_slot_3),
+            ],
+        )
+
+        self.logger.info(f"Invalidating pairing key in slot #{pkey_slot}.")
+        try:
+            self.i_pairing_keys[pkey_slot].invalidate()
+        except BlankSlotError as exc:
+            self.logger.info(exc)
+            raise L3ProcessingErrorFail(exc) from None
+
+        self.logger.debug(f"Invalidated pairing key in slot #{pkey_slot}.")
+        return TsL3PairingKeyInvalidateResult(result=L3ResultFieldEnum.OK)
 
     def _check_config_access_privileges(
         self,
@@ -205,7 +248,6 @@ class L3APIImplementation(L3API):
         functionality_access_privileges: Tuple[str, int],
         configuration_access_privileges: Tuple[str, int],
     ) -> None:
-        self._check_config_object_address(address)
         if address in FUNCTIONALITY_ACCESS_PRIVILEGES:
             self.logger.debug("'Functionality' register.")
             self.check_access_privileges(*functionality_access_privileges)
@@ -218,24 +260,26 @@ class L3APIImplementation(L3API):
     def ts_l3_r_config_write(
         self, command: TsL3RConfigWriteCommand
     ) -> TsL3RConfigWriteResult:
-        self._check_config_object_address(address := command.address.value)
         self.check_access_privileges(
             "r_config_write_erase",
             self.config.cfg_uap_r_config_write_erase.r_config_write_erase,
         )
 
+        address = command.address.value
         self.logger.info("Writing r_config register.")
         self.logger.debug(f"Register address: {address:#04x}.")
 
-        current_value = self.r_config[address].value
-        if current_value != self.r_config[address].reset_value:
-            raise L3ProcessingErrorFail(
-                f"Register is not erased: {current_value:#010x}"
-            )
-
         value = command.value.value
         self.logger.debug(f"Writing value: {value:#010x}.")
-        self.r_config[address].value = value
+
+        try:
+            self.r_config.write(address, value)
+        except (
+            AddressNotAlignedError,
+            AddressOutOfRangeError,
+            NoFreeSpaceError,
+        ) as exc:
+            raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug("R_config register written.")
         return TsL3RConfigWriteResult(result=L3ResultFieldEnum.OK)
@@ -252,7 +296,11 @@ class L3APIImplementation(L3API):
 
         self.logger.info("Reading r_config register.")
         self.logger.debug(f"Register address: {address:#04x}.")
-        value = self.r_config[address].value
+
+        try:
+            value = self.r_config.read(address)
+        except (AddressNotAlignedError, AddressOutOfRangeError) as exc:
+            raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Read value: {value:#010x}.")
         return TsL3RConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
@@ -266,11 +314,7 @@ class L3APIImplementation(L3API):
         )
 
         self.logger.info("Erasing r_config configuration object.")
-        for address in chain(
-            FUNCTIONALITY_ACCESS_PRIVILEGES, CONFIGURATION_ACCESS_PRIVILEGES
-        ):
-            self.logger.debug(f"{address!s}.")
-            self.r_config[address].reset()
+        self.r_config.erase()
 
         self.logger.debug("R_config configuration object erased.")
         return TsL3RConfigEraseResult(result=L3ResultFieldEnum.OK)
@@ -291,8 +335,12 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"Bit index: {bit_index}.")
 
         try:
-            self.i_config[address].write_bit(bit_index)
-        except ValueError as exc:
+            self.i_config.write_bit(address, bit_index)
+        except (
+            AddressNotAlignedError,
+            AddressOutOfRangeError,
+            BitIndexOutOfBoundError,
+        ) as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug("I_config register written.")
@@ -310,7 +358,11 @@ class L3APIImplementation(L3API):
 
         self.logger.info("Reading i_config register.")
         self.logger.debug(f"Register address: {address:#04x}.")
-        value = self.i_config[address].value
+
+        try:
+            value = self.i_config.read(address)
+        except (AddressNotAlignedError, AddressOutOfRangeError) as exc:
+            raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Read value: {value:#010x}.")
         return TsL3IConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
@@ -583,7 +635,9 @@ class L3APIImplementation(L3API):
         try:
             curve, pub_key, origin = self.r_ecc_keys.read(slot)
         except ECCKeyDoesNotExistInSlotError as exc:
-            raise L3ProcessingErrorFail(exc) from None
+            raise L3ProcessingError(
+                exc, result=TsL3EccKeyReadResult.ResultEnum.INVALID_KEY
+            ) from None
         self.logger.debug(
             f"Read ECC key from {slot=}: {curve=}; {pub_key=}; "
             f"randomly generated={origin}."

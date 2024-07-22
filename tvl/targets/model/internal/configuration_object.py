@@ -2,170 +2,175 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import contextlib
-from enum import Enum
-from itertools import count, islice
-from typing import Any, Callable, Dict, Iterator, Mapping, Tuple
+from typing import Any, Dict, Iterator, Mapping, Tuple
 
 from pydantic import BaseModel, root_validator
 from typing_extensions import Self
 
-CONFIG_OBJECT_SIZE_BYTES = 512
-REGISTER_SIZE = 32
+CONFIG_OBJECT_SIZE_BYTES = 0x200
+REGISTER_SIZE_BITS = 32
 REGISTER_SIZE_BYTES = 32 // 8
-REGISTER_MASK = 2**REGISTER_SIZE - 1
+NB_REGISTERS = CONFIG_OBJECT_SIZE_BYTES // REGISTER_SIZE_BYTES
+REGISTER_RESET_VALUE = b"\xff" * REGISTER_SIZE_BYTES
+REGISTER_MASK = 2**REGISTER_SIZE_BITS - 1
+REGISTER_STR_NB_CHARS = REGISTER_SIZE_BITS // 4 + 2
+ENDIANESS = "big"
 
 
-class AccessType(Enum):
-    """Registers' access types"""
+class ConfigObjectError(Exception):
+    pass
 
-    RW = (lambda x: x, lambda x, y, m: y)  # type: ignore
-    """Read-Write ﬁeld"""
-    RO = (lambda x: x, lambda x, y, m: x)  # type: ignore
-    """Read-only ﬁeld"""
-    WO = (lambda x: 0, lambda x, y, m: y)  # type: ignore
-    """Write-only ﬁeld"""
-    W1C = (lambda x: x, lambda x, y, m: x & (~y & m))  # type: ignore
-    """Write 1 to clear"""
-    W0C = (lambda x: x, lambda x, y, m: x & y)  # type: ignore
-    """Write 0 to clear"""
-    W1S = (lambda x: x, lambda x, y, m: x | y)  # type: ignore
-    """Write 1 to set"""
-    W0S = (lambda x: x, lambda x, y, m: x | (~y & m))  # type: ignore
-    """Write 0 to set"""
-    W1T = (lambda x: x, lambda x, y, m: x ^ y)  # type: ignore
-    """Write 1 to toggle"""
-    W0T = (lambda x: x, lambda x, y, m: x ^ (~y & m))  # type: ignore
-    """Write 0 to toggle"""
 
-    def __init__(
-        self,
-        read_function: Callable[[int], int],
-        write_function: Callable[[int, int, int], int],
-    ) -> None:
-        self.read_function = read_function
-        self.write_function = write_function
+class AddressNotAlignedError(ConfigObjectError):
+    pass
 
-    def read(self, value: int) -> int:
-        """Behavior upon read access
 
-        Args:
-            value (int): current register's value
+class AddressOutOfRangeError(ConfigObjectError):
+    pass
 
-        Returns:
-            the register's value when read
-        """
-        return self.read_function(value)
 
-    def write(self, value: int, new_value: int, mask: int) -> int:
-        """Behavior upon write access
+class NoFreeSpaceError(ConfigObjectError):
+    pass
 
-        Args:
-            value (int): current register's value
-            new_value (int): new value to write
-            mask (int): mask of the register
 
-        Returns:
-            the register's value as actually written
-        """
-        return self.write_function(value, new_value, mask)
-
-    def __repr__(self) -> str:
-        return str(self)
+class BitIndexOutOfBoundError(ConfigObjectError):
+    pass
 
 
 class ConfigObjectRegister:
     """Register contained in a configuration object"""
 
-    def __init__(self, address: int, reset_value: int) -> None:
+    def __init__(self, co: "ConfigurationObject", address: int) -> None:
+        self.co = co
         self.address = address
-        self.reset_value = reset_value
-        self.reset()
 
-    def reset(self) -> None:
-        self.value = self.reset_value
-
-    def write_bit(self, bit_index: int) -> None:
-        if not 0 <= bit_index < REGISTER_SIZE:
-            raise ValueError(f"Bit index is out of bound: {bit_index}")
-        masked_value = ~(2**bit_index) & REGISTER_MASK
-        self.value &= masked_value
+    @property
+    def value(self) -> int:
+        return self.co.read(self.address)
 
 
 class ConfigObjectField:
     """Register's field"""
 
-    def __init__(
-        self,
-        offset: int,
-        width: int,
-        access_type: AccessType = AccessType.W1C,
-    ) -> None:
+    def __init__(self, offset: int, width: int) -> None:
         self.offset = offset
         self.mask = 2**width - 1
-        self.access_type = access_type
 
     def __get__(self, instance: ConfigObjectRegister, _) -> int:
-        return self.access_type.read(instance.value >> self.offset & self.mask)
-
-    def __set__(self, instance: ConfigObjectRegister, value: int) -> None:
-        reg_value = instance.value
-
-        current_value = reg_value >> self.offset & self.mask
-        new_value = self.access_type.write(current_value, value, self.mask)
-
-        field_mask = ~(self.mask << self.offset) & REGISTER_MASK
-        instance.value = reg_value & field_mask | new_value << self.offset
+        return instance.value >> self.offset & self.mask
 
 
 class ConfigurationObject:
     """Chip configuration abstraction"""
 
     def __init__(self, **kwargs: int) -> None:
+        self.data: bytearray
+        self.erase()
+
         for regname, register in self.registers():
             with contextlib.suppress(KeyError):
-                register.value = kwargs[regname]
+                value = kwargs[regname]
+                self.write(register.address, value, check=False)
 
     def registers(self) -> Iterator[Tuple[str, ConfigObjectRegister]]:
-        """Go over the registers of the configuration object.
-
-        Returns:
-            an iterator of the registers in the configuration object
-        """
+        """Go over the registers of the configuration object."""
         for key, value in self.__dict__.items():
             if isinstance(value, ConfigObjectRegister):
                 yield key, value
 
-    def __getitem__(self, __item: int) -> ConfigObjectRegister:
-        for _, register in self.registers():
-            if register.address == __item:
-                return register
-        raise IndexError(f"Index {__item:#x} out of range")
-
     def __and__(self, __other: Any) -> Self:
         if not isinstance(__other, self.__class__):
             return NotImplemented
+
         new_instance = self.__class__()
-        for regname, _ in self.registers():
-            new_instance.__dict__[regname].value = (
-                self.__dict__[regname].value & __other.__dict__[regname].value
-            )
+
+        for address in (register.address for _, register in self.registers()):
+            and_ = self.read(address) & __other.read(address)
+            new_instance.write(address, and_)
+
         return new_instance
+
+    def __eq__(self, __other: Any) -> bool:
+        if __other is self:
+            return True
+
+        if not isinstance(__other, self.__class__):
+            return NotImplemented
+
+        return self.to_bytes() == __other.to_bytes()
 
     def __str__(self) -> str:
         registers = "; ".join(
-            f"{regname}={register.value:#010x}"
+            f"{regname}={register.value:#0{REGISTER_STR_NB_CHARS}x}"
             for regname, register in self.registers()
         )
         return f"{self.__class__.__name__}({registers})"
 
-    def __eq__(self, __other: Any, /) -> bool:
-        if __other is self:
-            return True
-        if not isinstance(__other, self.__class__):
-            return NotImplemented
-        return all(
-            self.__dict__[regname].value == __other.__dict__[regname].value
-            for regname, _ in self.registers()
+    @staticmethod
+    def _check_address(address: int) -> None:
+        if address % REGISTER_SIZE_BYTES != 0:
+            raise AddressNotAlignedError("Address should be word-aligned")
+
+        if not 0 <= address < CONFIG_OBJECT_SIZE_BYTES:
+            raise AddressOutOfRangeError("Address out of range")
+
+    def erase(self) -> None:
+        """Erase the memory content."""
+        self.data = bytearray(REGISTER_RESET_VALUE * NB_REGISTERS)
+
+    def write(self, address: int, value: int, *, check: bool = True) -> None:
+        """Write to the memory.
+
+        Args:
+            address (int): address to write the data
+            value (int): data to write
+            check (bool, optional): check the word is reset beforehand. Defaults to True.
+
+        Raises:
+            NoFreeSpaceError: (if check is enabled) register cannot be written
+        """
+        self._check_address(address)
+
+        if check:
+            current_value = bytes(self.data[address : address + REGISTER_SIZE_BYTES])
+            if current_value != REGISTER_RESET_VALUE:
+                raise NoFreeSpaceError("Register already written")
+
+        self.data[address : address + REGISTER_SIZE_BYTES] = value.to_bytes(
+            REGISTER_SIZE_BYTES, ENDIANESS
+        )
+
+    def write_bit(self, address: int, bit_index: int) -> None:
+        """Write a bit from one to zero.
+
+        Args:
+            address (int): address of the word
+            bit_index (int): index of the bit to flip
+
+        Raises:
+            BitIndexOutOfBoundError: bit is not reachable
+        """
+        current_value = self.read(address)
+
+        if not 0 <= bit_index < REGISTER_SIZE_BITS:
+            raise BitIndexOutOfBoundError(f"Bit index is out of bound: {bit_index}")
+
+        masked_value = ~(2**bit_index) & REGISTER_MASK
+        new_value = current_value & masked_value
+        self.write(address, new_value, check=False)
+
+    def read(self, address: int) -> int:
+        """Read the memory.
+
+        Args:
+            address (int): address to read
+
+        Returns:
+            the word stored at the address
+        """
+        self._check_address(address)
+        return int.from_bytes(
+            self.data[address : address + REGISTER_SIZE_BYTES], ENDIANESS
         )
 
     def to_dict(self) -> Dict[str, int]:
@@ -184,7 +189,7 @@ class ConfigurationObject:
             __mapping (Mapping[str, int]): the data
 
         Returns:
-            the new instance
+            a new instance
         """
         return cls(**__mapping)
 
@@ -194,15 +199,7 @@ class ConfigurationObject:
         Returns:
             the content of the configuration object as bytes
         """
-        address_register_mapping = {
-            register.address: register for _, register in self.registers()
-        }
-        return b"".join(
-            register.value.to_bytes(REGISTER_SIZE_BYTES, "big")
-            if (register := address_register_mapping.get(address)) is not None
-            else b"\x00\x00\x00\x00"
-            for address in range(0, CONFIG_OBJECT_SIZE_BYTES, REGISTER_SIZE_BYTES)
-        )
+        return bytes(self.data)
 
     @classmethod
     def from_bytes(cls, __data: bytes, /) -> Self:
@@ -212,23 +209,10 @@ class ConfigurationObject:
             __data (bytes): the serialized configuration object
 
         Returns:
-            the new instance
+            a new instance
         """
-
-        def _chunked(data: bytes) -> Iterator[int]:
-            it = iter(data)
-            while chunk := bytes(islice(it, REGISTER_SIZE_BYTES)):
-                yield int.from_bytes(chunk, "big")
-
         new_instance = cls()
-        address_register_mapping = {
-            register.address: register for _, register in new_instance.registers()
-        }
-
-        for value, address in zip(_chunked(__data), count(step=REGISTER_SIZE_BYTES)):
-            if (register := address_register_mapping.get(address)) is not None:
-                register.value = value
-
+        new_instance.data = bytearray(__data)
         return new_instance
 
 

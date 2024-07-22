@@ -21,7 +21,6 @@ from typing import Optional
 
 from pydantic import StrictInt
 
-from tvl.targets.model.internal.configuration_object import AccessType
 from tvl.targets.model.internal.configuration_object import (
     ConfigObjectField,
     ConfigObjectRegister,
@@ -33,7 +32,7 @@ from tvl.typing_utils import HexReprIntEnum
 {% for register_name, register in context.items() %}
 class {{to_camelcase(register_name)}}(ConfigObjectRegister):
     {%- for field_name, field in register.fields.items() %}
-    {{field_name | lower}} = ConfigObjectField({{field.lowidx}}, {{field.width}}, AccessType.{{field.access}})
+    {{field_name | lower}} = ConfigObjectField({{field.lowidx}}, {{field.width}})
     {{['"""', field.description, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
     {%- endfor %}
 
@@ -47,7 +46,7 @@ class {{ENUM_CLASS}}(HexReprIntEnum):
 class ConfigurationObjectImpl(ConfigurationObject):
     def __init__(self, **kwargs: int) -> None:
 {%- for register_name, register in context.items() %}
-        self.{{register_name | lower}} = {{to_camelcase(register_name)}}({{ENUM_CLASS}}.{{register_name | upper}}, {{"0x%08X" | format(register.reset)}})
+        self.{{register_name | lower}} = {{to_camelcase(register_name)}}(self, {{ENUM_CLASS}}.{{register_name | upper}})
 {%- endfor %}
         super().__init__(**kwargs)
 

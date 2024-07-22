@@ -10,7 +10,7 @@ from typing import Any, Dict, TypedDict
 
 import jinja2
 
-__version__ = "0.3"
+__version__ = "0.4"
 
 TOOL = Path(__file__)
 TEMPLATE_DIR = TOOL.parent
@@ -19,8 +19,6 @@ __logger = logging.getLogger(TOOL.stem.lower())
 
 
 class InputField(TypedDict):
-    access: str
-    reset: int
     lowidx: int
     width: int
     longtext: str
@@ -38,8 +36,6 @@ class Parser:
     @classmethod
     def parse_field(cls, node: et.Element) -> InputField:
         return {
-            "access": node.findtext("access", ""),
-            "reset": int(node.findtext("reset", ""), base=16),
             "lowidx": int(node.findtext("lowidx", "")),
             "width": int(node.findtext("width", "")),
             "longtext": node.findtext("longtext", ""),
@@ -64,7 +60,6 @@ class Parser:
 
 
 class ContextField(TypedDict):
-    access: str
     lowidx: int
     width: int
     description: str
@@ -72,7 +67,6 @@ class ContextField(TypedDict):
 
 class ContextRegister(TypedDict):
     baseaddr: int
-    reset: int
     fields: Dict[str, ContextField]
 
 
@@ -83,7 +77,6 @@ class Converter:
     @classmethod
     def convert_field(cls, field: InputField) -> ContextField:
         return {
-            "access": field["access"],
             "lowidx": field["lowidx"],
             "width": field["width"],
             "description": " ".join(map(str.strip, field["longtext"].split("\n"))),
@@ -93,7 +86,6 @@ class Converter:
     def convert_register(cls, reg: InputRegister) -> ContextRegister:
         return {
             "baseaddr": reg["baseaddr"],
-            "reset": 0xFFFF_FFFF,
             "fields": {
                 key: cls.convert_field(value) for key, value in reg["fields"].items()
             },

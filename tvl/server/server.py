@@ -48,7 +48,6 @@ def get_input_arguments():
         return _check
 
     parser = ArgumentParser(
-        f"./{Path(__file__).name}",
         description="Expose the Tropic01 model API via a server.",
     )
     subparsers = parser.add_subparsers(title="Connection type")

@@ -26,7 +26,7 @@ from .logging_utils import LogDict, LogIter
 DEFAULT_MODEL_CONFIG = {
     "i_pairing_keys": {
         0: {
-            "value": b"\x83\xc36<\xff'G\xb7\xf7\xeb\x19\x85\x17c\x1aqTv\xb4\xfe\"F\x01E\x89\xc3\xac\x11\x8b\xb8\x9eQ"  # noqa E501
+            "value": b"\x84/\xe3!\xa8$t\x0877\xff+\x9b\x88\xa2\xafBD-\xb0\xd8\xaa\xccm\xc6\x9e\x99S3D\xb2F"  # noqa E501
         }
     },
     "s_t_priv": b"H\xb9/\x05\x0b\xfb\x82@\"\xec\xef{\xc5\xec\xbc\xa4R\xd3\xfd'p\xe8\xb5T\x9e\x93g)\xacx\xc4m",  # noqa E501
@@ -106,7 +106,7 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
                     certificate = load_der_x509_certificate(cert.read_bytes())
                 else:
                     raise TypeError("Certificate not in DER nor PEM format")
-                values["certificate"] = certificate.public_bytes(Encoding.DER)
+                values["x509_certificate"] = certificate.public_bytes(Encoding.DER)
 
         return values
 

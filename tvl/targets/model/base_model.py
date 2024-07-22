@@ -101,7 +101,7 @@ class BaseModel(metaclass=MetaModel):
         chip_id: bytes = b"chip_id",
         riscv_fw_version: bytes = b"riscv_fw_version",
         spect_fw_version: bytes = b"spect_fw_version",
-        serial_code: bytes = b"serial_code",
+        serial_code: bytes = b"\x00\x01\x02\x03",
         activate_encryption: bool = True,
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
@@ -576,7 +576,7 @@ class BaseModel(metaclass=MetaModel):
         self.pairing_key_slot = -1
         self.logger.debug("Done.")
 
-    def _encrypt_result(self, result: bytes) -> bytes:
+    def encrypt_result(self, result: bytes) -> bytes:
         """Encrypt the raw result to be sent.
 
         Args:
@@ -589,7 +589,7 @@ class BaseModel(metaclass=MetaModel):
             return self.session.encrypt_response(result)
         return result + b"\x00" * ENCRYPTION_TAG_LEN
 
-    def _decrypt_command(self, command: bytes) -> Optional[bytes]:
+    def decrypt_command(self, command: bytes) -> Optional[bytes]:
         """Decrypt the received raw command.
 
         Args:

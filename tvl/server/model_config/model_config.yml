@@ -1,0 +1,3 @@
+s_t_priv: tropic01_ese_private_key_1.pem
+s_t_pub: tropic01_ese_public_key_1.pem
+x509_certificate: tropic01_ese_certificate_1.pem

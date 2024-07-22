@@ -12,7 +12,7 @@ from tvl.api.l2_api import TsL2HandshakeReqRequest, TsL2HandshakeReqResponse
 from tvl.constants import L2StatusEnum
 from tvl.host.host import Host
 from tvl.messages.l2_messages import L2Response
-from tvl.targets.model.internal.pairing_keys import BLANK_VALUE, INVALID_VALUE
+from tvl.targets.model.internal.pairing_keys import SlotState
 
 
 def sucessful_handshake(response: L2Response) -> bool:
@@ -54,7 +54,7 @@ def configuration(configuration: Dict[str, Dict[str, Any]], request: SubRequest)
         pytest.param(
             {
                 "host": {"pairing_key_index": (pki := random.randint(0, 4))},
-                "model": {"i_pairing_keys": {pki: {"value": BLANK_VALUE}}},
+                "model": {"i_pairing_keys": {pki: {"state": SlotState.BLANK}}},
             },
             nullcontext(),
             handshake_error,
@@ -63,7 +63,7 @@ def configuration(configuration: Dict[str, Dict[str, Any]], request: SubRequest)
         pytest.param(
             {
                 "host": {"pairing_key_index": (pki := random.randint(0, 4))},
-                "model": {"i_pairing_keys": {pki: {"value": INVALID_VALUE}}},
+                "model": {"i_pairing_keys": {pki: {"state": SlotState.INVALID}}},
             },
             nullcontext(),
             handshake_error,

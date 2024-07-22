@@ -103,13 +103,9 @@ class L2APIImplementation(L2API):
 
         s_h_pubkey = self.i_pairing_keys[pkey_index]
 
-        if s_h_pubkey.is_blank():
+        if not s_h_pubkey.is_valid():
             raise L2ProcessingErrorHandshake(
-                f"Pairing key slot #{pkey_index} is blank."
-            )
-        if s_h_pubkey.is_invalidated():
-            raise L2ProcessingErrorHandshake(
-                f"Pairing key slot #{pkey_index} is invalidated."
+                f"Pairing key slot #{pkey_index} is blank or invalidated."
             )
 
         if self.s_t_priv is None:
@@ -158,7 +154,7 @@ class L2APIImplementation(L2API):
         self.logger.debug(encrypted_command)
 
         self.logger.info("Decrypting L3 command.")
-        req_data = self._decrypt_command(encrypted_command.data_field_bytes)
+        req_data = self.decrypt_command(encrypted_command.data_field_bytes)
         if req_data is None:
             raise L2ProcessingErrorTag("Invalid TAG in encrypted command request")
         self.logger.debug(f"Decrypted command: {req_data}")
@@ -187,7 +183,7 @@ class L2APIImplementation(L2API):
 
         self.logger.info("Encrypting L3 result.")
         encrypted_result = L3EncryptedPacket.from_encrypted(
-            self._encrypt_result(result.to_bytes())
+            self.encrypt_result(result.to_bytes())
         )
         self.logger.debug(f"Encrypted result: {encrypted_result}")
 
@@ -224,10 +220,6 @@ class L2APIImplementation(L2API):
         raise L2ProcessingErrorGeneric("No latest response to send.")
 
     def ts_l2_sleep_req(self, request: TsL2SleepReqRequest) -> TsL2SleepReqResponse:
-        self.check_access_privileges(
-            "sleep_mode_en", self.config.cfg_sleep_mode.sleep_mode_en
-        )
-
         request_sleep_kind = request.sleep_kind.value
         try:
             sleep_kind = TsL2SleepReqRequest.SleepKindEnum(request_sleep_kind)
@@ -235,12 +227,29 @@ class L2APIImplementation(L2API):
             raise L2ProcessingErrorGeneric(
                 f"Unexpected value: {request_sleep_kind}."
             ) from None
+        self.logger.debug(f"{sleep_kind = }")
+
+        if (
+            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.SLEEP_MODE
+            and self.config.cfg_sleep_mode.sleep_mode_en == 0
+        ):
+            self.logger.debug("Sleep mode disabled.")
+            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
+
+        if (
+            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE
+            and self.config.cfg_sleep_mode.deep_sleep_mode_en == 0
+        ):
+            self.logger.debug("Deep sleep mode disabled.")
+            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
 
         self.logger.info("Entering in sleep mode.")
-        if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.SLEEP_MODE:
-            self.invalidate_session()
-            self.command_buffer.reset()
+        self.invalidate_session()
+        self.command_buffer.reset()
+
+        if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE:
             self.response_buffer.reset()
+            self._config = None
 
         self.logger.debug("Entered in sleep mode.")
         return TsL2SleepReqResponse(status=L2StatusEnum.REQ_OK)

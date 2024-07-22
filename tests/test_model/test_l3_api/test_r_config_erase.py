@@ -10,6 +10,10 @@ from tvl.api.l3_api import TsL3RConfigEraseCommand, TsL3RConfigEraseResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
+from tvl.targets.model.internal.configuration_object import (
+    ENDIANESS,
+    REGISTER_RESET_VALUE,
+)
 from tvl.targets.model.tropic01_l3_api_impl import (
     CONFIGURATION_ACCESS_PRIVILEGES,
     FUNCTIONALITY_ACCESS_PRIVILEGES,
@@ -20,7 +24,7 @@ R_CONFIG_CFG = {
     **{
         register: random.randint(0, 2**32 - 1)
         for register in FUNCTIONALITY_ACCESS_PRIVILEGES
-        + CONFIGURATION_ACCESS_PRIVILEGES
+        | CONFIGURATION_ACCESS_PRIVILEGES
     },
     # ensure that the users have the rights to erase all the r-config registers
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE: 0x0000_FFFF,
@@ -50,4 +54,6 @@ def test_r_config_erase(
 
     assert result.result.value == L3ResultFieldEnum.OK
     assert isinstance(result, TsL3RConfigEraseResult)
-    assert (_r := model.r_config[register.value]).value == _r.reset_value
+    assert model.r_config.read(register) == int.from_bytes(
+        REGISTER_RESET_VALUE, ENDIANESS
+    )

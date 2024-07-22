@@ -41,7 +41,7 @@ def model_configuration(model_configuration: Dict[str, Any]):
     (pytest.param(a, v, id=f"{a!s}-{v:#x}") for a, v in R_CONFIG_CFG.items()),
 )
 def test_valid_address(host: Host, model: Tropic01Model, address: int, value: int):
-    assert model.r_config[address].value == value
+    assert model.r_config.read(address) == value
 
     result = host.send_command(TsL3RConfigReadCommand(address=address))
 

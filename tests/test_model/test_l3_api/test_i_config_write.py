@@ -61,7 +61,7 @@ def test_valid_bit_index(
     value: int,
     bit_index: int,
 ):
-    assert model.i_config[register.value].value == value
+    assert model.i_config.read(register) == value
 
     command = TsL3IConfigWriteCommand(
         address=register.value,
@@ -71,7 +71,7 @@ def test_valid_bit_index(
 
     assert result.result.value == L3ResultFieldEnum.OK
     assert isinstance(result, TsL3IConfigWriteResult)
-    assert model.i_config[register.value].value == value & (~(2**bit_index) & U32_MAX)
+    assert model.i_config.read(register) == value & (~(2**bit_index) & U32_MAX)
 
 
 @pytest.mark.parametrize(
