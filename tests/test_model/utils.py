@@ -8,7 +8,7 @@ from typing import Any, Iterable, List, Optional, Sequence, TypeVar
 import pytest
 
 from tvl.targets.model.internal.ecc_keys import KEY_SIZE, Origins
-from tvl.targets.model.internal.mcounter import MCOUNTER_MAX_VAL, NOTSET_VALUE
+from tvl.targets.model.internal.mcounter import MCOUNTER_DEFAULT_VALUE, MCOUNTER_MAX_VAL
 from tvl.targets.model.internal.user_data_partition import INIT_VALUE, SLOT_SIZE_BYTES
 
 T = TypeVar("T")
@@ -78,7 +78,7 @@ class UtilsEcc:
 class UtilsMcounter:
     VALID_INDICES = list(range(16))
     INVALID_INDICES = sorted(set(range(256)) - set(VALID_INDICES))
-    NOTSET_VALUE = NOTSET_VALUE
+    DEFAULT_VALUE = MCOUNTER_DEFAULT_VALUE
 
     @staticmethod
     def get_valid_data() -> int:

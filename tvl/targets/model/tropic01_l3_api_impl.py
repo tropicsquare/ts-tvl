@@ -1,7 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 from ...api.l3_api import (
     L3API,
@@ -368,14 +368,18 @@ class L3APIImplementation(L3API):
         return TsL3IConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
 
     def _check_ranged_access_privileges(
-        self, address: int, access_privileges_list: List[Tuple[str, int]]
+        self,
+        address: int,
+        access_privileges_list: List[Tuple[str, int]],
+        *,
+        raise_on_failure: Type[Exception] = L3ProcessingErrorFail,
     ) -> None:
         for name, value in access_privileges_list:
             lower, upper = map(int, name.rsplit("_", maxsplit=2)[-2:])
             if lower <= address <= upper:
                 self.check_access_privileges(name, value)
                 return
-        raise L3ProcessingErrorFail(f"Slot index {address=:#06x} out of range.")
+        raise raise_on_failure(f"Slot index {address=:#06x} out of range.")
 
     def ts_l3_r_mem_data_write(
         self, command: TsL3RMemDataWriteCommand
@@ -490,11 +494,12 @@ class L3APIImplementation(L3API):
                 ("mcounter_init_8_11", config.mcounter_init_8_11),
                 ("mcounter_init_12_15", config.mcounter_init_12_15),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         mcounter_val = command.mcounter_val.value
         self.logger.info("Initializing mcounter.")
-        self.logger.debug(f"Mcounter index: {index}; value: {mcounter_val}.")
+        self.logger.debug(f"Mcounter index: {index}; value: {mcounter_val:#x}.")
         try:
             self.r_mcounters[index].init(mcounter_val)
         except MCounterWrongInitValueError as exc:
@@ -515,6 +520,7 @@ class L3APIImplementation(L3API):
                 ("mcounter_update_8_11", config.mcounter_update_8_11),
                 ("mcounter_update_12_15", config.mcounter_update_12_15),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.info("Updating mcounter.")
@@ -523,7 +529,10 @@ class L3APIImplementation(L3API):
             self.r_mcounters[index].update()
             self.logger.debug(f"Updated mcounter {index=}.")
         except MCounterNotInitializedError as exc:
-            raise L3ProcessingErrorFail(exc) from None
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                exc, result=TsL3McounterUpdateResult.ResultEnum.COUNTER_INVALID
+            ) from None
         except MCounterUpdateError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
@@ -544,6 +553,7 @@ class L3APIImplementation(L3API):
                 ("mcounter_get_8_11", config.mcounter_get_8_11),
                 ("mcounter_get_12_15", config.mcounter_get_12_15),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.info("Getting value of mcounter.")
@@ -551,9 +561,11 @@ class L3APIImplementation(L3API):
         try:
             mcounter_val = self.r_mcounters[index].get()
         except MCounterNotInitializedError as exc:
-            raise L3ProcessingErrorFail(exc) from None
+            raise L3ProcessingError(
+                exc, result=TsL3McounterUpdateResult.ResultEnum.COUNTER_INVALID
+            ) from None
 
-        self.logger.debug(f"Read value: {mcounter_val}.")
+        self.logger.debug(f"Read value: {mcounter_val:#x}.")
         return TsL3McounterGetResult(
             result=L3ResultFieldEnum.OK, mcounter_val=mcounter_val
         )

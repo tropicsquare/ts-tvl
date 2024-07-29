@@ -51,15 +51,15 @@ def test_get_initialized_counter(
 
 @pytest.mark.parametrize("mcounter_index", as_slow(UtilsMcounter.VALID_INDICES, 10))
 def test_get_notset_counter(host: Host, model: Tropic01Model, mcounter_index: int):
-    assert model.r_mcounters[mcounter_index].value == UtilsMcounter.NOTSET_VALUE
+    assert model.r_mcounters[mcounter_index].value == UtilsMcounter.DEFAULT_VALUE
 
     command = TsL3McounterGetCommand(
         mcounter_index=mcounter_index,
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
-    assert model.r_mcounters[mcounter_index].value == UtilsMcounter.NOTSET_VALUE
+    assert result.result.value == TsL3McounterGetResult.ResultEnum.COUNTER_INVALID
+    assert model.r_mcounters[mcounter_index].value == UtilsMcounter.DEFAULT_VALUE
 
 
 @pytest.mark.parametrize("mcounter_index", as_slow(UtilsMcounter.INVALID_INDICES, 10))
@@ -69,4 +69,4 @@ def test_invalid_index(host: Host, mcounter_index: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED

@@ -87,4 +87,4 @@ def test_invalid_index(host: Host, mcounter_index: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED

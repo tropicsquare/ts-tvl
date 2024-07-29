@@ -8,8 +8,8 @@ from typing import Any, ContextManager
 import pytest
 
 from tvl.targets.model.internal.mcounter import (
+    MCOUNTER_DEFAULT_VALUE,
     MCOUNTER_MAX_VAL,
-    NOTSET_VALUE,
     MCounter,
     MCounterNotInitializedError,
     MCounters,
@@ -51,9 +51,9 @@ def test_init(value: int, context: ContextManager[Any]):
             id="ok",
         ),
         pytest.param(
-            NOTSET_VALUE,
+            MCOUNTER_DEFAULT_VALUE,
             pytest.raises(MCounterNotInitializedError),
-            NOTSET_VALUE,
+            MCOUNTER_DEFAULT_VALUE,
             id="not_initialized",
         ),
         pytest.param(0, pytest.raises(MCounterUpdateError), 0, id="negative"),
@@ -71,7 +71,7 @@ def test_update(init_value: int, context: ContextManager[Any], expected_value: i
     [
         pytest.param(random.randint(0, MCOUNTER_MAX_VAL), nullcontext(), id="ok"),
         pytest.param(
-            NOTSET_VALUE,
+            MCOUNTER_DEFAULT_VALUE,
             pytest.raises(MCounterNotInitializedError),
             id="not_initialized",
         ),
