@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
+from itertools import chain
 from typing import Any, Dict
 
 import pytest
@@ -12,7 +13,7 @@ from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
 from tvl.targets.model.tropic01_model import Tropic01Model
 
-from ..utils import sample_outside
+from ..utils import UtilsCo
 
 R_CONFIG_CFG = {
     **{
@@ -51,9 +52,24 @@ def test_valid_address(host: Host, model: Tropic01Model, address: int, value: in
 
 
 @pytest.mark.parametrize(
-    "address", sample_outside(ConfigObjectRegisterAddressEnum, nb_bytes=2, k=10)
+    "address, expected_result",
+    chain(
+        (
+            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_not_aligned(10)
+        ),
+        (
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_out_of_range_aligned(10)
+        ),
+        (
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_out_of_range_and_not_aligned(10)
+        ),
+    )
+    # sample_outside(ConfigObjectRegisterAddressEnum, nb_bytes=2, k=10)
 )
-def test_invalid_address(host: Host, address: int):
+def test_invalid_address(host: Host, address: int, expected_result: L3ResultFieldEnum):
     result = host.send_command(TsL3RConfigReadCommand(address=address))
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == expected_result
