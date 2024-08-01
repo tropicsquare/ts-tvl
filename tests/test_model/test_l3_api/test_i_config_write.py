@@ -2,16 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
+from itertools import chain
 from typing import Any, Dict, Iterator
 
 import pytest
 
-from tests.test_model.utils import sample_outside
 from tvl.api.l3_api import TsL3IConfigWriteCommand, TsL3IConfigWriteResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.configuration_object_impl import ConfigObjectRegisterAddressEnum
 from tvl.targets.model.tropic01_model import Tropic01Model
+
+from ..utils import UtilsCo
 
 U32_MAX = 2**32 - 1
 
@@ -96,13 +98,27 @@ def test_invalid_bit_index(
 
 
 @pytest.mark.parametrize(
-    "address", sample_outside(ConfigObjectRegisterAddressEnum, 2, k=10)
+    "address, expected_result",
+    chain(
+        (
+            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_not_aligned(50)
+        ),
+        (
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_out_of_range_aligned(50)
+        ),
+        (
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
+            for a in UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50)
+        ),
+    ),
 )
-def test_invalid_address(host: Host, address: int):
+def test_invalid_address(address: int, expected_result: L3ResultFieldEnum, host: Host):
     command = TsL3IConfigWriteCommand(
         address=address,
         bit_index=next(_valid_bit_index()),
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == expected_result

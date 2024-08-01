@@ -108,11 +108,11 @@ class ConfigurationObject:
 
     @staticmethod
     def _check_address(address: int) -> None:
-        if address % REGISTER_SIZE_BYTES != 0:
-            raise AddressNotAlignedError("Address should be word-aligned")
-
         if not 0 <= address < CONFIG_OBJECT_SIZE_BYTES:
             raise AddressOutOfRangeError("Address out of range")
+
+        if address % REGISTER_SIZE_BYTES != 0:
+            raise AddressNotAlignedError("Address should be word-aligned")
 
     def erase(self) -> None:
         """Erase the memory content."""

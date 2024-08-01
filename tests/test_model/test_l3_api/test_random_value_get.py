@@ -11,7 +11,7 @@ from tvl.api.l3_api import TsL3RandomValueGetCommand, TsL3RandomValueGetResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 
-N_BYTES = random.randint(1, 256)
+N_BYTES = random.randrange(1, 256)
 RANDOM_VALUE = os.urandom(4)
 
 

@@ -274,11 +274,9 @@ class L3APIImplementation(L3API):
 
         try:
             self.r_config.write(address, value)
-        except (
-            AddressNotAlignedError,
-            AddressOutOfRangeError,
-            NoFreeSpaceError,
-        ) as exc:
+        except AddressOutOfRangeError as exc:
+            raise L3ProcessingErrorUnauthorized(exc) from None
+        except (AddressNotAlignedError, NoFreeSpaceError) as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug("R_config register written.")
@@ -299,7 +297,9 @@ class L3APIImplementation(L3API):
 
         try:
             value = self.r_config.read(address)
-        except (AddressNotAlignedError, AddressOutOfRangeError) as exc:
+        except AddressOutOfRangeError as exc:
+            raise L3ProcessingErrorUnauthorized(exc) from None
+        except AddressNotAlignedError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Read value: {value:#010x}.")
@@ -336,11 +336,9 @@ class L3APIImplementation(L3API):
 
         try:
             self.i_config.write_bit(address, bit_index)
-        except (
-            AddressNotAlignedError,
-            AddressOutOfRangeError,
-            BitIndexOutOfBoundError,
-        ) as exc:
+        except AddressOutOfRangeError as exc:
+            raise L3ProcessingErrorUnauthorized(exc) from None
+        except (AddressNotAlignedError, BitIndexOutOfBoundError) as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug("I_config register written.")
@@ -361,7 +359,9 @@ class L3APIImplementation(L3API):
 
         try:
             value = self.i_config.read(address)
-        except (AddressNotAlignedError, AddressOutOfRangeError) as exc:
+        except AddressOutOfRangeError as exc:
+            raise L3ProcessingErrorUnauthorized(exc) from None
+        except AddressNotAlignedError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Read value: {value:#010x}.")
