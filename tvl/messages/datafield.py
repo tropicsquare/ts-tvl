@@ -197,7 +197,7 @@ class DataField(Generic[T]):
 
     def __str__(self) -> str:
         return (
-            f"{self.__class__.__name__}" f"(value={self.value}, params={self.params})"
+            f"{self.__class__.__name__}" f"(value={self.value!r}, params={self.params})"
         )
 
     def __len__(self) -> int:
@@ -224,6 +224,8 @@ class DataField(Generic[T]):
         """Hexadecimal representation"""
         if (value := self.value) is AUTO:
             return str(value)
+        if isinstance(value, Enum):
+            return repr(value)
         return self._hexstr()
 
     def _hexstr(self) -> str:
