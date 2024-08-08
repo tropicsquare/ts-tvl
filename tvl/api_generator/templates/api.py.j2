@@ -50,7 +50,7 @@ from tvl.messages.datafield import (
     U32Scalar,
     U64Array,
     U64Scalar,
-    params,
+    datafield,
 )
 {{INTERNAL_IMPORT}}
 from tvl.targets.model.base_model import BaseModel
@@ -97,30 +97,27 @@ class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}
     {%- if message.arguments %}
         {%- set print_placeholder = False %}
         {%- for argument in message.arguments %}
+            {%- set args = [] %}
             {%- if argument.max_size %}
-                {%- set args = "min_size=%d, max_size=%d" | format(argument.min_size, argument.max_size) %}
+                {%- do args.append("min_size=%d" | format(argument.min_size)) %}
+                {%- do args.append("max_size=%d" | format(argument.max_size)) %}
             {%- elif argument.size %}
-                {%- set args = "size=%d" | format(argument.size) %}
-            {%- else %}
-                {%- set args = "" %}
-            {%- endif %}
-            {%- if args %}
-                {%- set annotations = "%s[params(%s)]" | format(argument.dtype, args) %}
-            {%- else %}
-                {%- set annotations = argument.dtype %}
+                {%- do args.append("size=%d" | format(argument.size)) %}
             {%- endif %}
             {%- if argument.name == "padding" %}
-                {%- set annotations = annotations ~ " = AUTO" %}
+                {%- do args.append("default=AUTO") %}
+            {%- endif %}
+            {%- if args %}
+                {%- set annotations = " = datafield(%s)" | format(args|join(", ")) %}
+            {%- else %}
+                {%- set annotations = "" %}
             {%- endif %}
             {%- if argument.description %}
                 {%- set trailer = "  # %s" | format(argument.description) %}
             {%- else %}
                 {%- set trailer = "" %}
             {%- endif %}
-            {%- if argument.name == "padding" %}
-                {%- set trailer = trailer ~ "  # type: ignore" %}
-            {%- endif %}
-    {{argument.name}}: {{annotations}}{{trailer}}
+    {{argument.name}}: {{argument.dtype}}{{annotations}}{{trailer}}
             {%- if argument.description_long %}
     {{['"""', argument.description_long, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
             {%- endif %}

@@ -1,4 +1,4 @@
-# GENERATED ON 2024-07-16 14:16:42.350093
+# GENERATED ON 2024-08-08 13:10:08.590912
 # BY internal VERSION 1.6
 # INPUT FILE: 20402444E43870FE5FEA170E6AADDC8A15CFA812CA74D39EEC3A8B75FA10ED56
 #
@@ -7,7 +7,7 @@
 
 from typing import List, Union
 
-from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, params
+from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, datafield
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -71,12 +71,12 @@ class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
 
 
 class TsL2GetInfoReqResponse(L2Response, id=L2Enum.GET_INFO_REQ):
-    object: U8Array[params(min_size=1, max_size=128)]
+    object: U8Array = datafield(min_size=1, max_size=128)
     """The data content of the requested object block."""
 
 
 class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
-    e_hpub: U8Array[params(size=32)]  # Ephemeral Key of Host MCU.
+    e_hpub: U8Array = datafield(size=32)  # Ephemeral Key of Host MCU.
     """The Host MCU's Ephemeral X25519 public key. A little endian encoding of
     the x-coordinate from the public Curve25519 point."""
     pkey_index: U8Scalar  # Pairing Key slot
@@ -95,27 +95,27 @@ class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
 
 
 class TsL2HandshakeReqResponse(L2Response, id=L2Enum.HANDSHAKE_REQ):
-    e_tpub: U8Array[params(size=32)]  # Ephemeral Key of TROPIC01.
+    e_tpub: U8Array = datafield(size=32)  # Ephemeral Key of TROPIC01.
     """TROPIC01's X25519 Ephemeral key."""
-    t_tauth: U8Array[params(size=16)]  # Authentication Tag
+    t_tauth: U8Array = datafield(size=16)  # Authentication Tag
     """The Secure Channel Handshake Authentication Tag."""
 
 
 class TsL2EncryptedCmdReqRequest(L2Request, id=L2Enum.ENCRYPTED_CMD_REQ):
     cmd_size: U16Scalar  # L3 Command size.
     """The size of the CMD_CIPHERTEXT L3 Field in bytes."""
-    cmd_ciphertext: U8Array[params(min_size=1, max_size=4096)]  # L3 Command.
+    cmd_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Command.
     """An encrypted L3 Command."""
-    cmd_tag: U8Array[params(size=16)]  # Authentication Tag.
+    cmd_tag: U8Array = datafield(size=16)  # Authentication Tag.
     """The L3 Command Authentication Tag."""
 
 
 class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
     res_size: U16Scalar  # L3 Result size.
     """The size of the RES_CIPHERTEXT L3 Field in bytes."""
-    res_ciphertext: U8Array[params(min_size=1, max_size=4096)]  # L3 Result
+    res_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Result
     """An encrypted L3 Result."""
-    res_tag: U8Array[params(size=16)]  # Authentication tag.
+    res_tag: U8Array = datafield(size=16)  # Authentication tag.
     """The L3 Result Authentication Tag."""
 
 
@@ -175,7 +175,7 @@ class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
         SPECT2 = 0x12
         """SPECT bank 2"""
     offset: U16Scalar  # The offset of the specific bank to write the chunk
-    data: U8Array[params(min_size=4, max_size=248)]  # The binary data to write. Data size should be a multiple of 4.
+    data: U8Array = datafield(min_size=4, max_size=248)  # The binary data to write. Data size should be a multiple of 4.
 
 
 class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
@@ -204,7 +204,7 @@ class TsL2GetLogReqRequest(L2Request, id=L2Enum.GET_LOG_REQ):
 
 
 class TsL2GetLogReqResponse(L2Response, id=L2Enum.GET_LOG_REQ):
-    log_msg: U8Array[params(min_size=0, max_size=255)]  # Log message
+    log_msg: U8Array = datafield(min_size=0, max_size=255)  # Log message
     """Log message of RISCV FW."""
 
 
