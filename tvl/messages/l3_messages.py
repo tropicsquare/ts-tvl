@@ -4,9 +4,9 @@
 from contextlib import nullcontext
 from typing import Any, ContextManager, Type
 
-from typing_extensions import Annotated, Self
+from typing_extensions import Self
 
-from .datafield import AUTO, U8Array, U8Scalar, U16Scalar, params
+from .datafield import AUTO, U8Array, U8Scalar, U16Scalar, datafield
 from .exceptions import UnauthorizedInstantiationError
 from .message import BaseMessage, Message
 
@@ -25,9 +25,9 @@ class MinNbBytesDescriptor:
 class L3EncryptedPacket(BaseMessage):
     """Utility class to parse encrypted messages"""
 
-    size: Annotated[U16Scalar, params(is_data=False)]
-    ciphertext: U8Array[params(min_size=0, max_size=2**16 - 1)]
-    tag: U8Array[params(size=TAG_LEN)]
+    size: U16Scalar = datafield(is_data=False)
+    ciphertext: U8Array = datafield(min_size=0, max_size=2**16 - 1)
+    tag: U8Array = datafield(size=TAG_LEN)
     MIN_NB_BYTES = MinNbBytesDescriptor()
 
     @classmethod
@@ -62,7 +62,7 @@ class L3Packet(Message, is_base=True):
 class L3Command(L3Packet):
     """Base class for L3 messages sent to the TROPIC01"""
 
-    id: Annotated[U8Scalar, params(priority=-999, is_data=False)] = AUTO  # type: ignore
+    id: U8Scalar = datafield(priority=-999, is_data=False, default=AUTO)
 
     def __init__(self, **kwargs: Any) -> None:
         try:
@@ -95,4 +95,4 @@ class L3Command(L3Packet):
 class L3Result(L3Packet):
     """Base class for L3 messages sent from the TROPIC01"""
 
-    result: Annotated[U8Scalar, params(priority=-999, is_data=False)]
+    result: U8Scalar = datafield(priority=-999, is_data=False)

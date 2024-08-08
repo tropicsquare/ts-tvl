@@ -4,7 +4,7 @@
 import contextlib
 from typing import Any, Dict, Iterator, Mapping, Tuple
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator  # type: ignore
 from typing_extensions import Self
 
 CONFIG_OBJECT_SIZE_BYTES = 0x200
@@ -217,6 +217,6 @@ class ConfigurationObject:
 
 
 class ConfigurationObjectModel(BaseModel):
-    @root_validator
+    @root_validator  # type: ignore
     def remove_none_values(cls, values: Mapping[str, Any]) -> Dict[str, Any]:
         return {k: v for k, v in values.items() if v is not None}

@@ -287,9 +287,9 @@ class Host:
 
         self.logger.info("Creating command chunks.")
         command_chunks: List[bytes] = []
-        for i, chunk in enumerate(encrypted_chunks, start=1):
+        for i, raw in enumerate(encrypted_chunks, start=1):
             self.logger.debug(f"Creating command chunk {i}/{nb_cmd_chunks}.")
-            chunk = L2EncryptedCmdChunk(encrypted_cmd=chunk)
+            chunk = L2EncryptedCmdChunk(encrypted_cmd=raw)
             self.logger.debug(f"Chunk: {chunk}.")
             command_chunks.append(chunk.to_bytes())
 
