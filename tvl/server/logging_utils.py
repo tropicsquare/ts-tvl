@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 from pprint import pformat
 from shutil import get_terminal_size

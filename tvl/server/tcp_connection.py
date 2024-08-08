@@ -1,3 +1,6 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 from socket import create_server, socket
 from typing import Any, Optional
