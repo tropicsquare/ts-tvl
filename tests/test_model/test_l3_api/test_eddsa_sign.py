@@ -28,7 +28,7 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
 
 
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10), indirect=True)
-def test_ecdsa_signature_ok(slot: int, host: Host):
+def test_eddsa_signature_ok(slot: int, host: Host):
     command = TsL3EddsaSignCommand(
         slot=slot,
         msg=_get_msg(),
