@@ -215,7 +215,7 @@ class L2APIImplementation(L2API):
         return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
-        if self.response_buffer.latest():
+        if self.spi_fsm.response_buffer.latest():
             raise ResendLastResponse("Resend the latest response.")
         raise L2ProcessingErrorGeneric("No latest response to send.")
 
@@ -248,7 +248,7 @@ class L2APIImplementation(L2API):
         self.command_buffer.reset()
 
         if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE:
-            self.response_buffer.reset()
+            self.spi_fsm.response_buffer.reset()
             self._config = None
 
         self.logger.debug("Entered in sleep mode.")

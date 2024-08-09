@@ -3,19 +3,16 @@
 
 import functools
 import logging
-from enum import Enum, auto
-from itertools import cycle
-from random import sample
 from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     Iterator,
     List,
     Mapping,
     Optional,
     Protocol,
+    Sequence,
     Type,
     TypeVar,
     Union,
@@ -24,15 +21,7 @@ from typing import (
 
 from typing_extensions import Self
 
-from ...constants import (
-    CHUNK_SIZE,
-    ENCRYPTION_TAG_LEN,
-    PADDING_BYTE,
-    S_HI_PUB_NB_SLOTS,
-    L1ChipStatusFlag,
-    L2IdFieldEnum,
-    L2StatusEnum,
-)
+from ...constants import CHUNK_SIZE, ENCRYPTION_TAG_LEN, S_HI_PUB_NB_SLOTS, L2StatusEnum
 from ...crypto.encrypted_session import TropicEncryptedSession
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
@@ -40,16 +29,12 @@ from ...messages.l3_messages import L3Command, L3Result
 from ...random_number_generator import RandomNumberGenerator
 from ...utils import chunked
 from .configuration_object_impl import ConfigurationObjectImpl
-from .exceptions import (
-    L2ProcessingError,
-    L3ProcessingErrorUnauthorized,
-    ResendLastResponse,
-)
+from .exceptions import L2ProcessingError, L3ProcessingErrorUnauthorized
 from .internal.command_buffer import CommandBuffer
 from .internal.ecc_keys import EccKeys
 from .internal.mcounter import MCounters
 from .internal.pairing_keys import PairingKeys
-from .internal.response_buffer import ResponseBuffer
+from .internal.spi_fsm import SpiFsm
 from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
 
@@ -62,16 +47,6 @@ class SupportsFromDict(Protocol):
     @classmethod
     def from_dict(cls, __mapping: Mapping[Any, Any], /) -> Self:
         ...
-
-
-class _FsmState(Enum):
-    """States of the L1 FSM. Internal use only."""
-
-    IDLE = auto()
-    CSN_FALLING_EDGE = auto()
-    SEND_RESPONSE = auto()
-    SEND_NO_RESP = auto()
-    SEND_INIT_BYTE = auto()
 
 
 T = TypeVar("T")
@@ -103,7 +78,7 @@ class BaseModel(metaclass=MetaModel):
         activate_encryption: bool = True,
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
-        busy_iter: Optional[Iterable[bool]] = None,
+        busy_iter: Optional[Sequence[bool]] = None,
         split_data_fn: Callable[[bytes], Iterator[bytes]] = split_data,
         logger: Optional[logging.Logger] = None,
     ):
@@ -140,9 +115,9 @@ class BaseModel(metaclass=MetaModel):
                 Defaults to None.
             init_byte (bytes): byte sent behind the chip status byte upon
                 reception of a request. Defaults to b"\x00".
-            busy_iter (Iterable[bool], optional): iterable managing the
-                frequency model returns the BUSY status code. Defaults to
-                `sample((l := [True] * 5 + [False] * 5), k=len(l))`
+            busy_iter (Sequence[bool], optional): sequence managing the
+                frequency model returns the BUSY status code.
+                Defaults to None.
         """
 
         def __factory(value: Optional[T], default: Callable[[], T]) -> T:
@@ -201,24 +176,13 @@ class BaseModel(metaclass=MetaModel):
         # pairing key currently used by the session
         self.pairing_key_slot: int = -1
 
-        # response buffer
-        self.response_buffer = ResponseBuffer()
         # command buffer
         self.command_buffer = CommandBuffer()
 
-        # L1 layer chip select - active low
-        self.csn_is_low = False
-
-        # FSM-related variables
-        self._odata = b""
-        self._state = _FsmState.IDLE
-        self.init_byte = init_byte
+        # L1 layer finite-state machine
+        self.spi_fsm = SpiFsm(init_byte, busy_iter, self.process_input, self.logger)
 
         self.split_data_fn = split_data_fn
-
-        if busy_iter is None:
-            busy_iter = sample((lst := [True] * 5 + [False] * 5), k=len(lst))
-        self.busy_iter = cycle(busy_iter)
 
     def set_logger(self, logger: logging.Logger) -> Self:
         self.logger = logger
@@ -254,8 +218,8 @@ class BaseModel(metaclass=MetaModel):
             serial_code=self.serial_code,
             activate_encryption=self.activate_encryption,
             debug_random_value=self.trng2.debug_random_value,
-            init_byte=self.init_byte,
-            busy_iter=self.busy_iter,
+            init_byte=self.spi_fsm.init_byte,
+            busy_iter=self.spi_fsm.busy_iter,
         )
 
     @classmethod
@@ -310,15 +274,12 @@ class BaseModel(metaclass=MetaModel):
     def spi_drive_csn_low(self) -> None:
         """Drive the Chip Select signal to LOW"""
         self.logger.info("Chip Select driven to LOW.")
-        if not self.csn_is_low:
-            self._state = _FsmState.CSN_FALLING_EDGE
-        self.csn_is_low = True
+        self.spi_fsm.spi_drive_csn_low()
 
     def spi_drive_csn_high(self) -> None:
         """Drive the Chip Select signal to HIGH"""
         self.logger.info("Chip Select driven to HIGH.")
-        self._state = _FsmState.IDLE
-        self.csn_is_low = False
+        self.spi_fsm.spi_drive_csn_high()
 
     @overload
     def spi_send(self, data: List[int]) -> List[int]:
@@ -349,90 +310,7 @@ class BaseModel(metaclass=MetaModel):
 
     @_spi_send.register
     def _(self, data: bytes) -> bytes:
-        def _f(length: int) -> bytes:
-            """Fetch output data"""
-            odata, self._odata = self._odata[:length], self._odata[length:]
-            return odata
-
-        self.logger.debug(f"Received {data}")
-        self.logger.debug(f"State: {self._state}")
-        length = len(data)
-
-        # Chip is idle, do nothing
-        if self._state is _FsmState.IDLE:
-            self.logger.debug("Chip Select is high, do not process data.")
-            return b""
-
-        # A transaction has just been initiated, process the received data
-        elif self._state is _FsmState.CSN_FALLING_EDGE:
-            # The first byte is GET_RESP, the chip should send back a response
-            if data[0] == L2IdFieldEnum.GET_RESP:
-                # Sporadically set READY bit to 0 to emulate a busy chip
-                if next(self.busy_iter):
-                    result = bytes([not L1ChipStatusFlag.READY])
-                    fill = bytes([L2StatusEnum.NO_RESP])
-                    self._state = _FsmState.SEND_NO_RESP
-
-                # Send response if some is ready
-                elif self._odata or not self.response_buffer.is_empty():
-                    if not self._odata:
-                        self._odata = self.response_buffer.next()
-                    result = bytes([L1ChipStatusFlag.READY]) + _f(length - 1)
-                    fill = PADDING_BYTE
-                    self._state = _FsmState.SEND_RESPONSE
-
-                # Otherwise send NO_RESP
-                else:
-                    result = bytes([L1ChipStatusFlag.READY])
-                    fill = bytes([L2StatusEnum.NO_RESP])
-                    self._state = _FsmState.SEND_NO_RESP
-
-            # The model processes only one request at a time, therefore
-            # all the responses have to be fetched before sending a new request
-            elif self._odata:
-                raise RuntimeError("Response buffer not empty.")
-
-            # Process the request that was just received
-            else:
-                try:
-                    responses_ = self.process_input(data)
-                except ResendLastResponse as exc:
-                    self.logger.info(exc)
-                    self._odata = self.response_buffer.latest()
-                    if not self._odata:
-                        raise RuntimeError("Should not happen: no latest response.")
-                else:
-                    self.response_buffer.add(responses_)
-                    self._odata = self.response_buffer.next()
-                result = bytes([not L1ChipStatusFlag.READY])
-                fill = self.init_byte[:1]
-                self._state = _FsmState.SEND_INIT_BYTE
-
-        # Send NO_RESP until a new transaction is initiated
-        elif self._state is _FsmState.SEND_NO_RESP:
-            result = b""
-            fill = bytes([L2StatusEnum.NO_RESP])
-
-        # Send response
-        elif self._state is _FsmState.SEND_RESPONSE:
-            result = _f(length)
-            fill = PADDING_BYTE
-
-        # Nothing in the fifo, send init bytes
-        elif self._state is _FsmState.SEND_INIT_BYTE:
-            result = b""
-            fill = self.init_byte[:1]
-
-        # Should not happen
-        else:
-            raise RuntimeError(f"Should not happen: {self._state}")
-
-        self.logger.debug(f"{result=}")
-        self.logger.debug(f"{fill=}")
-
-        result += fill * (length - len(result))
-        self.logger.debug(f"Returning {result}")
-        return result
+        return self.spi_fsm.process_spi_data(data)
 
     def process_input(self, data: bytes) -> Union[bytes, List[bytes]]:
         """Process the received L2 request - should be overridden by the API.
@@ -513,10 +391,8 @@ class BaseModel(metaclass=MetaModel):
         self.logger.info("Switching the model off.")
         self.invalidate_session()
         self.command_buffer.reset()
-        self.response_buffer.reset()
+        self.spi_fsm.reset()
         self._config = None
-        self._odata = b""
-        self._state = _FsmState.IDLE
 
     @property
     def config(self) -> ConfigurationObjectImpl:

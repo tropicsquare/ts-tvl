@@ -29,7 +29,7 @@ def host(host: Host, model: Tropic01Model):
     )
     assert model.session.is_session_valid()
     assert host.session.is_session_valid()
-    assert model.response_buffer.latest() != b""
+    assert model.spi_fsm.response_buffer.latest() != b""
     yield host
 
 
@@ -42,7 +42,7 @@ def test_sleep_mode(host: Host, model: Tropic01Model):
     assert isinstance(response, TsL2SleepReqResponse)
     assert not model.session.is_session_valid()
     assert model.command_buffer.is_empty()
-    assert model.response_buffer.latest() == response.to_bytes()
+    assert model.spi_fsm.response_buffer.latest() == response.to_bytes()
 
 
 @pytest.mark.xfail(reason="Response buffer to be emptied upon deep sleep mode request")
@@ -57,8 +57,8 @@ def test_deep_sleep_mode(host: Host, model: Tropic01Model):
     assert isinstance(response, TsL2SleepReqResponse)
     assert not model.session.is_session_valid()
     assert model.command_buffer.is_empty()
-    assert model.response_buffer.is_empty()
-    assert model.response_buffer.latest() == b""
+    assert model.spi_fsm.response_buffer.is_empty()
+    assert model.spi_fsm.response_buffer.latest() == b""
 
 
 @pytest.mark.parametrize(
