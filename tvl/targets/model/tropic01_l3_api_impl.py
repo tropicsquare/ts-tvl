@@ -86,35 +86,10 @@ from .internal.pairing_keys import (
 )
 from .internal.user_data_partition import SlotAlreadyWrittenError
 
-FUNCTIONALITY_ACCESS_PRIVILEGES = {
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_WRITE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_MEM_DATA_ERASE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_RANDOM_VALUE_GET,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_GENERATE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_STORE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_ERASE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_ECDSA_SIGN,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_EDDSA_SIGN,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_INIT,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_GET,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_UPDATE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_MAC_AND_DESTROY,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_PING,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_SERIAL_CODE_GET,
-}
 
-
-CONFIGURATION_ACCESS_PRIVILEGES = {
-    ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_WRITE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_I_CONFIG_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ,
-    ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_INVALIDATE,
-}
+# Whole Configuration Object address space could be accessed (no register need to be defined at given address)
+CONFIGURATION_ACCESS_PRIVILEGES = set(range(0x000, 0x100, 0x4))
+FUNCTIONALITY_ACCESS_PRIVILEGES = set(range(0x100, 0x200, 0x4))
 
 
 class L3APIImplementation(L3API):

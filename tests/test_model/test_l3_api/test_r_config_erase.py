@@ -14,17 +14,12 @@ from tvl.targets.model.internal.configuration_object import (
     ENDIANESS,
     REGISTER_RESET_VALUE,
 )
-from tvl.targets.model.tropic01_l3_api_impl import (
-    CONFIGURATION_ACCESS_PRIVILEGES,
-    FUNCTIONALITY_ACCESS_PRIVILEGES,
-)
 from tvl.targets.model.tropic01_model import Tropic01Model
 
 R_CONFIG_CFG = {
     **{
         register: random.randint(0, 2**32 - 1)
-        for register in FUNCTIONALITY_ACCESS_PRIVILEGES
-        | CONFIGURATION_ACCESS_PRIVILEGES
+        for register in ConfigObjectRegisterAddressEnum
     },
     # ensure that the users have the rights to erase all the r-config registers
     ConfigObjectRegisterAddressEnum.CFG_UAP_R_CONFIG_WRITE_ERASE: 0x0000_FFFF,
