@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from random import getrandbits, randint, sample
+from random import getrandbits, randint, randrange, sample
 from typing import Any, Iterable, Iterator, List, Optional, Sequence, TypeVar
 
 import pytest
@@ -146,7 +146,7 @@ class UtilsCo:
     def invalid_addresses_out_of_range_aligned(cls, k: int) -> Iterator[int]:
         for _ in range(k):
             while (
-                a := randint(CONFIG_OBJECT_SIZE_BYTES, cls.ADDR_MAX)
+                a := randrange(CONFIG_OBJECT_SIZE_BYTES, cls.ADDR_MAX)
             ) % REGISTER_SIZE_BYTES != 0:
                 continue
             yield a
@@ -155,7 +155,7 @@ class UtilsCo:
     def invalid_addresses_out_of_range_and_not_aligned(cls, k: int) -> Iterator[int]:
         for _ in range(k):
             while (
-                a := randint(CONFIG_OBJECT_SIZE_BYTES, cls.ADDR_MAX)
+                a := randrange(CONFIG_OBJECT_SIZE_BYTES, cls.ADDR_MAX)
             ) % REGISTER_SIZE_BYTES == 0:
                 continue
             yield a
