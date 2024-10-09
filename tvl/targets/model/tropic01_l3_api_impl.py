@@ -55,7 +55,6 @@ from ...api.l3_api import (
     TsL3SerialCodeGetResult,
 )
 from ...constants import L3ResultFieldEnum
-from .configuration_object_impl import ConfigObjectRegisterAddressEnum
 from .exceptions import (
     L3ProcessingError,
     L3ProcessingErrorFail,
@@ -85,7 +84,6 @@ from .internal.pairing_keys import (
     WrittenSlotError,
 )
 from .internal.user_data_partition import SlotAlreadyWrittenError
-
 
 # Whole Configuration Object address space could be accessed (no register need to be defined at given address)
 CONFIGURATION_ACCESS_PRIVILEGES = set(range(0x000, 0x100, 0x4))

@@ -4,21 +4,24 @@
 from itertools import chain, islice, repeat
 from typing import List, NoReturn, cast
 
+from tvl.api.l2_api import (
+    TsL2MutableFwUpdateDataReqRequest,
+    TsL2MutableFwUpdateDataReqResponse,
+)
+
 from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk
 from ...api.l2_api import (
     L2API,
     TsL2EncryptedCmdReqRequest,
     TsL2EncryptedCmdReqResponse,
-    TsL2EncryptedSessionAbtRequest,
-    TsL2EncryptedSessionAbtResponse,
+    TsL2EncryptedSessionAbtReqRequest,
+    TsL2EncryptedSessionAbtReqResponse,
     TsL2GetInfoReqRequest,
     TsL2GetInfoReqResponse,
     TsL2GetLogReqRequest,
     TsL2GetLogReqResponse,
     TsL2HandshakeReqRequest,
     TsL2HandshakeReqResponse,
-    TsL2MutableFwEraseReqRequest,
-    TsL2MutableFwEraseReqResponse,
     TsL2MutableFwUpdateReqRequest,
     TsL2MutableFwUpdateReqResponse,
     TsL2ResendReqRequest,
@@ -205,14 +208,14 @@ class L2APIImplementation(L2API):
         return cast(List[TsL2EncryptedCmdReqResponse], chunks)
 
     def ts_l2_encrypted_session_abt(
-        self, request: TsL2EncryptedSessionAbtRequest
-    ) -> TsL2EncryptedSessionAbtResponse:
+        self, request: TsL2EncryptedSessionAbtReqRequest
+    ) -> TsL2EncryptedSessionAbtReqResponse:
         self.logger.info("Aborting encrypted session.")
         self.command_buffer.reset()
         self.invalidate_session()
 
         self.logger.debug("Encrypted session aborted.")
-        return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2EncryptedSessionAbtReqResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
         if self.spi_fsm.response_buffer.latest():
@@ -279,11 +282,11 @@ class L2APIImplementation(L2API):
         # Start-up mode is not modelled
         return TsL2MutableFwUpdateReqResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_mutable_fw_erase_req(
-        self, request: TsL2MutableFwEraseReqRequest
-    ) -> TsL2MutableFwEraseReqResponse:
+    def ts_l2_mutable_fw_update_data_req(
+        self, request: TsL2MutableFwUpdateDataReqRequest
+    ) -> TsL2MutableFwUpdateDataReqResponse:
         # Start-up mode is not modelled
-        return TsL2MutableFwEraseReqResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2MutableFwUpdateDataReqResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_get_log_req(self, request: TsL2GetLogReqRequest) -> TsL2GetLogReqResponse:
         # Return OK status to avoid issues during tests

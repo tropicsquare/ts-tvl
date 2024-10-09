@@ -1,13 +1,13 @@
-# GENERATED ON 2024-08-08 13:10:08.590912
+# GENERATED ON 2024-10-14 11:54:51.033273
 # BY internal VERSION 1.6
-# INPUT FILE: 20402444E43870FE5FEA170E6AADDC8A15CFA812CA74D39EEC3A8B75FA10ED56
+# INPUT FILE: D0E700A2D97A499E9425EE2CAE6F39FAC74DE912B5F4083983367E163139880E
 #
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
-from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, datafield
+from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, U32Scalar, datafield
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -21,7 +21,7 @@ class L2Enum(HexReprIntEnum):
     """Start new Secure Channel Handshake"""
     ENCRYPTED_CMD_REQ = 0x04
     """Execute L3 Command."""
-    ENCRYPTED_SESSION_ABT = 0x08
+    ENCRYPTED_SESSION_ABT_REQ = 0x08
     """Abort current Secure Channel Session."""
     RESEND_REQ = 0x10
     """Resend last Response."""
@@ -29,10 +29,10 @@ class L2Enum(HexReprIntEnum):
     """Move to Sleep"""
     STARTUP_REQ = 0xB3
     """Reset the chip."""
-    MUTABLE_FW_UPDATE_REQ = 0xB1
+    MUTABLE_FW_UPDATE_REQ = 0xB0
+    """Request to enable write new FW."""
+    MUTABLE_FW_UPDATE_DATA_REQ = 0xB1
     """Write new FW."""
-    MUTABLE_FW_ERASE_REQ = 0xB2
-    """Erase FW."""
     GET_LOG_REQ = 0xA2
     """Get FW log"""
 
@@ -119,11 +119,11 @@ class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
     """The L3 Result Authentication Tag."""
 
 
-class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtReqRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT_REQ):
     pass
 
 
-class TsL2EncryptedSessionAbtResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtReqResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT_REQ):
     pass
 
 
@@ -164,38 +164,36 @@ class TsL2StartupReqResponse(L2Response, id=L2Enum.STARTUP_REQ):
 
 
 class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
-    bank_id: U8Scalar  # The Identifier of the bank to write in.
-    class BankIdEnum(HexReprIntEnum):
-        FW1 = 0x01
-        """Firmware bank 1."""
-        FW2 = 0x02
-        """Firmware bank 2"""
-        SPECT1 = 0x11
-        """SPECT bank 1."""
-        SPECT2 = 0x12
-        """SPECT bank 2"""
-    offset: U16Scalar  # The offset of the specific bank to write the chunk
-    data: U8Array = datafield(min_size=4, max_size=248)  # The binary data to write. Data size should be a multiple of 4.
+    signature: U8Array = datafield(size=64)  # Signature of other data fields.
+    """Signature of SHA256 hash of all following data in this packet."""
+    hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
+    """SHA256 HASH of first FW chunk of data sent using
+    Mutable_FW_Update_Data."""
+    type: U32Scalar  # FW type.
+    """FW type which is going to be updated."""
+    class TypeEnum(HexReprIntEnum):
+        FW_TYPE_CPU = 0x01
+        """FW for RISC-V main CPU."""
+        FW_TYPE_SPECT = 0x02
+        """FW for SPECT coprocessor."""
+    version: U32Scalar  # Version of FW.
 
 
 class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
     pass
 
 
-class TsL2MutableFwEraseReqRequest(L2Request, id=L2Enum.MUTABLE_FW_ERASE_REQ):
-    bank_id: U8Scalar  # The Identifier of the bank to erase. The same choices as above.
-    class BankIdEnum(HexReprIntEnum):
-        FW1 = 0x01
-        """Firmware bank 1."""
-        FW2 = 0x02
-        """Firmware bank 2"""
-        SPECT1 = 0x11
-        """SPECT bank 1."""
-        SPECT2 = 0x12
-        """SPECT bank 2"""
+class TsL2MutableFwUpdateDataReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA_REQ):
+    hash: U8Array = datafield(size=32)  # HASH of the next FW chunk.
+    """SHA256 HASH of the next FW chunk of data sent using
+    Mutable_FW_Update_Data."""
+    offset: U16Scalar  # Offset of the bank to write the FW chunk to.
+    """The offset of the specific bank to write the FW chunk data to."""
+    data: U8Array = datafield(min_size=4, max_size=220)  # The binary data to write.
+    """The binary data to write. Data size should be a multiple of 4."""
 
 
-class TsL2MutableFwEraseReqResponse(L2Response, id=L2Enum.MUTABLE_FW_ERASE_REQ):
+class TsL2MutableFwUpdateDataReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA_REQ):
     pass
 
 
@@ -250,9 +248,9 @@ class L2API(BaseModel):
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_session_abt(
-        self, request: TsL2EncryptedSessionAbtRequest
-    ) -> Union[TsL2EncryptedSessionAbtResponse, List[TsL2EncryptedSessionAbtResponse]]:
+    def ts_l2_encrypted_session_abt_req(
+        self, request: TsL2EncryptedSessionAbtReqRequest
+    ) -> Union[TsL2EncryptedSessionAbtReqResponse, List[TsL2EncryptedSessionAbtReqResponse]]:
         """Request to abort current Secure Channel Session and execution of L3
 		command (TROPIC01 moves to Idle Mode)."""
         raise NotImplementedError("TODO")
@@ -282,19 +280,19 @@ class L2API(BaseModel):
     def ts_l2_mutable_fw_update_req(
         self, request: TsL2MutableFwUpdateReqRequest
     ) -> Union[TsL2MutableFwUpdateReqResponse, List[TsL2MutableFwUpdateReqResponse]]:
-        """Request to write a chunk of the new mutable FW to a R-Memory bank.
-		Supported only in Start-up mode (i.e. after Startup_Req with
-		MAINTENANCE_REBOOT).  NOTE: Write only to the correctly erased bank
-		(see Mutable_FW_Erase_Req)."""
+        """Request to start updating mutable FW. Supported only in Start-up
+		mode (i.e. after Startup_Req with MAINTENANCE_REBOOT). Possible update
+		only same or newer version.  NOTE: Chip automatically select memory
+		space for FW storage and erase it."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_mutable_fw_erase_req(
-        self, request: TsL2MutableFwEraseReqRequest
-    ) -> Union[TsL2MutableFwEraseReqResponse, List[TsL2MutableFwEraseReqResponse]]:
-        """Request to erase the mutable FW stored in a R-Memory bank.
-		Supported only in Start-up mode (i.e. after Startup_Req with
-		MAINTENANCE_REBOOT)."""
+    def ts_l2_mutable_fw_update_data_req(
+        self, request: TsL2MutableFwUpdateDataReqRequest
+    ) -> Union[TsL2MutableFwUpdateDataReqResponse, List[TsL2MutableFwUpdateDataReqResponse]]:
+        """Request to write a chunk of the new mutable FW to a R-Memory bank.
+		Supported only in Start-up mode after Mutable_FW_Update_Req
+		successfully processed."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
