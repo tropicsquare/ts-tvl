@@ -9,7 +9,7 @@
 
 from pathlib import Path
 
-from tvl.api.l2_api import TsL2HandshakeReqRequest, TsL2HandshakeReqResponse
+from tvl.api.l2_api import TsL2HandshakeRequest, TsL2HandshakeResponse
 from tvl.api.l3_api import TsL3PingCommand, TsL3PingResult
 from tvl.configuration_file_model import load_configuration_file
 from tvl.constants import L2StatusEnum, L3ResultFieldEnum
@@ -44,14 +44,14 @@ else:
     assert False, "SessionError should be raised"
 
 # Establish a secure channel between the model and the host: Send a Handshake request
-handshake_request = TsL2HandshakeReqRequest(
+handshake_request = TsL2HandshakeRequest(
     e_hpub=host.session.create_handshake_request(),
     pkey_index=host.pairing_key_index,
 )
 
 handshake_response = host.send_request(handshake_request)
 
-assert isinstance(handshake_response, TsL2HandshakeReqResponse)
+assert isinstance(handshake_response, TsL2HandshakeResponse)
 assert handshake_response.status.value == L2StatusEnum.REQ_OK
 
 # Check the secure channel session is well established: Send a Ping command

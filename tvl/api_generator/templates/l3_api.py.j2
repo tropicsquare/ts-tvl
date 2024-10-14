@@ -14,3 +14,15 @@
 {%- set OUTPUT_TYPE_PATTERN = "%(type)s" %}
 {%- set BUILTIN_IMPORT = "" %}
 {%- set INTERNAL_IMPORT = "from tvl.messages.l3_messages import L3Command, L3Result" %}
+
+{%- macro format_class_name(name) -%}
+{{name}}
+{%- endmacro -%}
+
+{%- macro format_function_name(name) -%}
+{{name}}
+{%- endmacro -%}
+
+{%- macro format_id(name) -%}
+{{name}}
+{%- endmacro -%}

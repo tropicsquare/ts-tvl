@@ -19,7 +19,7 @@ from typing import (
     cast,
 )
 
-from ..api.l2_api import TsL2EncryptedCmdReqRequest, TsL2EncryptedCmdReqResponse
+from ..api.l2_api import TsL2EncryptedCmdRequest, TsL2EncryptedCmdResponse
 from ..constants import L1ChipStatusFlag, L2IdFieldEnum, L2StatusEnum
 from ..messages.l2_messages import L2Request, L2Response
 from ..messages.l3_messages import L3Command, L3Result
@@ -319,11 +319,11 @@ class LowLevelFunctionFactory:
         return partialize(
             partialize(ll_send_l3_command, tx_param),
             dict(
-                send_chunk_fn=self.create_ll_l2_fn(TsL2EncryptedCmdReqRequest),
+                send_chunk_fn=self.create_ll_l2_fn(TsL2EncryptedCmdRequest),
                 l3_receive_fn=partialize(ll_receive, rx_param),
                 receive_chunk_fn=partialize(
                     ll_receive,
-                    self._get_info(TsL2EncryptedCmdReqResponse, L2Response).param,
+                    self._get_info(TsL2EncryptedCmdResponse, L2Response).param,
                 ),
             ),
         )

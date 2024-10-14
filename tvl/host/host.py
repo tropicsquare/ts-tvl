@@ -20,7 +20,7 @@ from typing import (
 from typing_extensions import Self
 
 from ..api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data
-from ..api.l2_api import TsL2HandshakeReqResponse, TsL2StartupReqResponse
+from ..api.l2_api import TsL2HandshakeResponse, TsL2StartupResponse
 from ..constants import ENCRYPTION_TAG_LEN, L2StatusEnum, L3ResultFieldEnum
 from ..crypto.encrypted_session import HostEncryptedSession
 from ..messages.l2_messages import L2Request, L2Response
@@ -230,7 +230,7 @@ class Host:
         return l2response
 
     @_process_response.register
-    def _(self, l2response: TsL2HandshakeReqResponse) -> TsL2HandshakeReqResponse:
+    def _(self, l2response: TsL2HandshakeResponse) -> TsL2HandshakeResponse:
         self.logger.info(f"+ Processing {l2response} +")
         if self.s_t_pub is None:
             raise InitializationError("Host is not paired yet.")
@@ -247,7 +247,7 @@ class Host:
         return l2response
 
     @_process_response.register
-    def _(self, l2response: TsL2StartupReqResponse) -> TsL2StartupReqResponse:
+    def _(self, l2response: TsL2StartupResponse) -> TsL2StartupResponse:
         self.logger.info(f"+ Processing {l2response} +")
 
         with contextlib.suppress(ValueError):

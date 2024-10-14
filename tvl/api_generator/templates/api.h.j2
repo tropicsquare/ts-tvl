@@ -14,8 +14,9 @@
 {%- set RESULT_TYPE = [PREFIX, "result_t"] | join("_") | lower %}
 {%- set LEN_TYPE = [PREFIX, "len_t"] | join("_") | lower %}
 
-#ifndef {{name}}
-#define {{name}}
+{%- set IFDEF_NAME = name | replace(".", "_") | upper %}
+#ifndef {{IFDEF_NAME}}
+#define {{IFDEF_NAME}}
 
 #include "type.h"
 {% for define in defines %}
@@ -101,5 +102,5 @@ typedef void {{struct_name}};
         {%- endif %}
     {%- endif %}
 {% endfor %}
-#endif // !{{name}}
+#endif // !{{IFDEF_NAME}}
 {% endblock content %}

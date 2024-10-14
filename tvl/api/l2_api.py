@@ -1,8 +1,8 @@
-# GENERATED ON 2024-10-14 11:54:51.033273
+# GENERATED ON 2024-10-14 17:04:55.905797
 # BY internal VERSION 1.6
 # INPUT FILE: D0E700A2D97A499E9425EE2CAE6F39FAC74DE912B5F4083983367E163139880E
 #
-# Copyright 2023 TropicSquare
+# Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
@@ -15,29 +15,29 @@ from tvl.typing_utils import HexReprIntEnum
 
 
 class L2Enum(HexReprIntEnum):
-    GET_INFO_REQ = 0x01
+    GET_INFO = 0x01
     """Obtain information about TROPIC01"""
-    HANDSHAKE_REQ = 0x02
+    HANDSHAKE = 0x02
     """Start new Secure Channel Handshake"""
-    ENCRYPTED_CMD_REQ = 0x04
+    ENCRYPTED_CMD = 0x04
     """Execute L3 Command."""
-    ENCRYPTED_SESSION_ABT_REQ = 0x08
+    ENCRYPTED_SESSION_ABT = 0x08
     """Abort current Secure Channel Session."""
-    RESEND_REQ = 0x10
+    RESEND = 0x10
     """Resend last Response."""
-    SLEEP_REQ = 0x20
+    SLEEP = 0x20
     """Move to Sleep"""
-    STARTUP_REQ = 0xB3
+    STARTUP = 0xB3
     """Reset the chip."""
-    MUTABLE_FW_UPDATE_REQ = 0xB0
+    MUTABLE_FW_UPDATE = 0xB0
     """Request to enable write new FW."""
-    MUTABLE_FW_UPDATE_DATA_REQ = 0xB1
+    MUTABLE_FW_UPDATE_DATA = 0xB1
     """Write new FW."""
-    GET_LOG_REQ = 0xA2
+    GET_LOG = 0xA2
     """Get FW log"""
 
 
-class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
+class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
     object_id: U8Scalar
     """The Identifier of the requested object."""
     class ObjectIdEnum(HexReprIntEnum):
@@ -70,12 +70,12 @@ class TsL2GetInfoReqRequest(L2Request, id=L2Enum.GET_INFO_REQ):
         certificate)."""
 
 
-class TsL2GetInfoReqResponse(L2Response, id=L2Enum.GET_INFO_REQ):
+class TsL2GetInfoResponse(L2Response, id=L2Enum.GET_INFO):
     object: U8Array = datafield(min_size=1, max_size=128)
     """The data content of the requested object block."""
 
 
-class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
+class TsL2HandshakeRequest(L2Request, id=L2Enum.HANDSHAKE):
     e_hpub: U8Array = datafield(size=32)  # Ephemeral Key of Host MCU.
     """The Host MCU's Ephemeral X25519 public key. A little endian encoding of
     the x-coordinate from the public Curve25519 point."""
@@ -94,14 +94,14 @@ class TsL2HandshakeReqRequest(L2Request, id=L2Enum.HANDSHAKE_REQ):
         """Corresponds to $S_{H3Pub}$."""
 
 
-class TsL2HandshakeReqResponse(L2Response, id=L2Enum.HANDSHAKE_REQ):
+class TsL2HandshakeResponse(L2Response, id=L2Enum.HANDSHAKE):
     e_tpub: U8Array = datafield(size=32)  # Ephemeral Key of TROPIC01.
     """TROPIC01's X25519 Ephemeral key."""
     t_tauth: U8Array = datafield(size=16)  # Authentication Tag
     """The Secure Channel Handshake Authentication Tag."""
 
 
-class TsL2EncryptedCmdReqRequest(L2Request, id=L2Enum.ENCRYPTED_CMD_REQ):
+class TsL2EncryptedCmdRequest(L2Request, id=L2Enum.ENCRYPTED_CMD):
     cmd_size: U16Scalar  # L3 Command size.
     """The size of the CMD_CIPHERTEXT L3 Field in bytes."""
     cmd_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Command.
@@ -110,7 +110,7 @@ class TsL2EncryptedCmdReqRequest(L2Request, id=L2Enum.ENCRYPTED_CMD_REQ):
     """The L3 Command Authentication Tag."""
 
 
-class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
+class TsL2EncryptedCmdResponse(L2Response, id=L2Enum.ENCRYPTED_CMD):
     res_size: U16Scalar  # L3 Result size.
     """The size of the RES_CIPHERTEXT L3 Field in bytes."""
     res_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Result
@@ -119,23 +119,23 @@ class TsL2EncryptedCmdReqResponse(L2Response, id=L2Enum.ENCRYPTED_CMD_REQ):
     """The L3 Result Authentication Tag."""
 
 
-class TsL2EncryptedSessionAbtReqRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT_REQ):
+class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2EncryptedSessionAbtReqResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT_REQ):
+class TsL2EncryptedSessionAbtResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2ResendReqRequest(L2Request, id=L2Enum.RESEND_REQ):
+class TsL2ResendRequest(L2Request, id=L2Enum.RESEND):
     pass
 
 
-class TsL2ResendReqResponse(L2Response, id=L2Enum.RESEND_REQ):
+class TsL2ResendResponse(L2Response, id=L2Enum.RESEND):
     pass
 
 
-class TsL2SleepReqRequest(L2Request, id=L2Enum.SLEEP_REQ):
+class TsL2SleepRequest(L2Request, id=L2Enum.SLEEP):
     sleep_kind: U8Scalar  # Sleep Kind
     """The type of Sleep mode TROPIC01 moves to."""
     class SleepKindEnum(HexReprIntEnum):
@@ -145,11 +145,11 @@ class TsL2SleepReqRequest(L2Request, id=L2Enum.SLEEP_REQ):
         """Deep Sleep Mode"""
 
 
-class TsL2SleepReqResponse(L2Response, id=L2Enum.SLEEP_REQ):
+class TsL2SleepResponse(L2Response, id=L2Enum.SLEEP):
     pass
 
 
-class TsL2StartupReqRequest(L2Request, id=L2Enum.STARTUP_REQ):
+class TsL2StartupRequest(L2Request, id=L2Enum.STARTUP):
     startup_id: U8Scalar  # The request ID
     class StartupIdEnum(HexReprIntEnum):
         REBOOT = 0x01
@@ -159,11 +159,11 @@ class TsL2StartupReqRequest(L2Request, id=L2Enum.STARTUP_REQ):
         mutable FW from R-Memory."""
 
 
-class TsL2StartupReqResponse(L2Response, id=L2Enum.STARTUP_REQ):
+class TsL2StartupResponse(L2Response, id=L2Enum.STARTUP):
     pass
 
 
-class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
+class TsL2MutableFwUpdateRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE):
     signature: U8Array = datafield(size=64)  # Signature of other data fields.
     """Signature of SHA256 hash of all following data in this packet."""
     hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
@@ -179,11 +179,11 @@ class TsL2MutableFwUpdateReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
     version: U32Scalar  # Version of FW.
 
 
-class TsL2MutableFwUpdateReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_REQ):
+class TsL2MutableFwUpdateResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE):
     pass
 
 
-class TsL2MutableFwUpdateDataReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA_REQ):
+class TsL2MutableFwUpdateDataRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
     hash: U8Array = datafield(size=32)  # HASH of the next FW chunk.
     """SHA256 HASH of the next FW chunk of data sent using
     Mutable_FW_Update_Data."""
@@ -193,15 +193,15 @@ class TsL2MutableFwUpdateDataReqRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_D
     """The binary data to write. Data size should be a multiple of 4."""
 
 
-class TsL2MutableFwUpdateDataReqResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA_REQ):
+class TsL2MutableFwUpdateDataResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
     pass
 
 
-class TsL2GetLogReqRequest(L2Request, id=L2Enum.GET_LOG_REQ):
+class TsL2GetLogRequest(L2Request, id=L2Enum.GET_LOG):
     pass
 
 
-class TsL2GetLogReqResponse(L2Response, id=L2Enum.GET_LOG_REQ):
+class TsL2GetLogResponse(L2Response, id=L2Enum.GET_LOG):
     log_msg: U8Array = datafield(min_size=0, max_size=255)  # Log message
     """Log message of RISCV FW."""
 
@@ -221,9 +221,9 @@ class L2API(BaseModel):
     """
 
     @api("l2_api")
-    def ts_l2_get_info_req(
-        self, request: TsL2GetInfoReqRequest
-    ) -> Union[TsL2GetInfoReqResponse, List[TsL2GetInfoReqResponse]]:
+    def ts_l2_get_info(
+        self, request: TsL2GetInfoRequest
+    ) -> Union[TsL2GetInfoResponse, List[TsL2GetInfoResponse]]:
         """Request to obtain information about TROPIC01. The type of
 		information obtained is distinguished by OBJECT_ID.  NOTE: If Start-up
 		mode is active, TROPIC01 executes the immutable FW. Any version
@@ -233,53 +233,53 @@ class L2API(BaseModel):
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_handshake_req(
-        self, request: TsL2HandshakeReqRequest
-    ) -> Union[TsL2HandshakeReqResponse, List[TsL2HandshakeReqResponse]]:
+    def ts_l2_handshake(
+        self, request: TsL2HandshakeRequest
+    ) -> Union[TsL2HandshakeResponse, List[TsL2HandshakeResponse]]:
         """Request to execute a Secure Channel Handshake and establish a new
 		Secure Channel Session (TROPIC01 moves to Secure Channel Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_cmd_req(
-        self, request: TsL2EncryptedCmdReqRequest
-    ) -> Union[TsL2EncryptedCmdReqResponse, List[TsL2EncryptedCmdReqResponse]]:
+    def ts_l2_encrypted_cmd(
+        self, request: TsL2EncryptedCmdRequest
+    ) -> Union[TsL2EncryptedCmdResponse, List[TsL2EncryptedCmdResponse]]:
         """Request to execute an L3 Command."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_encrypted_session_abt_req(
-        self, request: TsL2EncryptedSessionAbtReqRequest
-    ) -> Union[TsL2EncryptedSessionAbtReqResponse, List[TsL2EncryptedSessionAbtReqResponse]]:
+    def ts_l2_encrypted_session_abt(
+        self, request: TsL2EncryptedSessionAbtRequest
+    ) -> Union[TsL2EncryptedSessionAbtResponse, List[TsL2EncryptedSessionAbtResponse]]:
         """Request to abort current Secure Channel Session and execution of L3
 		command (TROPIC01 moves to Idle Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_resend_req(
-        self, request: TsL2ResendReqRequest
-    ) -> Union[TsL2ResendReqResponse, List[TsL2ResendReqResponse]]:
+    def ts_l2_resend(
+        self, request: TsL2ResendRequest
+    ) -> Union[TsL2ResendResponse, List[TsL2ResendResponse]]:
         """Request for TROPIC01 to resend the last L2 Response."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_sleep_req(
-        self, request: TsL2SleepReqRequest
-    ) -> Union[TsL2SleepReqResponse, List[TsL2SleepReqResponse]]:
+    def ts_l2_sleep(
+        self, request: TsL2SleepRequest
+    ) -> Union[TsL2SleepResponse, List[TsL2SleepResponse]]:
         """Request for TROPIC01 to go to Sleep Mode or Deep Sleep Mode."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_startup_req(
-        self, request: TsL2StartupReqRequest
-    ) -> Union[TsL2StartupReqResponse, List[TsL2StartupReqResponse]]:
+    def ts_l2_startup(
+        self, request: TsL2StartupRequest
+    ) -> Union[TsL2StartupResponse, List[TsL2StartupResponse]]:
         """Request for TROPIC01 to reset."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_mutable_fw_update_req(
-        self, request: TsL2MutableFwUpdateReqRequest
-    ) -> Union[TsL2MutableFwUpdateReqResponse, List[TsL2MutableFwUpdateReqResponse]]:
+    def ts_l2_mutable_fw_update(
+        self, request: TsL2MutableFwUpdateRequest
+    ) -> Union[TsL2MutableFwUpdateResponse, List[TsL2MutableFwUpdateResponse]]:
         """Request to start updating mutable FW. Supported only in Start-up
 		mode (i.e. after Startup_Req with MAINTENANCE_REBOOT). Possible update
 		only same or newer version.  NOTE: Chip automatically select memory
@@ -287,17 +287,17 @@ class L2API(BaseModel):
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_mutable_fw_update_data_req(
-        self, request: TsL2MutableFwUpdateDataReqRequest
-    ) -> Union[TsL2MutableFwUpdateDataReqResponse, List[TsL2MutableFwUpdateDataReqResponse]]:
+    def ts_l2_mutable_fw_update_data(
+        self, request: TsL2MutableFwUpdateDataRequest
+    ) -> Union[TsL2MutableFwUpdateDataResponse, List[TsL2MutableFwUpdateDataResponse]]:
         """Request to write a chunk of the new mutable FW to a R-Memory bank.
 		Supported only in Start-up mode after Mutable_FW_Update_Req
 		successfully processed."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
-    def ts_l2_get_log_req(
-        self, request: TsL2GetLogReqRequest
-    ) -> Union[TsL2GetLogReqResponse, List[TsL2GetLogReqResponse]]:
+    def ts_l2_get_log(
+        self, request: TsL2GetLogRequest
+    ) -> Union[TsL2GetLogResponse, List[TsL2GetLogResponse]]:
         """Get log from FW running on RISCV CPU."""
         raise NotImplementedError("TODO")

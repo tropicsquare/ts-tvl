@@ -156,7 +156,6 @@ def generate_c_api(model: InputFileModel, output_file: Path) -> Dict[str, Any]:
     def to_dict(lst: List[Any]) -> List[Dict[str, Any]]:
         return [x.dict() for x in lst]
 
-    ifdef_name = output_file.name.replace(".", "_").upper()
     context: List[Dict[str, Any]] = []
 
     for cfg in model.commands:
@@ -183,13 +182,15 @@ def generate_c_api(model: InputFileModel, output_file: Path) -> Dict[str, Any]:
             }
             for arg in context_["structs"][io_type]["members"]:
                 if (size := arg.get("size")) is None:
-                    size = arg.get("max_size")
-                arg["size"] = size
+                    arg["size"] = arg.get("max_size")
+                elif arg.get("max_size") is None:
+                    arg["max_size"] = size
+                    arg["min_size"] = size
 
         context.append(context_)
 
     return {
-        "name": ifdef_name,
+        "name": output_file.name,
         "defines": to_dict(model.defines),
         "tags": context,
     }
