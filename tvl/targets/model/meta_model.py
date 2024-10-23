@@ -119,13 +119,13 @@ def _log_processing(method: F) -> F:
 
     @functools.wraps(method)
     def __log_processing(self: HasLogger, request: Any) -> Any:
-        self.logger.info((_line := f"-------- {method.__qualname__} --------"))
+        self.logger.debug(f"Executing {method.__qualname__}")
         try:
             return method(self, request)
         except Exception as exc:
             self.logger.info(exc)
             raise
         finally:
-            self.logger.info("-" * len(_line))
+            self.logger.debug(f"Done executing {method.__qualname__}")
 
     return cast(F, __log_processing)

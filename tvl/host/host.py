@@ -14,6 +14,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Union,
     overload,
 )
 
@@ -69,7 +70,7 @@ class Host:
         debug_random_value: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        def __i(value: Optional[T], default: Any) -> T:
+        def __i(value: Optional[T], default: Union[T, Callable[[], T]]) -> T:
             if value is not None:
                 return value
             if callable(default):

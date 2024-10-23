@@ -4,7 +4,12 @@
 import logging
 import logging.config
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
+
+if TYPE_CHECKING:
+    _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
+else:
+    _LoggerAdapter = logging.LoggerAdapter
 
 
 class Colors(str, Enum):
@@ -48,6 +53,26 @@ class TVLFormatter(logging.Formatter):
     def _format_with_colors(self, record: logging.LogRecord) -> str:
         record.color = self.COLORS.get(record.levelno, Colors.NONE)
         return super().format(record)
+
+
+class Labeller(_LoggerAdapter):
+    def __init__(self, logger: logging.Logger, label: str) -> None:
+        """LoggerAdapter adding an extra field `label` to the log records"""
+        super().__init__(logger, {"label": label})
+
+
+class LabelFilter(logging.Filter):
+    def __init__(self, labels: Sequence[str]) -> None:
+        """Filter removing out the log records with some label
+
+        Args:
+            labels (Sequence[str]): the labels to be filtered
+        """
+        self.labels = labels
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        label: Optional[str] = getattr(record, "label", None)
+        return label is None or label not in self.labels
 
 
 def setup_logging(config: Optional[Dict[str, Any]] = None) -> None:

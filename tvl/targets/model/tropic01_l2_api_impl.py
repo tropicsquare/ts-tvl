@@ -129,8 +129,10 @@ class L2APIImplementation(L2API):
 
         data_field_bytes = request.data_field_bytes
 
-        self.logger.info("Receiving L3 command.")
+        self.logger.info("L3 command chunk received.")
+        self.logger.debug(f"Raw L3 command chunk: {data_field_bytes}.")
         if self.command_buffer.is_empty():
+            self.logger.debug("Received first chunk of L3 command.")
             total_command_length = (
                 L3EncryptedPacket.MIN_NB_BYTES
                 + L3EncryptedPacket.from_bytes(data_field_bytes).size.value
@@ -141,21 +143,22 @@ class L2APIImplementation(L2API):
         self.logger.debug(f"Add chunk {data_field_bytes}.")
         self.command_buffer.add_chunk(data_field_bytes)
         if self.command_buffer.is_command_incomplete():
-            raise L2ProcessingErrorContinue("Request next L3 command chunk.")
+            raise L2ProcessingErrorContinue(
+                "L3 command not complete yet, requesting next chunk."
+            )
 
-        self.logger.info("Build encrypted packet from chunks.")
+        self.logger.info("All chunks received, L3 command complete.")
+
         raw_command = self.command_buffer.get_raw_command()
-        self.logger.debug(raw_command)
+        self.logger.debug(f"Parsing raw encrypted L3 command from {raw_command}.")
         encrypted_command = L3EncryptedPacket.from_bytes(raw_command)
-        self.logger.debug(encrypted_command)
 
-        self.logger.info("Decrypting L3 command.")
+        self.logger.info(f"Decrypting L3 command {encrypted_command}.")
         req_data = self.decrypt_command(encrypted_command.data_field_bytes)
         if req_data is None:
             raise L2ProcessingErrorTag("Invalid TAG in encrypted command request")
-        self.logger.debug(f"Decrypted command: {req_data}")
 
-        self.logger.info("Parsing L3 command.")
+        self.logger.debug(f"Parsing raw L3 command {req_data}.")
         try:
             command = L3Command.instantiate_subclass(
                 L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
@@ -168,22 +171,19 @@ class L2APIImplementation(L2API):
             self.logger.debug(exc)
             result = L3Result(result=L3ResultFieldEnum.FAIL)
         else:
-            self.logger.debug(f"L3 command: {command}")
-            self.logger.info("Processing L3 command.")
+            self.logger.info(f"Processing L3 command {command}.")
             try:
                 result = self.process_l3_command(command)
             except L3ProcessingError as exc:
                 result = L3Result(result=exc.result)
 
-        self.logger.debug(f"L3 result: {result}")
-
-        self.logger.info("Encrypting L3 result.")
+        self.logger.info(f"Encrypting L3 result {result}.")
         encrypted_result = L3EncryptedPacket.from_encrypted(
             self.encrypt_result(result.to_bytes())
         )
         self.logger.debug(f"Encrypted result: {encrypted_result}")
 
-        self.logger.info("Creating L2 response(s).")
+        self.logger.info("Splitting encrypted L3 result into L2 chunk(s).")
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
 
         result_chunks = list(self.split_data_fn(encrypted_result.to_bytes()))
@@ -203,7 +203,6 @@ class L2APIImplementation(L2API):
     def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest
     ) -> TsL2EncryptedSessionAbtResponse:
-        self.logger.info("Aborting encrypted session.")
         self.command_buffer.reset()
         self.invalidate_session()
 
@@ -239,7 +238,6 @@ class L2APIImplementation(L2API):
             self.logger.debug("Deep sleep mode disabled.")
             return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
 
-        self.logger.info("Entering in sleep mode.")
         self.invalidate_session()
         self.command_buffer.reset()
 
@@ -260,11 +258,9 @@ class L2APIImplementation(L2API):
             ) from None
 
         # Start-up mode is not modelled, so only one behavior for this request
-        self.logger.info("Resetting the chip.")
-        self.power_off()
-        self.power_on()
+        self._process_power_off()
 
-        self.logger.info("Chip reset.")
+        self.logger.debug("Chip reset.")
         return TsL2StartupResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_mutable_fw_update(

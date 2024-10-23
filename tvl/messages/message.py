@@ -273,7 +273,7 @@ class Message(BaseMessage):
             raise NegativeLengthError(f"length should be positive: {length}.")
 
         if length >= 1:
-            default_data_field_name = "default_data"
+            default_data_field_name = "data"
 
             if length > 1:
                 namespace = {

@@ -4,11 +4,16 @@
 import logging
 from itertools import cycle
 from random import sample
-from typing import Any, Callable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Sequence, Union
 
 from ....constants import PADDING_BYTE, L1ChipStatusFlag, L2IdFieldEnum, L2StatusEnum
 from ..exceptions import ResendLastResponse
 from .response_buffer import ResponseBuffer
+
+if TYPE_CHECKING:
+    _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
+else:
+    _LoggerAdapter = logging.LoggerAdapter
 
 State = Callable[["SpiFsm", bytes], bytes]
 
@@ -25,11 +30,11 @@ class SpiFsm:
         init_byte: bytes,
         busy_iter: Optional[Sequence[bool]],
         process_input_fn: Callable[[bytes], Union[bytes, List[bytes]]],
-        logger: Optional[logging.Logger] = None,
+        logger: Optional[Union[logging.Logger, _LoggerAdapter]] = None,
     ) -> None:
         if logger is None:
             logger = logging.getLogger(self.__class__.__name__.lower())
-        self.logger = logger
+        self.set_logger(logger)
 
         self.init_byte = init_byte
 
@@ -52,12 +57,17 @@ class SpiFsm:
         self.odata = b""
         self.current_state = idle_state
 
+    def set_logger(self, logger: Union[logging.Logger, _LoggerAdapter]) -> None:
+        self.logger = logger
+
     def spi_drive_csn_low(self) -> None:
+        self.logger.info("Chip Select driven to LOW.")
         if not self.csn_is_low:
             self.current_state = csn_falling_edge_state
         self.csn_is_low = True
 
     def spi_drive_csn_high(self) -> None:
+        self.logger.info("Chip Select driven to HIGH.")
         self.current_state = idle_state
         self.csn_is_low = False
 

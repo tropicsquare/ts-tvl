@@ -16,6 +16,10 @@ REGISTER_MASK = 2**REGISTER_SIZE_BITS - 1
 REGISTER_STR_NB_CHARS = REGISTER_SIZE_BITS // 4 + 2
 ENDIANESS = "big"
 
+# Whole Configuration Object address space could be accessed (no register need to be defined at given address)
+CONFIGURATION_ACCESS_PRIVILEGES = range(0x000, 0x100, 0x4)
+FUNCTIONALITY_ACCESS_PRIVILEGES = range(0x100, 0x200, 0x4)
+
 
 class ConfigObjectError(Exception):
     pass

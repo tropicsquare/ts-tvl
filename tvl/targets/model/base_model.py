@@ -23,6 +23,7 @@ from typing_extensions import Self
 
 from ...constants import CHUNK_SIZE, ENCRYPTION_TAG_LEN, S_HI_PUB_NB_SLOTS, L2StatusEnum
 from ...crypto.encrypted_session import TropicEncryptedSession
+from ...logging_utils import Labeller
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
 from ...messages.l3_messages import L3Command, L3Result
@@ -125,11 +126,6 @@ class BaseModel(metaclass=MetaModel):
                 return value
             return default()
 
-        # logging settings
-        if logger is None:
-            logger = logging.getLogger(self.__class__.__name__.lower())
-        self.logger = logger
-
         # --- R-Memory Partitions ---
 
         self.r_config = __factory(r_config, ConfigurationObjectImpl)
@@ -180,12 +176,19 @@ class BaseModel(metaclass=MetaModel):
         self.command_buffer = CommandBuffer()
 
         # L1 layer finite-state machine
-        self.spi_fsm = SpiFsm(init_byte, busy_iter, self.process_input, self.logger)
+        self.spi_fsm = SpiFsm(init_byte, busy_iter, self.process_input)
 
         self.split_data_fn = split_data_fn
 
+        # logging settings
+        if logger is None:
+            logger = logging.getLogger(self.__class__.__name__.lower())
+        self.set_logger(logger)
+
     def set_logger(self, logger: logging.Logger) -> Self:
-        self.logger = logger
+        self.logger = Labeller(logger, "base")
+        self.uap_logger = Labeller(logger, "uap")
+        self.spi_fsm.set_logger(Labeller(logger, "spi"))
         return self
 
     def __enter__(self) -> Self:
@@ -273,12 +276,10 @@ class BaseModel(metaclass=MetaModel):
 
     def spi_drive_csn_low(self) -> None:
         """Drive the Chip Select signal to LOW"""
-        self.logger.info("Chip Select driven to LOW.")
         self.spi_fsm.spi_drive_csn_low()
 
     def spi_drive_csn_high(self) -> None:
         """Drive the Chip Select signal to HIGH"""
-        self.logger.info("Chip Select driven to HIGH.")
         self.spi_fsm.spi_drive_csn_high()
 
     @overload
@@ -324,33 +325,42 @@ class BaseModel(metaclass=MetaModel):
         Returns:
             the response computed from the request
         """
-        self.logger.info("Checking L2 request.")
+        responses = self._process_input(data)
+
+        if not isinstance(responses, list):
+            self.logger.info(f"Returning L2 response: {responses}")
+            return responses.to_bytes()
+
+        self.logger.info(
+            f"Returning L2 responses: {[str(response) for response in responses]}"
+        )
+        return [response.to_bytes() for response in responses]
+
+    def _process_input(self, data: bytes) -> Union[L2Response, List[L2Response]]:
+        self.logger.debug(f"Parsing raw L2 request {data}.")
         request = L2Request.with_length(len(data)).from_bytes(data)
 
+        self.logger.info(f"Checking checksum of {request}")
         if not request.has_valid_crc():
-            self.logger.info(f"Invalid CRC in L2 request {data}")
-            return L2Response(status=L2StatusEnum.CRC_ERR).to_bytes()
+            self.logger.debug("Checksum is incorrect.")
+            return L2Response(status=L2StatusEnum.CRC_ERR)
         self.logger.debug("Checksum is correct.")
 
-        self.logger.info("Parsing L2 request.")
+        self.logger.debug("Parsing L2 request.")
         try:
             request = L2Request.instantiate_subclass(request.id.value, data)
         except SubclassNotFoundError as exc:
             self.logger.debug(exc)
-            return L2Response(status=L2StatusEnum.UNKNOWN_REQ).to_bytes()
+            return L2Response(status=L2StatusEnum.UNKNOWN_REQ)
         except NoValidSubclassError as exc:
             self.logger.debug(exc)
-            return L2Response(status=L2StatusEnum.CRC_ERR).to_bytes()
-        self.logger.debug(f"L2 request: {request}")
+            return L2Response(status=L2StatusEnum.CRC_ERR)
 
-        self.logger.info("Processing L2 request.")
+        self.logger.info(f"Processing L2 request {request}")
         try:
-            responses = self.process_l2_request(request)
+            return self.process_l2_request(request)
         except L2ProcessingError as exc:
-            return L2Response(status=exc.status).to_bytes()
-        if not isinstance(responses, list):
-            responses = [responses]
-        return [response.to_bytes() for response in responses]
+            return L2Response(status=exc.status)
 
     @base("l2_api")
     def process_l2_request(
@@ -389,6 +399,9 @@ class BaseModel(metaclass=MetaModel):
 
     def power_off(self) -> None:
         self.logger.info("Switching the model off.")
+        self._process_power_off()
+
+    def _process_power_off(self) -> None:
         self.invalidate_session()
         self.command_buffer.reset()
         self.spi_fsm.reset()
@@ -404,7 +417,9 @@ class BaseModel(metaclass=MetaModel):
                 configuration objects
         """
         if self._config is None:
-            self.logger.info("Updating configuration.")
+            self.logger.debug(
+                "Updating configuration for the first time after power on."
+            )
             self._config = self.i_config & self.r_config
         return self._config
 
@@ -420,12 +435,13 @@ class BaseModel(metaclass=MetaModel):
             UnauthorizedError: the current pairing key does not have sufficient
                 privileges to access the feature guarded by the register.
         """
-        self.logger.info(f"Checking access privileges for {name}.")
+        name = name.upper()
+        self.uap_logger.info(f"Checking access privileges for {name}.")
         if not self.activate_encryption:
-            self.logger.debug("Encryption deactivated, bypassing check.")
+            self.uap_logger.debug("Encryption deactivated, bypassing check.")
             return
-        self.logger.debug(f"Pairing key slot #{self.pairing_key_slot}")
-        self.logger.debug(f"Configuration field: {value:#b}")
+        self.uap_logger.debug(f"Pairing key slot #{self.pairing_key_slot}")
+        self.uap_logger.debug(f"Configuration field: {value:#b}")
         if not 0 <= self.pairing_key_slot < S_HI_PUB_NB_SLOTS:
             raise RuntimeError("Chip not paired yet.")
         if not value & 2**self.pairing_key_slot:
@@ -433,13 +449,13 @@ class BaseModel(metaclass=MetaModel):
                 f"Pairing key slot #{self.pairing_key_slot} "
                 f"does not have access to {name}."
             )
-        self.logger.debug(
+        self.uap_logger.debug(
             f"Pairing key slot #{self.pairing_key_slot} has access to {name}."
         )
 
     def invalidate_session(self) -> None:
         """Invalidate the secure channel session"""
-        self.logger.info("Invalidating secure channel session.")
+        self.logger.debug("Invalidating secure channel session.")
         self.session.reset()
         self.pairing_key_slot = -1
         self.logger.debug("Done.")
