@@ -159,7 +159,7 @@ def process(
     except ValueError as exc:
         logger.error(exc)
         return ProcessingResult(Buffer(TagEnum.INVALID))
-    logger.debug("Tag: %s", tag)
+    logger.debug("Tag: %r", tag)
 
     # choose command to execute depending on the tag's value.
     if tag is TagEnum.SPI_DRIVE_CSN_LOW:
@@ -187,14 +187,14 @@ def process(
 
     # No behaviour attached to the tag
     else:
+        logger.warning("Tag %r is unsupported", tag)
         return ProcessingResult(Buffer(TagEnum.UNSUPPORTED))
 
     # Safely execute the command
     try:
         result = execute_command()
     except Exception as exc:
-        logger.error("An exception occured in the target:")
-        logger.exception(exc)
+        logger.error("An exception occured in the target:", exc_info=exc)
         return ProcessingResult(Buffer(tag=TagEnum.EXCEPTION), reset_target=True)
 
     if result is None:
@@ -210,7 +210,6 @@ def run_server(
     """Serve the Tropic01Model through the selected connection."""
 
     with connection, ExitStack() as stack:
-        logger.info("Instantiating target.")
         target = enter_context(stack, instantiate_model(configuration, logger))
         logger.info("Target instantiated.")
 
@@ -220,15 +219,12 @@ def run_server(
             while (rx_buffer := receive(connection, logger)) is not None:
                 logger.debug("Rx buffer: %s", rx_buffer)
 
-                logger.info("Processing received data.")
                 tx_buffer, reset_target = process(rx_buffer, target, logger)
 
-                logger.info("Sending processed data.")
                 logger.debug("Tx buffer: %s", tx_buffer)
                 send(connection, tx_buffer, logger)
 
                 if reset_target:
-                    logger.info("Resetting target.")
                     target = enter_context(
                         stack, instantiate_model(configuration, logger)
                     )

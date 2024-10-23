@@ -8,6 +8,8 @@ from typing import Any, Optional, Union, cast
 from serial import Serial
 from typing_extensions import Self
 
+from .internal import run_server
+
 SERIAL_DEFAULT_PORT = "/dev/ttyUSB0"
 SERIAL_DEFAULT_BAUDRATE = 115200
 SERIAL_BUFFER_SIZE = 3
@@ -48,5 +50,15 @@ class SerialConnection:
             data = data[sent:]
 
 
-def generate_serial_connection(**kwargs: Any) -> SerialConnection:
-    return SerialConnection(kwargs["port"], kwargs["baudrate"], kwargs["logger"])
+def run_server_over_serial(
+    port: Union[Path, str],
+    baudrate: int,
+    configuration: Optional[Path],
+    logger: logging.Logger,
+    **kwargs: Any,
+) -> None:
+    run_server(
+        SerialConnection(port, baudrate, logger),
+        configuration,
+        logger,
+    )
