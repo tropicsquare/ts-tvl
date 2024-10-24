@@ -122,7 +122,7 @@ defined in the TROPIC01 datasheet and returns the response it receives from the 
 Example:
 ```python
 from tvl.host.host import Host
-from tvl.api.l2_api import TsL2GetInfoReqRequest, TsL2GetInfoReqResponse
+from tvl.api.l2_api import TsL2GetInfoRequest, TsL2GetInfoResponse
 
 # Instantiation of the Host
 host = Host(target=<TropicProtocol-compliant object>)
@@ -133,10 +133,10 @@ response = host.send_request(b"\x01\x02\x02\x00+\x98")
 assert isinstance(response, bytes)
 
 # - Second way: send an L2Request object
-# TsL2GetInfoReqRequest inherits from L2Request
-response = host.send_request(TsL2GetInfoReqRequest(object_id=2, block_index=0))
+# TsL2GetInfoRequest inherits from L2Request
+response = host.send_request(TsL2GetInfoRequest(object_id=2, block_index=0))
 # If the request is successfully processed, this assert statement is true
-assert isinstance(response, TsL2GetInfoReqResponse)
+assert isinstance(response, TsL2GetInfoResponse)
 ```
 
 More info on the low-level communication functions [here](../targets/README.md#examples-of-communication).
