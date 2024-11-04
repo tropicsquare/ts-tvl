@@ -1,0 +1,167 @@
+{#- Copyright 2024 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "header_api.j2" %}
+
+{%- set PREFIX = PREFIX | default("lt_l2") %}
+
+{%- set INPUT_TYPE = INPUT_TYPE | default("req_t") %}
+{%- set INPUT_NAME = INPUT_NAME | default("request") %}
+{%- set OUTPUT_TYPE = OUTPUT_TYPE | default("rsp_t") %}
+{%- set OUTPUT_NAME = OUTPUT_NAME | default("response") %}
+{%- set MSG_LEN_NAME = MSG_LEN_NAME | default("LEN") %}
+{%- set FILE_BRIEF = FILE_BRIEF | default("Layer 2 structure declaration") %}
+
+{%- if not prepend_base_fields -%}
+    {%- macro prepend_base_fields(structs) -%}
+        {%- do structs["input"]["members"].insert(0, {'name': 'req_id', 'type': 'u8', 'size': 1, 'description': 'Request ID byte'}) -%}
+        {%- do structs["input"]["members"].insert(1, {'name': 'req_len', 'type': 'u8', 'size': 1, 'description': 'Length byte'}) -%}
+        {%- do structs["input"]["members"].append({'name': 'crc', 'type': 'u8', 'size': 2, 'description': 'Checksum'}) -%}
+
+        {%- do structs["output"]["members"].insert(0, {'name': 'chip_status', 'type': 'u8', 'size': 1, 'description': 'CHIP_STATUS byte'}) -%}
+        {%- do structs["output"]["members"].insert(1, {'name': 'status', 'type': 'u8', 'size': 1, 'description': 'L2 status byte'}) -%}
+        {%- do structs["output"]["members"].insert(2, {'name': 'rsp_len', 'type': 'u8', 'size': 1, 'description': 'Length of incoming data'}) -%}
+        {%- do structs["output"]["members"].append({'name': 'crc', 'type': 'u8', 'size': 2, 'description': 'Checksum'}) -%}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- if not format_input_basename -%}
+    {%- macro format_input_basename(name) -%}
+        {{name}}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- if not format_output_basename -%}
+    {%- macro format_output_basename(name) -%}
+        {%- set suffix = "_req" %}
+        {%- set new_suffix = "_rsp" %}
+        {%- if name.lower().endswith(suffix) %}{{name[:-(suffix | length)]}}{{new_suffix}}
+        {%- else %}{{name}}{{new_suffix}}
+        {%- endif %}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- if not format_struct_name -%}
+    {%- macro format_struct_name(name) -%}
+        {%- set suffix = "_req" %}
+        {%- if name.lower().endswith(suffix) %}{{name[:-(suffix | length)]}}
+        {%- else %}{{name}}
+        {%- endif %}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- macro get_io_name(io) -%}
+    {%- if io == "input" %}{{INPUT_TYPE}}
+    {%- else %}{{OUTPUT_TYPE}}
+    {%- endif %}
+{%- endmacro -%}
+
+{%- macro process_description_long(descr) -%}
+/**
+ * @brief
+    {%- for line in descr.rstrip().split("\n") %}
+ {{["*", line] | join(" ") | trim}}
+    {%- endfor %}
+ */
+{%- endmacro -%}
+
+{%- macro format_description(member) -%}
+    {%- if member.description %} /**< {{member.description}} */
+    {%- endif %}
+{%- endmacro -%}
+
+{%- if not format_message_size -%}
+    {%- macro format_message_size(number) -%}
+        {{number}}
+    {%- endmacro -%}
+{%- endif -%}
+
+{% block content %}
+
+{%- set IFDEF_NAME = name | replace(".", "_") | upper %}
+#ifndef {{IFDEF_NAME}}
+#define {{IFDEF_NAME}}
+
+/**
+ * @file {{name}}
+ * @brief {{FILE_BRIEF}}
+ * @author Tropic Square s.r.o.
+ */
+
+#include "libtropic_common.h"
+
+{% for tag in tags %}
+    {%- set define_input_basename = [PREFIX, format_input_basename(tag.name)] | join("_") | upper %}
+/** @brief {{INPUT_NAME|capitalize}} ID */
+#define {{define_input_basename}}_ID {{"%#04x" | format(tag.message_id)}}
+    {%- set ns = namespace(min_size=0, size=0, has_variable_size=false, variable_size_field=none) %}
+    {%- for member in tag.structs["input"].members %}
+        {%- set ns.min_size = ns.min_size + member.min_size * member.type.nb_bytes %}
+        {%- set ns.size = ns.size + member.size * member.type.nb_bytes %}
+        {%- if member.min_size != member.max_size %}
+            {%- set ns.has_variable_size = true %}
+            {%- set ns.variable_size_field = member %}
+        {%- endif %}
+    {%- endfor %}
+/** @brief {{INPUT_NAME|capitalize}} length */
+    {%- if ns.has_variable_size %}
+#define {{define_input_basename}}_{{MSG_LEN_NAME}}_MIN {{format_message_size(ns.min_size)}}u
+/** Minimal length of field {{ns.variable_size_field.name | lower}} */
+#define {{define_input_basename}}_{{ns.variable_size_field.name | upper}}_LEN_MIN {{ns.variable_size_field.min_size}}u
+/** Maximal length of field {{ns.variable_size_field.name | lower}} */
+#define {{define_input_basename}}_{{ns.variable_size_field.name | upper}}_LEN_MAX {{ns.variable_size_field.max_size}}u
+    {%- else %}
+#define {{define_input_basename}}_{{MSG_LEN_NAME}} {{format_message_size(ns.size)}}u
+    {%- endif %}
+    {%- for io, value in tag.structs | dictsort %}
+        {%- for member in value.members %}
+            {%- if member.choices %}
+                {%- for choice in member.choices %}
+                    {%- if choice.description %}
+/** @brief {{choice.description}} */
+                    {%- endif %}
+#define {{[define_input_basename, member.name, choice.name] | join("_") | upper}} {{"%#04x" | format(choice.value)}}
+                {%- endfor %}
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
+    {% set define_output_basename = [PREFIX, format_output_basename(tag.name)] | join("_") | upper %}
+    {%- set ns2 = namespace(min_size=0, size=0, has_variable_size=false) %}
+    {%- for member in tag.structs["output"].members %}
+        {%- set ns2.min_size = ns2.min_size + member.min_size * member.type.nb_bytes %}
+        {%- set ns2.size = ns2.size + member.size * member.type.nb_bytes %}
+        {%- if member.min_size != member.max_size %}
+            {%- set ns2.has_variable_size = true %}
+        {%- endif %}
+    {%- endfor %}
+/** @brief {{OUTPUT_NAME|capitalize}} length */
+    {%- if ns2.has_variable_size %}
+#define {{define_output_basename}}_{{MSG_LEN_NAME}}_MIN {{format_message_size(ns2.min_size)}}u
+    {%- else %}
+#define {{define_output_basename}}_{{MSG_LEN_NAME}} {{format_message_size(ns2.size)}}u
+    {%- endif %}
+
+    {%- set _dontuse = prepend_base_fields(tag.structs) %}
+    {% for io, value in tag.structs | dictsort %}
+        {%- if tag.description_long %}
+{{process_description_long(tag.description_long)}}
+        {%- endif %}
+        {%- set io_name = get_io_name(io) %}
+        {%- if value.name %}
+struct {{[PREFIX, format_struct_name(tag.name | lower), io_name] | join("_")}} {
+            {%- for member in value.members %}
+                {%- if member.description_long %}
+    {{process_description_long(member.description_long) | indent(4)}}
+                {%- endif %}
+                {%- if member.size != 1 %}
+    {{member.type}} {{member.name | lower}}[{{member.size}}];{{format_description(member)}}
+                {%- else %}
+    {{member.type}} {{member.name | lower}};{{format_description(member)}}
+                {%- endif %}
+            {%- endfor %}
+} __attribute__((__packed__));
+        {%- endif %}
+    {% endfor %}
+{% endfor %}
+#endif // !{{IFDEF_NAME}}
+{% endblock content %}

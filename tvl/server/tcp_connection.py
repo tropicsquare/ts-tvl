@@ -1,8 +1,14 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
+from pathlib import Path
 from socket import create_server, socket
 from typing import Any, Optional
 
 from typing_extensions import Self
+
+from .internal import run_server
 
 TCP_DEFAULT_ADDRESS = "127.0.0.1"
 TCP_DEFAULT_PORT = 28992
@@ -48,5 +54,15 @@ class TCPConnection:
         self.client.sendall(data)
 
 
-def generate_tcp_connection(**kwargs: Any) -> TCPConnection:
-    return TCPConnection(kwargs["address"], kwargs["port"], kwargs["logger"])
+def run_server_over_tcp(
+    address: str,
+    port: int,
+    configuration: Optional[Path],
+    logger: logging.Logger,
+    **kwargs: Any,
+) -> None:
+    run_server(
+        TCPConnection(address, port, logger),
+        configuration,
+        logger,
+    )

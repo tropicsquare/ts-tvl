@@ -14,13 +14,14 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Union,
     overload,
 )
 
 from typing_extensions import Self
 
 from ..api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data
-from ..api.l2_api import TsL2HandshakeReqResponse, TsL2StartupReqResponse
+from ..api.l2_api import TsL2HandshakeResponse, TsL2StartupResponse
 from ..constants import ENCRYPTION_TAG_LEN, L2StatusEnum, L3ResultFieldEnum
 from ..crypto.encrypted_session import HostEncryptedSession
 from ..messages.l2_messages import L2Request, L2Response
@@ -69,7 +70,7 @@ class Host:
         debug_random_value: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        def __i(value: Optional[T], default: Any) -> T:
+        def __i(value: Optional[T], default: Union[T, Callable[[], T]]) -> T:
             if value is not None:
                 return value
             if callable(default):
@@ -230,7 +231,7 @@ class Host:
         return l2response
 
     @_process_response.register
-    def _(self, l2response: TsL2HandshakeReqResponse) -> TsL2HandshakeReqResponse:
+    def _(self, l2response: TsL2HandshakeResponse) -> TsL2HandshakeResponse:
         self.logger.info(f"+ Processing {l2response} +")
         if self.s_t_pub is None:
             raise InitializationError("Host is not paired yet.")
@@ -247,7 +248,7 @@ class Host:
         return l2response
 
     @_process_response.register
-    def _(self, l2response: TsL2StartupReqResponse) -> TsL2StartupReqResponse:
+    def _(self, l2response: TsL2StartupResponse) -> TsL2StartupResponse:
         self.logger.info(f"+ Processing {l2response} +")
 
         with contextlib.suppress(ValueError):
@@ -287,9 +288,9 @@ class Host:
 
         self.logger.info("Creating command chunks.")
         command_chunks: List[bytes] = []
-        for i, chunk in enumerate(encrypted_chunks, start=1):
+        for i, raw in enumerate(encrypted_chunks, start=1):
             self.logger.debug(f"Creating command chunk {i}/{nb_cmd_chunks}.")
-            chunk = L2EncryptedCmdChunk(encrypted_cmd=chunk)
+            chunk = L2EncryptedCmdChunk(encrypted_cmd=raw)
             self.logger.debug(f"Chunk: {chunk}.")
             command_chunks.append(chunk.to_bytes())
 

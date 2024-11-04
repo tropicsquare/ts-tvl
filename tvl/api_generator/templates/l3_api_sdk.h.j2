@@ -1,0 +1,46 @@
+{#- Copyright 2024 TropicSquare -#}
+{#- SPDX-License-Identifier: Apache-2.0 -#}
+{% extends "api_sdk.h.j2" %}
+
+{%- set PREFIX = "lt_l3" %}
+
+{%- set INPUT_TYPE = "cmd_t" %}
+{%- set INPUT_NAME = "command" %}
+{%- set OUTPUT_TYPE = "res_t" %}
+{%- set OUTPUT_NAME = "result" %}
+{%- set MSG_LEN_NAME = "SIZE" %}
+{%- set FILE_BRIEF = "Layer 3 structure declaration" %}
+
+
+{%- macro prepend_base_fields(structs) -%}
+    {%- do structs["input"]["members"].insert(0, {'name': 'cmd_size', 'type': 'u16', 'size': 1, 'description': 'L3 command size'}) -%}
+    {%- do structs["input"]["members"].insert(1, {'name': 'cmd_id', 'type': 'u8', 'size': 1, 'description': 'Command Identifier'}) -%}
+    {%- do structs["input"]["members"].append({'name': 'tag', 'type': 'u8', 'size': 16, 'description': 'L3 tag'}) -%}
+
+    {%- do structs["output"]["members"].insert(0, {'name': 'res_size', 'type': 'u16', 'size': 1, 'description': 'L3 result size'}) -%}
+    {%- do structs["output"]["members"].insert(1, {'name': 'result', 'type': 'u8', 'size': 1, 'description': 'Result status indication'}) -%}
+    {%- do structs["output"]["members"].append({'name': 'tag', 'type': 'u8', 'size': 16, 'description': 'L3 tag'}) -%}
+{%- endmacro -%}
+
+{%- macro format_input_basename(name) -%}
+    {%- set suffix = "_cmd" %}
+    {%- if not name.lower().endswith(suffix) %}{{name}}{{suffix}}
+    {%- else %}{{name}}
+    {%- endif %}
+{%- endmacro -%}
+
+{%- macro format_output_basename(name) -%}
+    {%- set suffix = "_cmd" %}
+    {%- set new_suffix = "_res" %}
+    {%- if name.lower().endswith(suffix) %}{{name[:-(suffix | length)]}}{{new_suffix}}
+    {%- else %}{{name}}{{new_suffix}}
+    {%- endif %}
+{%- endmacro -%}
+
+{%- macro format_struct_name(name) -%}
+{{name}}
+{%- endmacro -%}
+
+{%- macro format_message_size(number) -%}
+    {{number + 1}}
+{%- endmacro -%}

@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from functools import reduce
 from pathlib import Path
+from textwrap import dedent
 from typing import Callable
 
-from tvl.server.internal import run_server
-from tvl.server.logging_utils import LogDict, configure_logging
-from tvl.server.serial_connection import (
+from .logging_utils import LogDict, configure_logging, dump_logging_configuration
+from .serial_connection import (
     SERIAL_DEFAULT_BAUDRATE,
     SERIAL_DEFAULT_PORT,
-    generate_serial_connection,
+    run_server_over_serial,
 )
-from tvl.server.tcp_connection import (
-    TCP_DEFAULT_ADDRESS,
-    TCP_DEFAULT_PORT,
-    generate_tcp_connection,
-)
+from .tcp_connection import TCP_DEFAULT_ADDRESS, TCP_DEFAULT_PORT, run_server_over_tcp
 
 
 def get_input_arguments():
@@ -50,18 +49,26 @@ def get_input_arguments():
     parser = ArgumentParser(
         description="Expose the Tropic01 model API via a server.",
     )
-    subparsers = parser.add_subparsers(title="Connection type")
-    parser_tcp = subparsers.add_parser("tcp")
-    parser_serial = subparsers.add_parser("serial")
+    # subparsers = parser.add_subparsers(title="Connection type")
+    subparsers = parser.add_subparsers()
+    parser_tcp = subparsers.add_parser(
+        "tcp", description="Serve the Tropic01 model via TCP/IP."
+    )
+    parser_serial = subparsers.add_parser(
+        "serial", description="Serve the Tropic01 model via serial port."
+    )
+    parser_dump_logging_cfg = subparsers.add_parser(
+        "dump-logging-cfg",
+        formatter_class=RawDescriptionHelpFormatter,
+        description=dedent(
+            """\
+            Dump the default logging configuration in YAML format.
+            The configuration can then be reused via the argument '--logging-configuration'.
+        """
+        ),
+    )
 
     for subparser in (parser_tcp, parser_serial):
-        subparser.add_argument(
-            "-v",
-            "--verbose",
-            action="count",
-            default=0,
-            help="Increase script verbosity, the more v's the more verbose.",
-        )
         subparser.add_argument(
             "-c",
             "--configuration",
@@ -69,8 +76,15 @@ def get_input_arguments():
             help="Yaml file with the model configuration.",
             metavar="FILE",
         )
+        subparser.add_argument(
+            "-l",
+            "--logging-configuration",
+            type=_existing_file(_is_file, _with_ext(".yml", ".yaml")),
+            help="Yaml file with the logging configuration.",
+            metavar="FILE",
+        )
 
-    parser_tcp.set_defaults(function=generate_tcp_connection)
+    parser_tcp.set_defaults(function=run_server_over_tcp)
     parser_tcp.add_argument(
         "-a",
         "--address",
@@ -88,7 +102,7 @@ def get_input_arguments():
         metavar="INT",
     )
 
-    parser_serial.set_defaults(function=generate_serial_connection)
+    parser_serial.set_defaults(function=run_server_over_serial)
     parser_serial.add_argument(
         "-p",
         "--port",
@@ -105,6 +119,9 @@ def get_input_arguments():
         help="Serial port baudrate. Defaults to %(default)s.",
         metavar="INT",
     )
+
+    parser_dump_logging_cfg.set_defaults(function=dump_logging_configuration)
+
     if kwargs := vars(parser.parse_args()):
         return kwargs
     parser.print_usage()
@@ -113,10 +130,10 @@ def get_input_arguments():
 def main() -> None:
     if (kwargs := get_input_arguments()) is None:
         return
-    configure_logging(kwargs["verbose"])
+    configure_logging(kwargs.get("logging_configuration"))
     kwargs["logger"] = logger = logging.getLogger("server")
     logger.debug("Arguments:%s", LogDict(kwargs))
-    run_server(kwargs["function"](**kwargs), kwargs["configuration"], logger)
+    kwargs["function"](**kwargs)
 
 
 if __name__ == "__main__":

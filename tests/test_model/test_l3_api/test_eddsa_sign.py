@@ -1,8 +1,6 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import random
 from typing import Any, Dict
 
 import pytest
@@ -11,12 +9,9 @@ from _pytest.fixtures import SubRequest
 from tvl.api.l3_api import TsL3EddsaSignCommand, TsL3EddsaSignResult
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
+from tvl.messages.randomize import randomize
 
 from ..utils import UtilsEcc, as_slow
-
-
-def _get_msg() -> bytes:
-    return os.urandom(random.randint(1, 4096))
 
 
 @pytest.fixture()
@@ -28,11 +23,8 @@ def slot(model_configuration: Dict[str, Any], request: SubRequest):
 
 
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10), indirect=True)
-def test_ecdsa_signature_ok(slot: int, host: Host):
-    command = TsL3EddsaSignCommand(
-        slot=slot,
-        msg=_get_msg(),
-    )
+def test_eddsa_signature_ok(slot: int, host: Host):
+    command = randomize(TsL3EddsaSignCommand, slot=slot)
     result = host.send_command(command)
 
     assert result.result.value == L3ResultFieldEnum.OK
@@ -43,10 +35,7 @@ def test_ecdsa_signature_ok(slot: int, host: Host):
 # TODO diff between no key and curve mismatch
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
 def test_no_key_and_bad_curve(host: Host, slot: int):
-    command = TsL3EddsaSignCommand(
-        slot=slot,
-        msg=_get_msg(),
-    )
+    command = randomize(TsL3EddsaSignCommand, slot=slot)
     result = host.send_command(command)
 
     assert result.result.value == TsL3EddsaSignResult.ResultEnum.INVALID_KEY
@@ -55,10 +44,7 @@ def test_no_key_and_bad_curve(host: Host, slot: int):
 
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.INVALID_INDICES, 10))
 def test_invalid_slot(host: Host, slot: int):
-    command = TsL3EddsaSignCommand(
-        slot=slot,
-        msg=_get_msg(),
-    )
+    command = randomize(TsL3EddsaSignCommand, slot=slot)
     result = host.send_command(command)
 
     assert result.result.value == L3ResultFieldEnum.FAIL

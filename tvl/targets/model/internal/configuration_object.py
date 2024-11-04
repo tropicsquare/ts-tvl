@@ -4,7 +4,7 @@
 import contextlib
 from typing import Any, Dict, Iterator, Mapping, Tuple
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator  # type: ignore
 from typing_extensions import Self
 
 CONFIG_OBJECT_SIZE_BYTES = 0x200
@@ -15,6 +15,10 @@ REGISTER_RESET_VALUE = b"\xff" * REGISTER_SIZE_BYTES
 REGISTER_MASK = 2**REGISTER_SIZE_BITS - 1
 REGISTER_STR_NB_CHARS = REGISTER_SIZE_BITS // 4 + 2
 ENDIANESS = "big"
+
+# Whole Configuration Object address space could be accessed (no register need to be defined at given address)
+CONFIGURATION_ACCESS_PRIVILEGES = range(0x000, 0x100, 0x4)
+FUNCTIONALITY_ACCESS_PRIVILEGES = range(0x100, 0x200, 0x4)
 
 
 class ConfigObjectError(Exception):
@@ -217,6 +221,6 @@ class ConfigurationObject:
 
 
 class ConfigurationObjectModel(BaseModel):
-    @root_validator
+    @root_validator  # type: ignore
     def remove_none_values(cls, values: Mapping[str, Any]) -> Dict[str, Any]:
         return {k: v for k, v in values.items() if v is not None}

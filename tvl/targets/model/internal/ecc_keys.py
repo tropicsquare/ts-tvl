@@ -21,7 +21,13 @@ from typing import (
 from pydantic import BaseModel
 from typing_extensions import Self
 
-from ....crypto.ecdsa import ECDSA_KEY_SIZE, SignatureError, ecdsa_key_setup, ecdsa_sign
+from ....crypto.ecdsa import (
+    ECDSA_KEY_SIZE,
+    SignatureError,
+    ecdsa_key_setup,
+    ecdsa_sign,
+    is_private_key_valid,
+)
 from ....crypto.eddsa import EDDSA_KEY_SIZE, eddsa_key_setup, eddsa_sign
 from ....typing_utils import FixedSizeBytes
 from .generic_partition import GenericModel
@@ -30,6 +36,10 @@ KEY_SIZE = 32
 
 
 class ECCKeyError(Exception):
+    pass
+
+
+class ECCKeySetupError(ECCKeyError):
     pass
 
 
@@ -154,6 +164,8 @@ class ECDSAKeyMemLayout(EccKey, curve=CurveTypes.P256):
 
     @classmethod
     def from_key(cls, key: bytes, origin: Origins) -> Self:
+        if not is_private_key_valid(key):
+            raise ECCKeySetupError("Private key is out of range")
         return cls(
             d=(tup := ecdsa_key_setup(key))[0],
             w=tup[1],
@@ -163,7 +175,13 @@ class ECDSAKeyMemLayout(EccKey, curve=CurveTypes.P256):
 
     @classmethod
     def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
-        return cls.from_key(rng.urandom(ECDSA_KEY_SIZE, swap_endianness=True), origin)
+        key = rng.urandom(ECDSA_KEY_SIZE, swap_endianness=True)
+        return cls(
+            d=(tup := ecdsa_key_setup(key))[0],
+            w=tup[1],
+            a=tup[2],
+            origin=origin,
+        )
 
 
 @dataclass

@@ -12,7 +12,7 @@ from contextlib import nullcontext
 
 import pytest
 
-from tvl.messages.datafield import AUTO, U16Scalar, U32Array, U64Scalar, params
+from tvl.messages.datafield import AUTO, U16Scalar, U32Array, U64Scalar, datafield
 from tvl.messages.exceptions import (
     DataValueError,
     FieldAlreadyExistsError,
@@ -29,8 +29,8 @@ from tvl.messages.l3_messages import L3Command
 
 
 class RequestTest1(L2Request, id=0x12):
-    f1: U16Scalar = 0  # type: ignore
-    f2: U32Array[params(size=3)] = 0  # type: ignore
+    f1: U16Scalar = datafield(default=0)
+    f2: U32Array = datafield(size=3, default=0)
 
 
 class RequestTest2(L2Request, id=0x13):

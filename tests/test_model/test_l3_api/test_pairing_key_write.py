@@ -9,6 +9,7 @@ import pytest
 from tvl.api.l3_api import TsL3PairingKeyWriteCommand
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
+from tvl.messages.randomize import randomize
 from tvl.targets.model.internal.pairing_keys import KEY_SIZE, SlotState
 from tvl.targets.model.tropic01_model import Tropic01Model
 
@@ -81,10 +82,7 @@ def test_write_key(
     "slot", sample_outside(TsL3PairingKeyWriteCommand.SlotEnum, 1, k=10)
 )
 def test_write_out_of_range_key_slot(host: Host, slot: int):
-    command = TsL3PairingKeyWriteCommand(
-        slot=slot,
-        s_hipub=os.urandom(KEY_SIZE),
-    )
+    command = randomize(TsL3PairingKeyWriteCommand, slot=slot)
     result = host.send_command(command)
 
     assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED

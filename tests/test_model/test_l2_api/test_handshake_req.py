@@ -8,7 +8,7 @@ from typing import Any, Callable, ContextManager, Dict
 import pytest
 from _pytest.fixtures import SubRequest
 
-from tvl.api.l2_api import TsL2HandshakeReqRequest, TsL2HandshakeReqResponse
+from tvl.api.l2_api import TsL2HandshakeRequest, TsL2HandshakeResponse
 from tvl.constants import L2StatusEnum
 from tvl.host.host import Host
 from tvl.messages.l2_messages import L2Response
@@ -17,14 +17,14 @@ from tvl.targets.model.internal.pairing_keys import SlotState
 
 def sucessful_handshake(response: L2Response) -> bool:
     return (
-        isinstance(response, TsL2HandshakeReqResponse)
+        isinstance(response, TsL2HandshakeResponse)
         and response.status.value == L2StatusEnum.REQ_OK
     )
 
 
 def handshake_error(response: L2Response) -> bool:
     return (
-        not isinstance(response, TsL2HandshakeReqResponse)
+        not isinstance(response, TsL2HandshakeResponse)
         and response.status.value == L2StatusEnum.HSK_ERR
     )
 
@@ -88,7 +88,7 @@ def configuration(configuration: Dict[str, Dict[str, Any]], request: SubRequest)
 def test_handshake(
     host: Host, context: ContextManager[Any], outcome: Callable[[L2Response], bool]
 ):
-    request = TsL2HandshakeReqRequest(
+    request = TsL2HandshakeRequest(
         e_hpub=host.session.create_handshake_request(),
         pkey_index=host.pairing_key_index,
     )

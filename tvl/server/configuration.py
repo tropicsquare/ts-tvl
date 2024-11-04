@@ -1,4 +1,8 @@
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
+from binascii import hexlify
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
@@ -22,8 +26,7 @@ from pydantic import BaseModel, Extra, FilePath, StrictBytes
 from ..configuration_file_model import ModelConfigurationModel
 from .logging_utils import LogDict, LogIter
 
-# TODO temporary solution, to be defined another way when flow is mature
-DEFAULT_MODEL_CONFIG = {
+DEFAULT_MODEL_CONFIG: Dict[Any, Any] = {
     "i_pairing_keys": {
         0: {
             "value": b"\x84/\xe3!\xa8$t\x0877\xff+\x9b\x88\xa2\xafBD-\xb0\xd8\xaa\xccm\xc6\x9e\x99S3D\xb2F"  # noqa E501
@@ -116,6 +119,18 @@ def _open_yaml_file(filepath: Path) -> Dict[Any, Any]:
     return yaml.safe_load(filepath.read_bytes())
 
 
+def _format(config: Dict[Any, Any]) -> Dict[Any, Any]:
+    formatted_config: Dict[Any, Any] = {}
+    for k, v in config.items():
+        if isinstance(v, dict):
+            formatted_config[k] = _format(v)  # type: ignore
+        elif isinstance(v, bytes):
+            formatted_config[k] = hexlify(v)
+        else:
+            formatted_config[k] = v
+    return formatted_config
+
+
 def load_configuration(
     filepath: Optional[Path], logger: logging.Logger
 ) -> Dict[Any, Any]:
@@ -125,17 +140,18 @@ def load_configuration(
     else:
         logger.info("Loading target configuration from %s.", filepath)
         config = _open_yaml_file(filepath)
-        logger.debug("Configuration:%s", LogDict(config))
+        logger.debug("Configuration from file:%s", LogDict(_format(config)))
         # Checking file content
         config = ConfigurationModel.parse_obj(config).dict()
 
     # Merging file configuration with default configuration
     config = merge_dicts(DEFAULT_MODEL_CONFIG, config)
-    logger.debug("Configuration after merge:%s", LogDict(config))
+    logger.debug("Configuration after merge:%s", LogDict(_format(config)))
 
     # Checking configuration
     config = ModelConfigurationModel.parse_obj(config).dict(exclude_none=True)
-    logger.debug("Validated configuration:%s", LogDict(config))
+    logger.info(
+        "Target Configuration loaded and validated:%s", LogDict(_format(config))
+    )
     logger.debug("STPUB[] = {%s};", LogIter(config["s_t_pub"], "%#04x"))
-    logger.info("Target configuration loaded and validated.")
     return config
