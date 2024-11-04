@@ -1,9 +1,9 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import functools
 import logging
 from collections import defaultdict
+from functools import reduce, singledispatchmethod, wraps
 from typing import (
     Any,
     Callable,
@@ -34,7 +34,7 @@ class MetaModel(type):
     Metaclass for the TROPIC01 model
 
     Allows method to be defined as base methods in the api and overrides
-    these latter.This class wraps the `singledispatchmethod` mechanism.
+    these latter. This class wraps the `singledispatchmethod` mechanism.
     """
 
     def __new__(
@@ -42,7 +42,7 @@ class MetaModel(type):
     ) -> Type["MetaModel"]:
         new_cls = super().__new__(cls, name, bases, namespace)
 
-        api_bases: Dict[str, "functools.singledispatchmethod[Any]"] = {}
+        api_bases: Dict[str, "singledispatchmethod[Any]"] = {}
         api_over: DefaultDict[str, Set[str]] = defaultdict(set)
         api_types: Dict[str, Optional[Tuple[type, ...]]] = {}
 
@@ -65,9 +65,9 @@ class MetaModel(type):
                 over = getattr(new_cls, over_name)
                 if (_types := api_types[over_name]) is not None:
                     # register with types if passed
-                    registered = over
-                    for _type in _types:
-                        registered = _base.register(_type)(registered)
+                    registered = reduce(
+                        lambda o, ty: _base.register(ty)(o), _types, over
+                    )
                 else:
                     # register with the annotated types
                     registered = _base.register(over)
@@ -89,7 +89,7 @@ def base(__id: str, /) -> Callable[[F], F]:
     """
 
     def _base(method: F) -> F:
-        _method = functools.singledispatchmethod(method)
+        _method = singledispatchmethod(method)
         setattr(_method, __api_base__, __id)
         return cast(F, _method)
 
@@ -101,7 +101,7 @@ def api(__id: str, __dt: Optional[Tuple[type, ...]] = None, /) -> Callable[[F], 
 
     Args:
         __id (str): the identifier of the associated base method.
-        dt (type, optional): explicitly force the type if needed.
+        __dt (type, optional): explicitly force the type if needed.
 
     Returns:
         the same method, overloading the base with the same identifier.
@@ -117,7 +117,7 @@ def api(__id: str, __dt: Optional[Tuple[type, ...]] = None, /) -> Callable[[F], 
 def _log_processing(method: F) -> F:
     """Log the call to the method."""
 
-    @functools.wraps(method)
+    @wraps(method)
     def __log_processing(self: HasLogger, request: Any) -> Any:
         self.logger.debug(f"Executing {method.__qualname__}")
         try:
