@@ -31,7 +31,7 @@ class ParamError(Exception):
     pass
 
 
-class _AUTO(int):
+class _AUTO(bytes):
     _instance: Optional[Self] = None
 
     def __init__(self) -> None:
