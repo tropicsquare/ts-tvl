@@ -18,8 +18,8 @@ from tvl.api_generator.grammar import InoutTypeEnum, InputFileModel
 
 __version__ = "1.6"
 
-TOOL = Path(__file__)
-TEMPLATE_DIR = TOOL.parent / "templates"
+TOOL = Path(__file__).parent
+TEMPLATE_DIR = TOOL / "templates"
 
 __logger = logging.getLogger(TOOL.stem.lower())
 
@@ -281,7 +281,6 @@ class HeaderDict(TypedDict):
     date: datetime
     hash: str
     version: str
-    tool: str
 
 
 def prepare_header(input_file: Path) -> HeaderDict:
@@ -293,7 +292,6 @@ def prepare_header(input_file: Path) -> HeaderDict:
         return hash_.hexdigest()
 
     return {
-        "tool": TOOL.stem,
         "version": __version__,
         "date": datetime.now(),
         "hash": _compute_sha256(input_file).upper(),
