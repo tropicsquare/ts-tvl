@@ -7,6 +7,7 @@ from typing import Any, Iterable, Iterator, List, Optional, Sequence, TypeVar
 
 import pytest
 
+from tvl.crypto.ecdsa import P256_PARAMETERS
 from tvl.targets.model.internal.configuration_object import (
     CONFIG_OBJECT_SIZE_BYTES,
     REGISTER_MASK,
@@ -56,28 +57,38 @@ class UtilsEcc:
     INVALID_INDICES = sorted(set(range(256)) - set(VALID_INDICES))
 
     @staticmethod
-    def get_ecdsa_key():
+    def get_valid_ecdsa_private_key() -> bytes:
+        return randint(1, P256_PARAMETERS.q - 1).to_bytes(KEY_SIZE, "big")
+
+    @staticmethod
+    def get_invalid_ecdsa_private_key() -> bytes:
+        return randint(P256_PARAMETERS.q, 2 ** (KEY_SIZE * 8) - 1).to_bytes(
+            KEY_SIZE, "big"
+        )
+
+    @staticmethod
+    def get_ecdsa_key():  # type: ignore
         return {
             "d": os.urandom(KEY_SIZE),
             "w": os.urandom(KEY_SIZE),
             "a": os.urandom(KEY_SIZE * 2),
             "origin": one_of(Origins),
-        }
+        }  # type: ignore
 
     @staticmethod
-    def get_eddsa_key():
+    def get_eddsa_key():  # type: ignore
         return {
             "s": os.urandom(KEY_SIZE),
             "prefix": os.urandom(KEY_SIZE),
             "a": os.urandom(KEY_SIZE),
             "origin": one_of(Origins),
-        }
+        }  # type: ignore
 
     @classmethod
-    def get_valid_data(cls):
+    def get_valid_data(cls):  # type: ignore
         if randint(0, 255) % 2 == 0:
-            return cls.get_ecdsa_key()
-        return cls.get_eddsa_key()
+            return cls.get_ecdsa_key()  # type: ignore
+        return cls.get_eddsa_key()  # type: ignore
 
 
 class UtilsMcounter:

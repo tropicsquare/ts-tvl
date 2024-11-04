@@ -37,6 +37,10 @@ def _assert_not_zero(__n: int, /) -> None:
         )
 
 
+def is_private_key_valid(key: bytes) -> bool:
+    return 1 <= int.from_bytes(key, byteorder="big") <= P256_PARAMETERS.q - 1
+
+
 def ecdsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
     """Setup a new ECDSA key.
 

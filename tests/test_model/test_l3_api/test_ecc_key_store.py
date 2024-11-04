@@ -1,7 +1,8 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Dict
+from itertools import chain
+from typing import Any, Callable, Dict
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -15,10 +16,70 @@ from tvl.targets.model.tropic01_model import Tropic01Model
 from ..utils import UtilsEcc, as_slow, one_outside
 
 
+def _isnone(x: Any) -> bool:
+    return x is None
+
+
+def _isnotnone(x: Any) -> bool:
+    return not _isnone(x)
+
+
 @pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
-def test_storing_ok(host: Host, model: Tropic01Model, slot: int):
+@pytest.mark.parametrize(
+    "key, status, check",
+    chain(
+        (
+            pytest.param(
+                UtilsEcc.get_valid_ecdsa_private_key(),
+                L3ResultFieldEnum.OK,
+                _isnotnone,
+                id="valid_private_key",
+            )
+            for _ in range(5)
+        ),
+        (
+            pytest.param(
+                UtilsEcc.get_invalid_ecdsa_private_key(),
+                L3ResultFieldEnum.FAIL,
+                _isnone,
+                id="invalid_private_key",
+            )
+            for _ in range(5)
+        ),
+        [
+            pytest.param(
+                0, L3ResultFieldEnum.FAIL, _isnone, id="invalid_private_key_zero"
+            )
+        ],
+    ),
+)
+def test_storing_ecdsa(
+    host: Host,
+    model: Tropic01Model,
+    slot: int,
+    key: bytes,
+    status: L3ResultFieldEnum,
+    check: Callable[[Any], bool],
+):
     assert model.r_ecc_keys.slots[slot] is None
-    command = randomize(TsL3EccKeyStoreCommand, slot=slot)
+    command = TsL3EccKeyStoreCommand(
+        slot=slot, k=key, curve=TsL3EccKeyStoreCommand.CurveEnum.P256
+    )
+    result = host.send_command(command)
+
+    assert result.result.value == status
+    assert isinstance(result, TsL3EccKeyStoreResult)
+    assert check(model.r_ecc_keys.slots[slot])
+
+
+@pytest.mark.parametrize("slot", as_slow(UtilsEcc.VALID_INDICES, 10))
+def test_storing_eddsa(host: Host, model: Tropic01Model, slot: int):
+    assert model.r_ecc_keys.slots[slot] is None
+    command = randomize(
+        TsL3EccKeyStoreCommand,
+        slot=slot,
+        curve=TsL3EccKeyStoreCommand.CurveEnum.ED25519,
+    )
     result = host.send_command(command)
 
     assert result.result.value == L3ResultFieldEnum.OK

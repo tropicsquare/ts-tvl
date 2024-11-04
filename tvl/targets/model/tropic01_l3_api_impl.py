@@ -73,6 +73,7 @@ from .internal.ecc_keys import (
     CurveMismatchError,
     ECCKeyDoesNotExistInSlotError,
     ECCKeyExistsInSlotError,
+    ECCKeySetupError,
     SignatureFailedError,
 )
 from .internal.mcounter import (
@@ -575,7 +576,7 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"ECC key slot: {slot}.")
         try:
             self.r_ecc_keys.store(slot, curve, command.k.to_bytes())
-        except ECCKeyExistsInSlotError as exc:
+        except (ECCKeyExistsInSlotError, ECCKeySetupError) as exc:
             raise L3ProcessingErrorFail(exc) from None
 
         self.logger.debug(f"Stored ECC key in {slot=}.")
