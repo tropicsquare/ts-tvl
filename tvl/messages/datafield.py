@@ -3,7 +3,7 @@
 
 import struct
 from dataclasses import InitVar, dataclass
-from enum import Enum, IntEnum, auto
+from enum import Enum
 from functools import singledispatch
 from typing import (
     TYPE_CHECKING,
@@ -11,14 +11,13 @@ from typing import (
     Callable,
     Generic,
     List,
-    Literal,
     Optional,
     TypedDict,
     TypeVar,
     Union,
 )
 
-from typing_extensions import Annotated, Unpack
+from typing_extensions import Annotated, Self, Unpack
 
 from .endianness import endianness
 from .exceptions import DataValueError, ListTooLongError, TypeNotSupportedError
@@ -32,14 +31,25 @@ class ParamError(Exception):
     pass
 
 
-class _AUTO(IntEnum):
-    AUTO = auto()
+class _AUTO(bytes):
+    _instance: Optional[Self] = None
+
+    def __init__(self) -> None:
+        # This class generates a singleton
+        if self._instance is not None:
+            raise RuntimeError(
+                f"Instantiating another {self.__class__} object is forbidden."
+            )
+        self.__class__._instance = self
 
     def __str__(self) -> str:
-        return self.name
+        return "AUTO"
+
+    def __repr__(self) -> str:
+        return "AUTO"
 
 
-AUTO = _AUTO.AUTO
+AUTO = _AUTO()
 """AUTO value for specific fields. Conversion of these must be implemented."""
 
 
@@ -93,9 +103,10 @@ class _ParamsFnArgs(TypedDict, total=False):
     max_size: int
     priority: int
     is_data: bool
+    default: DataFieldInputData
 
 
-def params(**kwargs: Unpack[_ParamsFnArgs]):
+def datafield(**kwargs: Unpack[_ParamsFnArgs]) -> Any:
     """Define the parameters of a DataField.
 
     Args:
@@ -106,6 +117,8 @@ def params(**kwargs: Unpack[_ParamsFnArgs]):
         priority (int): order of the DataField during the serialization;
             the lesser the number, the higher the priority
         is_data (bool): if True, is part of the DATA field of the Message
+        default (DataFieldInputData): datafield default value
+
     """
     return kwargs
 
@@ -181,7 +194,7 @@ class ValueDescriptor(Generic[T]):
             the value of the field
         """
         if (value := getattr(instance, self.name)) is AUTO:
-            return value  # type: ignore
+            return value
         return self.getter_fn(value)
 
 
@@ -191,17 +204,17 @@ class DataField(Generic[T]):
     value: ValueDescriptor[T]
 
     def __init__(self, value: DataFieldInputData, params: Params) -> None:
-        self._value: Union[List[int], Literal[AUTO]]
+        self._value: Union[List[int], _AUTO]
         self.params = params
         self.value = value
 
     def __str__(self) -> str:
         return (
-            f"{self.__class__.__name__}" f"(value={self.value}, params={self.params})"
+            f"{self.__class__.__name__}" f"(value={self.value!r}, params={self.params})"
         )
 
     def __len__(self) -> int:
-        if self._value is AUTO:
+        if isinstance(self._value, _AUTO):
             return self.params.min_size * self.params.dtype.nb_bytes
         return len(self._value) * self.params.dtype.nb_bytes
 
@@ -222,8 +235,10 @@ class DataField(Generic[T]):
 
     def hexstr(self) -> str:
         """Hexadecimal representation"""
-        if (value := self.value) is AUTO:
+        if isinstance(value := self._value, _AUTO):
             return str(value)
+        if isinstance(value, Enum):
+            return repr(value)
         return self._hexstr()
 
     def _hexstr(self) -> str:
@@ -247,42 +262,26 @@ class ArrayDataField(DataField[List[int]]):
         return f"[{', '.join(f'{x:0{nb_chars}x}' for x in self.value)}]"
 
 
-U8Scalar = Annotated[ScalarDataField, params(dtype=Dtype.UINT8)]
+U8Scalar = Annotated[ScalarDataField, datafield(dtype=Dtype.UINT8, size=1)]
 """Unsigned char"""
 
-U16Scalar = Annotated[ScalarDataField, params(dtype=Dtype.UINT16)]
+U16Scalar = Annotated[ScalarDataField, datafield(dtype=Dtype.UINT16, size=1)]
 """Unsigned short"""
 
-U32Scalar = Annotated[ScalarDataField, params(dtype=Dtype.UINT32)]
+U32Scalar = Annotated[ScalarDataField, datafield(dtype=Dtype.UINT32, size=1)]
 """Unsigned int"""
 
-U64Scalar = Annotated[ScalarDataField, params(dtype=Dtype.UINT64)]
+U64Scalar = Annotated[ScalarDataField, datafield(dtype=Dtype.UINT64, size=1)]
 """Unsigned long"""
 
+U8Array = Annotated[ArrayDataField, datafield(dtype=Dtype.UINT8)]
+"""Array of unsigned chars"""
 
-class U8Array(ArrayDataField):
-    """Array of unsigned chars"""
+U16Array = Annotated[ArrayDataField, datafield(dtype=Dtype.UINT16)]
+"""Array of unsigned shorts"""
 
-    def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT8), param]  # type: ignore
+U32Array = Annotated[ArrayDataField, datafield(dtype=Dtype.UINT32)]
+"""Array of unsigned ints"""
 
-
-class U16Array(ArrayDataField):
-    """Array of unsigned shorts"""
-
-    def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT16), param]  # type: ignore
-
-
-class U32Array(ArrayDataField):
-    """Array of unsigned ints"""
-
-    def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT32), param]  # type: ignore
-
-
-class U64Array(ArrayDataField):
-    """Array of unsigned longs"""
-
-    def __class_getitem__(cls, param: _ParamsFnArgs):
-        return Annotated[cls.__base__, params(dtype=Dtype.UINT64), param]  # type: ignore
+U64Array = Annotated[ArrayDataField, datafield(dtype=Dtype.UINT64)]
+"""Array of unsigned longs"""

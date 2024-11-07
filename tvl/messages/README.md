@@ -65,27 +65,27 @@ actual payload of the message.
 
 Example:
 ```python
-from tvl.api.l2_api import TsL2GetInfoReqRequest
+from tvl.api.l2_api import TsL2GetInfoRequest
 
-original_request = TsL2GetInfoReqRequest(
+original_request = TsL2GetInfoRequest(
     # Some values are enumerated
-    object_id=TsL2GetInfoReqRequest.ObjectIdEnum.CHIP_ID,
+    object_id=TsL2GetInfoRequest.ObjectIdEnum.CHIP_ID,
     # int support
     block_index=0,
 )
 print(original_request.has_valid_crc())
 # > True
 print(original_request)
-# > TsL2GetInfoReqRequest<(id=AUTO, length=AUTO, object_id=01, block_index=00, crc=AUTO)
+# > TsL2GetInfoRequest<(id=AUTO, length=AUTO, object_id=01, block_index=00, crc=AUTO)
 
 # The id, length and crc field values are automatically computed.
 request_bytes = original_request.to_bytes()
 print(request_bytes)
 # > b'\x01\x02\x01\x00+\x92'
 
-rebuilt_request = TsL2GetInfoReqRequest.from_bytes(request_bytes)
+rebuilt_request = TsL2GetInfoRequest.from_bytes(request_bytes)
 print(rebuilt_request)
-# > TsL2GetInfoReqRequest<(id=01, length=02, object_id=01, block_index=00, crc=922b)
+# > TsL2GetInfoRequest<(id=01, length=02, object_id=01, block_index=00, crc=922b)
 print(original_request.has_valid_crc())
 # > True
 ```
@@ -94,9 +94,9 @@ The user has of course the possibility not to leave the field value to `AUTO`
 and set it to another value. Example with the `crc` field:
 
 ```python
-from tvl.api.l2_api import TsL2GetInfoReqRequest
+from tvl.api.l2_api import TsL2GetInfoRequest
 
-original_request_bad_crc = TsL2GetInfoReqRequest(
+original_request_bad_crc = TsL2GetInfoRequest(
     # bytes support
     object_id=b"\x01",
     # List[int] support
@@ -107,7 +107,7 @@ original_request_bad_crc = TsL2GetInfoReqRequest(
 print(original_request_bad_crc.has_valid_crc())
 # > False
 print(original_request_bad_crc)
-# > TsL2GetInfoReqRequest<(id=AUTO, length=AUTO, object_id=01, block_index=00, crc=1234)
+# > TsL2GetInfoRequest<(id=AUTO, length=AUTO, object_id=01, block_index=00, crc=1234)
 
 # The id and length field values are automatically computed.
 # The crc field value is that of the user.
@@ -115,9 +115,9 @@ request_bytes = original_request_bad_crc.to_bytes()
 print(request_bytes)
 # > b'\x01\x02\x01\x004\x12'
 
-rebuilt_request = TsL2GetInfoReqRequest.from_bytes(request_bytes)
+rebuilt_request = TsL2GetInfoRequest.from_bytes(request_bytes)
 print(rebuilt_request)
-# > TsL2GetInfoReqRequest<(id=01, length=02, object_id=01, block_index=00, crc=1234)
+# > TsL2GetInfoRequest<(id=01, length=02, object_id=01, block_index=00, crc=1234)
 print(rebuilt_request.has_valid_crc())
 # > False
 ```
@@ -167,21 +167,21 @@ parameters of the fields to serialize and deserialize the message.
 
 ### Example: study of an already-existing class
 
-The class `TsL2EncryptedCmdReqRequest` is defined in the file `l2_api.py`.
+The class `TsL2EncryptedCmdRequest` is defined in the file `l2_api.py`.
 Here is its definition:
 
 ```python
-class TsL2EncryptedCmdReqRequest(L2Request, id=0x04): # (1)
+class TsL2EncryptedCmdRequest(L2Request, id=0x04): # (1)
     cmd_size: U16Scalar  # (2)
     cmd_ciphertext: U8Array[params(min_size=1, max_size=4096)]  # (3)
     cmd_tag: U8Array[params(size=16)]  # (4)
 ```
 
-1.  - the class `TsL2EncryptedCmdReqRequest` inherits from `L2Request`, it has then
+1.  - the class `TsL2EncryptedCmdRequest` inherits from `L2Request`, it has then
     the fields already defined by this latter, namely `id`, `length` and `crc`.
     - the `id` argument here defines the `ID` attribute of the new class.
     This attribute is important as it allows to deserialize the requests from `bytes`.
-    Its value is set to `0x04`, which allows to create an `TsL2EncryptedCmdReqRequest`
+    Its value is set to `0x04`, which allows to create an `TsL2EncryptedCmdRequest`
     object with `L2Request.instantiate_subclass(0x04, <data>)`.
     **This argument is not to be confused here with the `id` field!**
 2.  - `cmd_size` is the first subfield of the `REQ_DATA` field. It is a `U16Scalar`
@@ -205,7 +205,7 @@ class TsL2EncryptedCmdReqRequest(L2Request, id=0x04): # (1)
 
 ```python
 # Creating a request -> instantiate the class
-request = TsL2EncryptedCmdReqRequest(
+request = TsL2EncryptedCmdRequest(
     # id=<other value>,                  # `id` field is accessible
     # length=<other value>,              # `length` field is also accessible
     cmd_size=4,                          # Initializing with int
@@ -263,7 +263,7 @@ print(request.crc.value)
 # > 62461
 
 print(request)
-# > TsL2EncryptedCmdReqRequest<(
+# > TsL2EncryptedCmdRequest<(
 #       id=AUTO,
 #       length=AUTO,
 #       cmd_size=0004,
@@ -295,9 +295,9 @@ print(data)
 # b'\xfd\xf3'                                                          # crc
 
 # First method of deserialization
-rebuilt_request_1 = TsL2EncryptedCmdReqRequest.from_bytes(data)
+rebuilt_request_1 = TsL2EncryptedCmdRequest.from_bytes(data)
 print(rebuilt_request_1)
-# > TsL2EncryptedCmdReqRequest<(
+# > TsL2EncryptedCmdRequest<(
 #       id=04,
 #       length=16,
 #       cmd_size=0004,
@@ -309,9 +309,9 @@ print(rebuilt_request_1 == request)  # `to_bytes` is used for the comparison
 # > True
 
 # Second method of deserialization
-rebuilt_request_2 = L2Request.instantiate_subclass(TsL2EncryptedCmdReqRequest.ID, data)
+rebuilt_request_2 = L2Request.instantiate_subclass(TsL2EncryptedCmdRequest.ID, data)
 print(rebuilt_request_2)
-# > TsL2EncryptedCmdReqRequest<(
+# > TsL2EncryptedCmdRequest<(
 #       id=04,
 #       length=16,
 #       cmd_size=0004,
@@ -334,7 +334,7 @@ print(tmp)
 # The `DefaultL2Request` class is built on-the-fly, `default_data` is the only subfield in `REQ_DATA`.
 rebuilt_request_3 = L2Request.instantiate_subclass(tmp.id.value, data)
 print(rebuilt_request_3)
-# > TsL2EncryptedCmdReqRequest<(
+# > TsL2EncryptedCmdRequest<(
 #       id=04,
 #       length=16,
 #       cmd_size=0004,

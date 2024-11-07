@@ -14,6 +14,10 @@ class InoutTypeEnum(str, Enum):
     U32 = "u32"
     U64 = "u64"
 
+    @property
+    def nb_bytes(self) -> int:
+        return int(self.value[1:]) // 8
+
     def __str__(self) -> str:
         return self.value
 

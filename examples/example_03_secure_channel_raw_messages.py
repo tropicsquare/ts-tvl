@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright 2023 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
+
 # ######################################################################################
 # This test establish a secure channel between the Tropic01Model and the Host.
 # The messages are created manually, i.e. without the classes offered by the TVL.

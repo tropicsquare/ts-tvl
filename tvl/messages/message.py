@@ -27,7 +27,7 @@ from typing_extensions import (
     get_type_hints,
 )
 
-from .datafield import DataField, Params, U8Array, U8Scalar, params
+from .datafield import DataField, Params, U8Array, U8Scalar, datafield
 from .endianness import endianness
 from .exceptions import (
     FieldAlreadyExistsError,
@@ -36,20 +36,21 @@ from .exceptions import (
     NoValidSubclassError,
     ReservedFieldNameError,
     SubclassNotFoundError,
+    UnsupportedFieldTypeError,
 )
 
 _RESERVED_FIELD_NAMES = {"data_field_bytes"}
 
 
 def _get_specs(__cls: type, /) -> Iterator[Tuple[str, Type[DataField[Any]], Params]]:
-    return (  # type: ignore
+    return (
         (name, *get_args(anns))
         for name, anns in get_type_hints(__cls, include_extras=True).items()
         if get_origin(anns) is Annotated
     )
 
 
-@dataclass_transform(kw_only_default=True)
+@dataclass_transform(kw_only_default=True, field_specifiers=(datafield,))
 class _MetaMessage(type):
     """
     Metaclass of the Message class.
@@ -68,7 +69,9 @@ class _MetaMessage(type):
     ) -> Type["_MetaMessage"]:
         existing_fields = {n for base in bases for n, *_ in _get_specs(base)}
 
-        for field_name in (annot := namespace.get("__annotations__", {})):
+        annotations: Dict[str, Any] = namespace.get("__annotations__", {})
+
+        for field_name, field_annot in annotations.items():
             if field_name in _RESERVED_FIELD_NAMES:
                 raise ReservedFieldNameError(
                     f"Cannot add field '{field_name}': name reserved."
@@ -78,17 +81,19 @@ class _MetaMessage(type):
                     f"Cannot add field '{field_name}': already exists."
                 )
 
-            if get_origin(field_annot := annot[field_name]) is not Annotated:
+            if (origin := get_origin(field_annot)) is Annotated:
+                tp, *params_args = get_args(field_annot)
+            elif origin is None:
+                tp, params_args = field_annot, {}
+            else:
                 continue
 
-            tp, *params_args = get_args(field_annot)
+            if not issubclass(tp, DataField):
+                raise UnsupportedFieldTypeError(f"Field type {tp} not supported.")
 
-            if (default_value := namespace.pop(field_name, None)) is not None:
-                params_args.append({"default": default_value})
+            params = Params(**ChainMap(*params_args, namespace.pop(field_name, {})))  # type: ignore
 
-            params = Params(**dict(ChainMap(*params_args)))
-
-            annot[field_name] = Annotated[tp, params]
+            annotations[field_name] = Annotated[tp, params]  # type: ignore
 
         return super().__new__(cls, name, bases, namespace, **kwargs)
 
@@ -196,7 +201,7 @@ class BaseMessage(metaclass=_MetaMessage):
 
 
 class Message(BaseMessage):
-    SUBCLASSES: ClassVar[DefaultDict[int, List[Type[Self]]]]
+    SUBCLASSES: ClassVar[DefaultDict[int, List[Type["Message"]]]]
     """Dictionary with subclasses and their associated id"""
     ID: ClassVar[int]
     """id of the class"""
@@ -267,12 +272,18 @@ class Message(BaseMessage):
         if length < 0:
             raise NegativeLengthError(f"length should be positive: {length}.")
 
-        elif length >= 1:
+        if length >= 1:
+            default_data_field_name = "data"
+
             if length > 1:
-                annotations = U8Array[params(size=length)]
+                namespace = {
+                    "__annotations__": {default_data_field_name: U8Array},
+                    default_data_field_name: datafield(size=length),
+                }
             else:
-                annotations = U8Scalar
-            namespace = {"__annotations__": {"default_data": annotations}}
+                namespace = {
+                    "__annotations__": {default_data_field_name: U8Scalar},
+                }
         else:
             namespace = {}
 

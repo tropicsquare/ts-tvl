@@ -7,25 +7,25 @@ from typing import List, NoReturn, cast
 from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk
 from ...api.l2_api import (
     L2API,
-    TsL2EncryptedCmdReqRequest,
-    TsL2EncryptedCmdReqResponse,
+    TsL2EncryptedCmdRequest,
+    TsL2EncryptedCmdResponse,
     TsL2EncryptedSessionAbtRequest,
     TsL2EncryptedSessionAbtResponse,
-    TsL2GetInfoReqRequest,
-    TsL2GetInfoReqResponse,
-    TsL2GetLogReqRequest,
-    TsL2GetLogReqResponse,
-    TsL2HandshakeReqRequest,
-    TsL2HandshakeReqResponse,
-    TsL2MutableFwEraseReqRequest,
-    TsL2MutableFwEraseReqResponse,
-    TsL2MutableFwUpdateReqRequest,
-    TsL2MutableFwUpdateReqResponse,
-    TsL2ResendReqRequest,
-    TsL2SleepReqRequest,
-    TsL2SleepReqResponse,
-    TsL2StartupReqRequest,
-    TsL2StartupReqResponse,
+    TsL2GetInfoRequest,
+    TsL2GetInfoResponse,
+    TsL2GetLogRequest,
+    TsL2GetLogResponse,
+    TsL2HandshakeRequest,
+    TsL2HandshakeResponse,
+    TsL2MutableFwEraseRequest,
+    TsL2MutableFwEraseResponse,
+    TsL2MutableFwUpdateRequest,
+    TsL2MutableFwUpdateResponse,
+    TsL2ResendRequest,
+    TsL2SleepRequest,
+    TsL2SleepResponse,
+    TsL2StartupRequest,
+    TsL2StartupResponse,
 )
 from ...constants import (
     CERTIFICATE_BLOCK_SIZE,
@@ -51,20 +51,18 @@ from .meta_model import api
 
 
 class L2APIImplementation(L2API):
-    def ts_l2_get_info_req(
-        self, request: TsL2GetInfoReqRequest
-    ) -> TsL2GetInfoReqResponse:
+    def ts_l2_get_info(self, request: TsL2GetInfoRequest) -> TsL2GetInfoResponse:
         object_id = request.object_id.value
         try:
-            object_id = TsL2GetInfoReqRequest.ObjectIdEnum(object_id)
+            object_id = TsL2GetInfoRequest.ObjectIdEnum(object_id)
         except ValueError:
             raise L2ProcessingErrorGeneric(f"Invalid {object_id = }") from None
         self.logger.debug(f"{object_id = }")
 
-        if object_id is TsL2GetInfoReqRequest.ObjectIdEnum.X509_CERTIFICATE:
+        if object_id is TsL2GetInfoRequest.ObjectIdEnum.X509_CERTIFICATE:
             block_index = request.block_index.value
             try:
-                block_index = TsL2GetInfoReqRequest.BlockIndexEnum(block_index)
+                block_index = TsL2GetInfoRequest.BlockIndexEnum(block_index)
             except ValueError:
                 raise L2ProcessingErrorGeneric(f"Invalid {block_index = }") from None
             self.logger.debug(f"{block_index = }")
@@ -73,30 +71,28 @@ class L2APIImplementation(L2API):
                 (block_index + 1) * CERTIFICATE_BLOCK_SIZE,
             )
             object_, len_ = self.x509_certificate[slice_], CERTIFICATE_BLOCK_SIZE
-        elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.CHIP_ID:
+        elif object_id is TsL2GetInfoRequest.ObjectIdEnum.CHIP_ID:
             object_, len_ = self.chip_id, CHIP_ID_SIZE
-        elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.RISCV_FW_VERSION:
+        elif object_id is TsL2GetInfoRequest.ObjectIdEnum.RISCV_FW_VERSION:
             object_, len_ = self.riscv_fw_version, RISCV_FW_VERSION_SIZE
-        elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.SPECT_FW_VERSION:
+        elif object_id is TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION:
             object_, len_ = self.spect_fw_version, SPECT_FW_VERSION_SIZE
-        elif object_id is TsL2GetInfoReqRequest.ObjectIdEnum.FW_BANK:
+        elif object_id is TsL2GetInfoRequest.ObjectIdEnum.FW_BANK:
             # Start-up mode is not modelled
             raise L2ProcessingErrorGeneric(
                 f"{object_id} supported only in start-up mode."
             )
         else:
             raise NotImplementedError(f"Unsupported object id {object_id}")
-        return TsL2GetInfoReqResponse(
+        return TsL2GetInfoResponse(
             status=L2StatusEnum.REQ_OK,
             object=bytes(islice(chain(object_, repeat(0x00)), len_)),
         )
 
-    def ts_l2_handshake_req(
-        self, request: TsL2HandshakeReqRequest
-    ) -> TsL2HandshakeReqResponse:
+    def ts_l2_handshake(self, request: TsL2HandshakeRequest) -> TsL2HandshakeResponse:
         pkey_index = request.pkey_index.value
         try:
-            pkey_index = TsL2HandshakeReqRequest.PkeyIndexEnum(pkey_index)
+            pkey_index = TsL2HandshakeRequest.PkeyIndexEnum(pkey_index)
         except ValueError:
             raise L2ProcessingErrorHandshake(f"Invalid {pkey_index = }") from None
         self.logger.debug(f"{pkey_index = }")
@@ -119,15 +115,15 @@ class L2APIImplementation(L2API):
         )
         self.pairing_key_slot = pkey_index
 
-        return TsL2HandshakeReqResponse(
+        return TsL2HandshakeResponse(
             status=L2StatusEnum.REQ_OK, e_tpub=e_tpub, t_tauth=t_tauth
         )
 
-    # TsL2EncryptedCmdReqRequest and L2EncryptedCmdChunk are compatible
-    @api("l2_api", (TsL2EncryptedCmdReqRequest, L2EncryptedCmdChunk))
-    def ts_l2_encrypted_cmd_req(
-        self, request: TsL2EncryptedCmdReqRequest
-    ) -> List[TsL2EncryptedCmdReqResponse]:
+    # TsL2EncryptedCmdRequest and L2EncryptedCmdChunk are compatible
+    @api("l2_api", (TsL2EncryptedCmdRequest, L2EncryptedCmdChunk))
+    def ts_l2_encrypted_cmd(
+        self, request: TsL2EncryptedCmdRequest
+    ) -> List[TsL2EncryptedCmdResponse]:
         if self.activate_encryption and not self.session.is_session_valid():
             raise L2ProcessingErrorNoSession("No valid session")
 
@@ -201,8 +197,8 @@ class L2APIImplementation(L2API):
             self.logger.debug(f"Chunk {i}/{len(result_chunks)}: {l2_chunk}")
             chunks.append(l2_chunk)
 
-        # TsL2EncryptedCmdReqResponse and L2EncryptedResChunk are compatible
-        return cast(List[TsL2EncryptedCmdReqResponse], chunks)
+        # TsL2EncryptedCmdResponse and L2EncryptedResChunk are compatible
+        return cast(List[TsL2EncryptedCmdResponse], chunks)
 
     def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest
@@ -214,15 +210,15 @@ class L2APIImplementation(L2API):
         self.logger.debug("Encrypted session aborted.")
         return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_resend_req(self, request: TsL2ResendReqRequest) -> NoReturn:
+    def ts_l2_resend(self, request: TsL2ResendRequest) -> NoReturn:
         if self.response_buffer.latest():
             raise ResendLastResponse("Resend the latest response.")
         raise L2ProcessingErrorGeneric("No latest response to send.")
 
-    def ts_l2_sleep_req(self, request: TsL2SleepReqRequest) -> TsL2SleepReqResponse:
+    def ts_l2_sleep(self, request: TsL2SleepRequest) -> TsL2SleepResponse:
         request_sleep_kind = request.sleep_kind.value
         try:
-            sleep_kind = TsL2SleepReqRequest.SleepKindEnum(request_sleep_kind)
+            sleep_kind = TsL2SleepRequest.SleepKindEnum(request_sleep_kind)
         except ValueError:
             raise L2ProcessingErrorGeneric(
                 f"Unexpected value: {request_sleep_kind}."
@@ -230,36 +226,34 @@ class L2APIImplementation(L2API):
         self.logger.debug(f"{sleep_kind = }")
 
         if (
-            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.SLEEP_MODE
+            sleep_kind is TsL2SleepRequest.SleepKindEnum.SLEEP_MODE
             and self.config.cfg_sleep_mode.sleep_mode_en == 0
         ):
             self.logger.debug("Sleep mode disabled.")
-            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
+            return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
 
         if (
-            sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE
+            sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE
             and self.config.cfg_sleep_mode.deep_sleep_mode_en == 0
         ):
             self.logger.debug("Deep sleep mode disabled.")
-            return TsL2SleepReqResponse(status=L2StatusEnum.RESP_DISABLED)
+            return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
 
         self.logger.info("Entering in sleep mode.")
         self.invalidate_session()
         self.command_buffer.reset()
 
-        if sleep_kind is TsL2SleepReqRequest.SleepKindEnum.DEEP_SLEEP_MODE:
+        if sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE:
             self.response_buffer.reset()
             self._config = None
 
         self.logger.debug("Entered in sleep mode.")
-        return TsL2SleepReqResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2SleepResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_startup_req(
-        self, request: TsL2StartupReqRequest
-    ) -> TsL2StartupReqResponse:
+    def ts_l2_startup(self, request: TsL2StartupRequest) -> TsL2StartupResponse:
         request_startup_id = request.startup_id.value
         try:
-            TsL2StartupReqRequest.StartupIdEnum(request_startup_id)
+            TsL2StartupRequest.StartupIdEnum(request_startup_id)
         except ValueError:
             raise L2ProcessingErrorGeneric(
                 f"Unexpected value: {request_startup_id}."
@@ -271,20 +265,20 @@ class L2APIImplementation(L2API):
         self.power_on()
 
         self.logger.info("Chip reset.")
-        return TsL2StartupReqResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2StartupResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_mutable_fw_update_req(
-        self, request: TsL2MutableFwUpdateReqRequest
-    ) -> TsL2MutableFwUpdateReqResponse:
+    def ts_l2_mutable_fw_update(
+        self, request: TsL2MutableFwUpdateRequest
+    ) -> TsL2MutableFwUpdateResponse:
         # Start-up mode is not modelled
-        return TsL2MutableFwUpdateReqResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2MutableFwUpdateResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_mutable_fw_erase_req(
-        self, request: TsL2MutableFwEraseReqRequest
-    ) -> TsL2MutableFwEraseReqResponse:
+    def ts_l2_mutable_fw_erase(
+        self, request: TsL2MutableFwEraseRequest
+    ) -> TsL2MutableFwEraseResponse:
         # Start-up mode is not modelled
-        return TsL2MutableFwEraseReqResponse(status=L2StatusEnum.REQ_OK)
+        return TsL2MutableFwEraseResponse(status=L2StatusEnum.REQ_OK)
 
-    def ts_l2_get_log_req(self, request: TsL2GetLogReqRequest) -> TsL2GetLogReqResponse:
+    def ts_l2_get_log(self, request: TsL2GetLogRequest) -> TsL2GetLogResponse:
         # Return OK status to avoid issues during tests
-        return TsL2GetLogReqResponse(status=L2StatusEnum.REQ_OK, log_msg=b"")
+        return TsL2GetLogResponse(status=L2StatusEnum.REQ_OK, log_msg=b"")

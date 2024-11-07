@@ -20,6 +20,32 @@
     0x{{-"%02X" | format(number)}}
 {%- endmacro -%}
 
+{%- if not format_class_name -%}
+    {%- macro format_class_name(name) -%}
+        {%- set suffix = "Req" %}
+        {%- if name.endswith(suffix) %}{{name[:-(suffix | length)]}}
+        {%- else %}{{name}}
+        {%- endif %}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- if not format_function_name -%}
+    {%- macro format_function_name(name) -%}
+        {%- set suffix = "_req" %}
+        {%- if name.endswith(suffix) %}{{name[:-(suffix | length)]}}
+        {%- else %}{{name}}
+        {%- endif %}
+    {%- endmacro -%}
+{%- endif -%}
+
+{%- if not format_id -%}
+    {%- macro format_id(name) -%}
+        {%- set suffix = "_req" %}
+        {%- if name.lower().endswith(suffix) %}{{name[:-(suffix | length)]}}
+        {%- else %}{{name}}
+        {%- endif %}
+    {%- endmacro -%}
+{%- endif -%}
 
 {%- macro to_camelcase(string) -%}
     {%- set words = [] -%}
@@ -50,7 +76,7 @@ from tvl.messages.datafield import (
     U32Scalar,
     U64Array,
     U64Scalar,
-    params,
+    datafield,
 )
 {{INTERNAL_IMPORT}}
 from tvl.targets.model.base_model import BaseModel
@@ -66,7 +92,7 @@ from tvl.typing_utils import HexReprIntEnum
 
 class {{ENUM_NAME}}(HexReprIntEnum):
 {%- for element in enum_class.elements %}
-    {{element.name}} = {{to_hex(element.message_id)}}
+    {{format_id(element.name)}} = {{to_hex(element.message_id)}}
     {%- if element.description %}
     {{['"""', element.description, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
     {%- endif %}
@@ -82,7 +108,7 @@ class {{ENUM_NAME}}(HexReprIntEnum):
     {%- set parent = OUTPUT_CLASS_PARENT %}
     {%- set verify_result_choices = True %}
 {%- endif %}
-class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}}.{{message.tag}}):
+class {{CLASS_PREFIX}}{{format_class_name(message.name)}}{{class_type}}({{parent}}, id={{ENUM_NAME}}.{{format_id(message.tag)}}):
     {%- set print_placeholder = True %}
     {%- if verify_result_choices and message.result_choices %}
         {%- set print_placeholder = False %}
@@ -97,30 +123,27 @@ class {{CLASS_PREFIX}}{{message.name}}{{class_type}}({{parent}}, id={{ENUM_NAME}
     {%- if message.arguments %}
         {%- set print_placeholder = False %}
         {%- for argument in message.arguments %}
+            {%- set args = [] %}
             {%- if argument.max_size %}
-                {%- set args = "min_size=%d, max_size=%d" | format(argument.min_size, argument.max_size) %}
+                {%- do args.append("min_size=%d" | format(argument.min_size)) %}
+                {%- do args.append("max_size=%d" | format(argument.max_size)) %}
             {%- elif argument.size %}
-                {%- set args = "size=%d" | format(argument.size) %}
-            {%- else %}
-                {%- set args = "" %}
-            {%- endif %}
-            {%- if args %}
-                {%- set annotations = "%s[params(%s)]" | format(argument.dtype, args) %}
-            {%- else %}
-                {%- set annotations = argument.dtype %}
+                {%- do args.append("size=%d" | format(argument.size)) %}
             {%- endif %}
             {%- if argument.name == "padding" %}
-                {%- set annotations = annotations ~ " = AUTO" %}
+                {%- do args.append("default=AUTO") %}
+            {%- endif %}
+            {%- if args %}
+                {%- set annotations = " = datafield(%s)" | format(args|join(", ")) %}
+            {%- else %}
+                {%- set annotations = "" %}
             {%- endif %}
             {%- if argument.description %}
                 {%- set trailer = "  # %s" | format(argument.description) %}
             {%- else %}
                 {%- set trailer = "" %}
             {%- endif %}
-            {%- if argument.name == "padding" %}
-                {%- set trailer = trailer ~ "  # type: ignore" %}
-            {%- endif %}
-    {{argument.name}}: {{annotations}}{{trailer}}
+    {{argument.name}}: {{argument.dtype}}{{annotations}}{{trailer}}
             {%- if argument.description_long %}
     {{['"""', argument.description_long, '"""'] | join | wordwrap(74, wrapstring="\n\t") | replace("\t", " "*4)}}
             {%- endif %}
@@ -154,10 +177,10 @@ class {{CLASS_NAME}}(BaseModel):
     ```
     """
 {% for function in api_class.functions %}
-    {%- set input_type = [CLASS_PREFIX, function.input, INPUT_CLASS] | join %}
-    {%- set output_type = [CLASS_PREFIX, function.output, OUTPUT_CLASS] | join %}
+    {%- set input_type = [CLASS_PREFIX, format_class_name(function.input), INPUT_CLASS] | join %}
+    {%- set output_type = [CLASS_PREFIX, format_class_name(function.output), OUTPUT_CLASS] | join %}
     @api({{API_LEVEL}})
-    def {{METHOD_PREFIX}}{{function.name}}(
+    def {{METHOD_PREFIX}}{{format_function_name(function.name)}}(
         self, {{INPUT_CLASS | lower}}: {{input_type}}
     ) -> {{format_output_type(output_type)}}:
         {%- if function.description %}

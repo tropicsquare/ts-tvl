@@ -3,10 +3,8 @@
 
 from typing import Any, ContextManager, Tuple
 
-from typing_extensions import Annotated
-
 from ..crypto.hash import crc16
-from .datafield import AUTO, U8Scalar, U16Scalar, params
+from .datafield import AUTO, U8Scalar, U16Scalar, datafield
 from .exceptions import UnauthorizedInstantiationError
 from .message import Message
 
@@ -14,8 +12,8 @@ from .message import Message
 class L2Frame(Message, is_base=True):
     """Base class for L2 messages"""
 
-    length: Annotated[U8Scalar, params(is_data=False)] = AUTO  # type: ignore
-    crc: Annotated[U16Scalar, params(priority=999, is_data=False)] = AUTO  # type: ignore
+    length: U8Scalar = datafield(is_data=False, default=AUTO)
+    crc: U16Scalar = datafield(priority=999, is_data=False, default=AUTO)
 
     def set_length_if_auto(self) -> ContextManager[None]:
         """Update the LENGTH field of the message if set to AUTO."""
@@ -74,7 +72,7 @@ class L2Frame(Message, is_base=True):
 class L2Request(L2Frame):
     """Base class for L2 messages sent to the TROPIC01"""
 
-    id: Annotated[U8Scalar, params(priority=-999, is_data=False)] = AUTO  # type: ignore
+    id: U8Scalar = datafield(priority=-999, is_data=False, default=AUTO)
 
     def __init__(self, **kwargs: Any) -> None:
         try:
@@ -107,4 +105,4 @@ class L2Request(L2Frame):
 class L2Response(L2Frame):
     """Base class for L2 messages sent from the TROPIC01"""
 
-    status: Annotated[U8Scalar, params(priority=-999, is_data=False)]
+    status: U8Scalar = datafield(priority=-999, is_data=False)
