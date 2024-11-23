@@ -71,10 +71,10 @@ def ts_compute_r(
 ) -> int:
     """TropicSquare's R computation function"""
 
-    def _reverse_endianity(x: bytes) -> bytes:
+    def _reverse_endianess(x: bytes) -> bytes:
         return int.from_bytes(x, "big").to_bytes(len(x), "little")
 
-    r1 = tmac(_reverse_endianity(prefix), h + n + m, b"\x0C")
+    r1 = tmac(_reverse_endianess(prefix), h + n + m, b"\x0C")
     r2 = tmac(r1, b"", b"\x0C")
     return _to_int(r2 + r1, byteorder="big") % ED25519_PARAMETERS.q
 
