@@ -8,6 +8,7 @@ import struct
 from collections import ChainMap, defaultdict
 from typing import (
     Any,
+    Callable,
     ClassVar,
     DefaultDict,
     Dict,
@@ -152,11 +153,20 @@ class BaseMessage(metaclass=_MetaMessage):
         return b"".join(field.to_bytes() for _, field in self)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Self:
+    def from_bytes(
+        cls,
+        data: bytes,
+        /,
+        *,
+        fn: Optional[Callable[[Tuple[str, Type[DataField[Any]], Params]], bool]] = None,
+    ) -> Self:
         """Deserialize a Message instance from bytes representation.
 
         Args:
             data (bytes): bytes representation of a message
+            fn (Optional[Tuple[Callable[[str, Type[DataField[Any]], Params]], bool]], optional):
+                only the fields for which fn returns True are going to be deserialized,
+                the others will be included with their default value
 
         Returns:
             Message instance
@@ -166,7 +176,7 @@ class BaseMessage(metaclass=_MetaMessage):
 
         _second_pass = None
         _known_len = 0
-        for name, _, params_ in cls.specs():
+        for name, _, params_ in filter(fn, cls.specs()):
             # compute length of a variable size field during the second pass
             if params_.has_variable_size():
                 fmt_dict[name] = (-1, "")
@@ -276,7 +286,7 @@ class Message(BaseMessage):
             default_data_field_name = "data"
 
             if length > 1:
-                namespace = {
+                namespace = {  # type: ignore
                     "__annotations__": {default_data_field_name: U8Array},
                     default_data_field_name: datafield(size=length),
                 }
