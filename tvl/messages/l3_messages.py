@@ -1,12 +1,12 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from contextlib import nullcontext
-from typing import Any, ContextManager, Type
+from contextlib import contextmanager, nullcontext
+from typing import Any, ContextManager, Iterator, Type
 
 from typing_extensions import Self
 
-from .datafield import AUTO, U8Array, U8Scalar, U16Scalar, datafield
+from .datafield import AUTO, DataField, U8Array, U8Scalar, U16Scalar, datafield
 from .exceptions import UnauthorizedInstantiationError
 from .message import BaseMessage, Message
 
@@ -20,6 +20,15 @@ class MinNbBytesDescriptor:
             for name, _, params in owner.specs()
             if name in ("size", "tag")
         )
+
+
+@contextmanager
+def _restore(field: DataField[Any], value: int) -> Iterator[None]:
+    """Context manager that restores the field value upon exit."""
+    try:
+        yield
+    finally:
+        field.value = value
 
 
 class L3EncryptedPacket(BaseMessage):
@@ -52,11 +61,16 @@ class L3Packet(Message, is_base=True):
 
         if (padding_save := padding_field.value) is AUTO:
             padding_field.value = []
-        return self._restore(padding_field, padding_save)
+        return _restore(padding_field, padding_save)
 
     def to_bytes(self) -> bytes:
         with self.set_padding_if_auto():
             return super().to_bytes()
+
+    @property
+    def data_field_bytes(self) -> bytes:
+        with self.set_padding_if_auto():
+            return super().data_field_bytes
 
 
 class L3Command(L3Packet):
@@ -77,7 +91,7 @@ class L3Command(L3Packet):
         """Update the ID field of the message if set to AUTO."""
         if (id_save := self.id.value) is AUTO:
             self.id.value = self.ID
-        return self._restore(self.id, id_save)
+        return _restore(self.id, id_save)
 
     def has_valid_id(self) -> bool:
         """Check if the ID field is valid.
