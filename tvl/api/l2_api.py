@@ -1,13 +1,20 @@
-# GENERATED ON 2024-11-04 16:06:10.113795
+# GENERATED ON 2024-11-26 10:20:00.128603
 # BY API_GENERATOR VERSION 1.6
-# INPUT FILE: D0E700A2D97A499E9425EE2CAE6F39FAC74DE912B5F4083983367E163139880E
+# INPUT FILE: 7B98ABFEF10AFE3AF8294CC79E4547AC4E194AD602500FABCB1F1397AB8B1463
 #
 # Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
-from tvl.messages.datafield import U8Array, U8Scalar, U16Scalar, U32Scalar, datafield
+from tvl.messages.datafield import (
+    AUTO,
+    U8Array,
+    U8Scalar,
+    U16Scalar,
+    U32Scalar,
+    datafield,
+)
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -169,13 +176,17 @@ class TsL2MutableFwUpdateRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE):
     hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
     """SHA256 HASH of first FW chunk of data sent using
     Mutable_FW_Update_Data."""
-    type: U32Scalar  # FW type.
+    type: U16Scalar  # FW type.
     """FW type which is going to be updated."""
     class TypeEnum(HexReprIntEnum):
         FW_TYPE_CPU = 0x01
         """FW for RISC-V main CPU."""
         FW_TYPE_SPECT = 0x02
         """FW for SPECT coprocessor."""
+    padding: U8Scalar = datafield(default=AUTO)  # U32 padding byte.
+    """Zero value."""
+    header_version: U8Scalar  # Version of used header.
+    """Current value is 1."""
     version: U32Scalar  # Version of FW.
 
 
