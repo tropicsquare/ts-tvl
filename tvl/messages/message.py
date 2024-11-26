@@ -308,11 +308,3 @@ class Message(BaseMessage):
         """
         empty_length = len(cls.with_data_length(0)())
         return cls.with_data_length(length - empty_length)
-
-    @contextlib.contextmanager
-    def _restore(self, field: DataField[Any], value: int) -> Iterator[None]:
-        """Context manager that restores the field value upon exit."""
-        try:
-            yield
-        finally:
-            field.value = value
