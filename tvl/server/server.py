@@ -50,7 +50,7 @@ def get_input_arguments():
         description="Expose the Tropic01 model API via a server.",
     )
     # subparsers = parser.add_subparsers(title="Connection type")
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(required=True)
     parser_tcp = subparsers.add_parser(
         "tcp", description="Serve the Tropic01 model via TCP/IP."
     )
@@ -122,14 +122,11 @@ def get_input_arguments():
 
     parser_dump_logging_cfg.set_defaults(function=dump_logging_configuration)
 
-    if kwargs := vars(parser.parse_args()):
-        return kwargs
-    parser.print_usage()
+    return vars(parser.parse_args())
 
 
 def main() -> None:
-    if (kwargs := get_input_arguments()) is None:
-        return
+    kwargs = get_input_arguments()
     configure_logging(kwargs.get("logging_configuration"))
     kwargs["logger"] = logger = logging.getLogger("server")
     logger.debug("Arguments:%s", LogDict(kwargs))

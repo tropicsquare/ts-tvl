@@ -1,6 +1,7 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
+from contextlib import nullcontext
 from typing import Any, ContextManager, Tuple
 
 from ..crypto.hash import crc16
@@ -18,16 +19,21 @@ class L2Frame(Message, is_base=True):
     def set_length_if_auto(self) -> ContextManager[None]:
         """Update the LENGTH field of the message if set to AUTO."""
         if (length_save := self.length.value) is AUTO:
-            _length = 0
-            for _, field in self:
-                if not field.params.is_data:
-                    continue
-                try:
-                    _length += len(field.value) * field.params.dtype.nb_bytes
-                except TypeError:
-                    _length += field.params.dtype.nb_bytes
-            self.length.value = _length
+            self.length.value = sum(
+                len(field) for _, field in self if field.params.is_data
+            )
         return self._restore(self.length, length_save)
+
+    def set_padding_if_auto(self) -> ContextManager[None]:
+        """Fill the `padding` field of the message if set to AUTO."""
+        try:
+            padding_field = getattr(self, "padding")
+        except AttributeError:
+            return nullcontext()
+
+        if (padding_save := padding_field.value) is AUTO:
+            padding_field.value = []
+        return self._restore(padding_field, padding_save)
 
     def has_valid_crc(self) -> bool:
         """Check the CRC field of the message.
@@ -50,7 +56,7 @@ class L2Frame(Message, is_base=True):
         return self._get_data_and_crc(force_auto_crc=True)[1]
 
     def _get_data_and_crc(self, *, force_auto_crc: bool = False) -> Tuple[bytes, int]:
-        with self.set_length_if_auto():
+        with self.set_length_if_auto(), self.set_padding_if_auto():
             data = b"".join(field.to_bytes() for name, field in self if name != "crc")
 
             if (crc := self.crc.value) is AUTO or force_auto_crc:

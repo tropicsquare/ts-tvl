@@ -30,6 +30,14 @@ class SignatureError(Exception):
     pass
 
 
+def _to_int(__bytes: bytes, /) -> int:
+    return int.from_bytes(__bytes, byteorder="big")
+
+
+def _to_bytes(__int: int, /, *, size: int) -> bytes:
+    return __int.to_bytes(size, byteorder="big")
+
+
 def _assert_not_zero(__n: int, /) -> None:
     if __n == 0:
         raise SignatureError(
@@ -38,7 +46,7 @@ def _assert_not_zero(__n: int, /) -> None:
 
 
 def is_private_key_valid(key: bytes) -> bool:
-    return 1 <= int.from_bytes(key, byteorder="big") <= P256_PARAMETERS.q - 1
+    return 1 <= _to_int(key) <= P256_PARAMETERS.q - 1
 
 
 def ecdsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
@@ -51,13 +59,12 @@ def ecdsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
         private key 1, private key 2, public key
     """
     # For ECC_Generate SPECT uses 64 bytes of private_value to increase entropy
-    k_reduce = int.from_bytes(k, byteorder="big") % P256_PARAMETERS.q
+    k_reduce = _to_int(k) % P256_PARAMETERS.q
     private_key = ec.derive_private_key(k_reduce, ec.SECP256R1())
 
-    # SPECT uses little endian format of d for w calculation
-    d = private_key.private_numbers().private_value.to_bytes(32, byteorder="big")
+    d = _to_bytes(private_key.private_numbers().private_value, size=32)
 
-    w = tmac(d[::-1], b"", b"\x0A")
+    w = tmac(d, b"", b"\x0A")
 
     a = private_key.public_key().public_bytes(
         Encoding.X962, PublicFormat.UncompressedPoint
@@ -88,8 +95,9 @@ def ecdsa_sign_first_part(
     First part of the ECDSA signing algorithm.
     The computation of k is separated from the rest so the testing is easier.
     """
-    k = tmac(w, h + n + z, b"\x0B")
-    k_int = int.from_bytes(k, byteorder="big") % P256_PARAMETERS.q
+    k1 = tmac(w, h + n + z, b"\x0B")
+    k2 = tmac(k1, b"", b"\x0B")
+    k_int = _to_int(k2 + k1) % P256_PARAMETERS.q
     _assert_not_zero(k_int)
     return d, z, k_int
 
@@ -104,11 +112,11 @@ def ecdsa_sign_second_part(d: bytes, z: bytes, k_int: int) -> Tuple[bytes, bytes
     _assert_not_zero(r_int)
 
     k_inv = pow(k_int, P256_PARAMETERS.q - 2, P256_PARAMETERS.q)
-    d_int = int.from_bytes(d, byteorder="big")
-    z_int = int.from_bytes(z, byteorder="big")
+    d_int = _to_int(d)
+    z_int = _to_int(z)
     s_int = k_inv * (z_int + (d_int * r_int)) % P256_PARAMETERS.q
     _assert_not_zero(s_int)
 
-    r = r_int.to_bytes(32, byteorder="big")
-    s = s_int.to_bytes(32, byteorder="big")
+    r = _to_bytes(r_int, size=32)
+    s = _to_bytes(s_int, size=32)
     return r, s

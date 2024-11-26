@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from hashlib import sha512
-from typing import Callable, Tuple
+from typing import Literal, Protocol, Tuple
 
 from Crypto.PublicKey.ECC import EccPoint
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -26,7 +26,23 @@ EDDSA_B = EccPoint(*ED25519_PARAMETERS.G, curve="ed25519")
 EDDSA_KEY_SIZE = 32
 
 
-EdDSAComputeRFn = Callable[[bytes, bytes, bytes, bytes, bytes, bytes], bytes]
+class EdDSAComputeRFn(Protocol):
+    def __call__(
+        self, s: bytes, prefix: bytes, a: bytes, m: bytes, h: bytes, n: bytes
+    ) -> int:
+        ...
+
+
+def _to_int(
+    __bytes: bytes, /, *, byteorder: Literal["little", "big"] = "little"
+) -> int:
+    return int.from_bytes(__bytes, byteorder)
+
+
+def _to_bytes(
+    __int: int, /, *, size: int, byteorder: Literal["little", "big"] = "little"
+) -> bytes:
+    return __int.to_bytes(size, byteorder)
 
 
 def eddsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
@@ -39,10 +55,12 @@ def eddsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
         scalar, prefix, public key
     """
     k_hash = sha512(k).digest()
-    s_int = int.from_bytes(k_hash[:32], byteorder="little")
+    s_int = _to_int(k_hash[:32])
     s_int &= (1 << 254) - 8
     s_int |= 1 << 254
-    s = s_int.to_bytes(32, byteorder="little")
+    s_int %= ED25519_PARAMETERS.q
+
+    s = _to_bytes(s_int, size=32)
     prefix = k_hash[32:]
     a = Ed25519PrivateKey.from_private_bytes(k).public_key().public_bytes_raw()
     return s, prefix, a
@@ -50,9 +68,15 @@ def eddsa_key_setup(k: bytes) -> Tuple[bytes, bytes, bytes]:
 
 def ts_compute_r(
     s: bytes, prefix: bytes, a: bytes, m: bytes, h: bytes, n: bytes
-) -> bytes:
+) -> int:
     """TropicSquare's R computation function"""
-    return tmac(prefix, h + n + m, b"\x0C")
+
+    def _reverse_endianess(x: bytes) -> bytes:
+        return int.from_bytes(x, "big").to_bytes(len(x), "little")
+
+    r1 = tmac(_reverse_endianess(prefix), h + n + m, b"\x0C")
+    r2 = tmac(r1, b"", b"\x0C")
+    return _to_int(r2 + r1, byteorder="big") % ED25519_PARAMETERS.q
 
 
 def eddsa_sign(
@@ -77,18 +101,16 @@ def eddsa_sign(
     Returns:
         the signature (r, s)
     """
-    r = compute_r_fn(s, prefix, a, m, h, n)
-    r_int = int.from_bytes(r, byteorder="big") % ED25519_PARAMETERS.q
+    r_int = compute_r_fn(s, prefix, a, m, h, n)
 
     b_ = EDDSA_B * r_int
     r_ = b_.y | ((b_.x & 1) << 255)
-    r_ = r_.to_bytes(32, byteorder="little")
+    r_ = _to_bytes(r_, size=32)
 
     e = sha512(r_ + a + m).digest()
-    e_int = int.from_bytes(e, byteorder="little") % ED25519_PARAMETERS.q
+    e_int = _to_int(e) % ED25519_PARAMETERS.q
 
-    s_int = int.from_bytes(s, byteorder="little")
-    s_int_ = (r_int + e_int * s_int) % ED25519_PARAMETERS.q
+    s_int = (r_int + e_int * _to_int(s)) % ED25519_PARAMETERS.q
 
-    s_ = s_int_.to_bytes(32, byteorder="little")
+    s_ = _to_bytes(s_int, size=32)
     return r_, s_
