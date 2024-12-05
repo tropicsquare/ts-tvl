@@ -1,6 +1,6 @@
-# GENERATED ON 2024-11-26 10:20:00.128603
-# BY API_GENERATOR VERSION 1.6
-# INPUT FILE: 7B98ABFEF10AFE3AF8294CC79E4547AC4E194AD602500FABCB1F1397AB8B1463
+# GENERATED ON 2024-12-05 14:06:30.895780
+# BY API_GENERATOR VERSION 1.7
+# INPUT FILE: 06A25CC030E99AE88CF6F16F29E3F4C245D7ECFA874A17B75122786B0F39108E
 #
 # Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -61,20 +61,10 @@ class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
         FW_BANK = 0xB0
         """The FW header read from the selected bank id (shown as an index).
         Supported only in Start-up mode."""
-    block_index: U8Scalar
-    """The index of the 128 Byte long block to request"""
-    class BlockIndexEnum(HexReprIntEnum):
-        DATA_CHUNK_0_127 = 0x00
-        """Request for data bytes 0-127 of the object."""
-        DATA_CHUNK_128_255 = 0x01
-        """Request for data bytes 128-255 of the object (only needed for the
-        X.509 certificate)."""
-        DATA_CHUNK_256_383 = 0x02
-        """Request for data bytes 128-383 of object (only needed for the X.509
-        certificate)."""
-        DATA_CHUNK_384_511 = 0x03
-        """Request for data bytes 384-511 of object (only needed for the X.509
-        certificate)."""
+    block_index: U8Scalar  # The index of the 128 Byte long block to request
+    """In case the requested object is larger than 128B use chunk number.
+    First chunk has index 0 and maximum value is 29 for X.509 certificate
+    which size is 3840B."""
 
 
 class TsL2GetInfoResponse(L2Response, id=L2Enum.GET_INFO):
@@ -109,21 +99,13 @@ class TsL2HandshakeResponse(L2Response, id=L2Enum.HANDSHAKE):
 
 
 class TsL2EncryptedCmdRequest(L2Request, id=L2Enum.ENCRYPTED_CMD):
-    cmd_size: U16Scalar  # L3 Command size.
-    """The size of the CMD_CIPHERTEXT L3 Field in bytes."""
-    cmd_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Command.
-    """An encrypted L3 Command."""
-    cmd_tag: U8Array = datafield(size=16)  # Authentication Tag.
-    """The L3 Command Authentication Tag."""
+    l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 command.
+    """The encrypted L3 command or a chunk of it."""
 
 
 class TsL2EncryptedCmdResponse(L2Response, id=L2Enum.ENCRYPTED_CMD):
-    res_size: U16Scalar  # L3 Result size.
-    """The size of the RES_CIPHERTEXT L3 Field in bytes."""
-    res_ciphertext: U8Array = datafield(min_size=1, max_size=4096)  # L3 Result
-    """An encrypted L3 Result."""
-    res_tag: U8Array = datafield(size=16)  # Authentication tag.
-    """The L3 Result Authentication Tag."""
+    l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 result.
+    """The encrypted L3 result or a chunk of it."""
 
 
 class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
@@ -233,8 +215,9 @@ class L2API(BaseModel):
 
     @api("l2_api")
     def ts_l2_get_info(
-        self, request: TsL2GetInfoRequest
-    ) -> Union[TsL2GetInfoResponse, List[TsL2GetInfoResponse]]:
+        self,
+        request: TsL2GetInfoRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to obtain information about TROPIC01. The type of
 		information obtained is distinguished by OBJECT_ID.  NOTE: If Start-up
 		mode is active, TROPIC01 executes the immutable FW. Any version
@@ -245,52 +228,59 @@ class L2API(BaseModel):
 
     @api("l2_api")
     def ts_l2_handshake(
-        self, request: TsL2HandshakeRequest
-    ) -> Union[TsL2HandshakeResponse, List[TsL2HandshakeResponse]]:
+        self,
+        request: TsL2HandshakeRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to execute a Secure Channel Handshake and establish a new
 		Secure Channel Session (TROPIC01 moves to Secure Channel Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_encrypted_cmd(
-        self, request: TsL2EncryptedCmdRequest
-    ) -> Union[TsL2EncryptedCmdResponse, List[TsL2EncryptedCmdResponse]]:
+        self,
+        request: TsL2EncryptedCmdRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to execute an L3 Command."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_encrypted_session_abt(
-        self, request: TsL2EncryptedSessionAbtRequest
-    ) -> Union[TsL2EncryptedSessionAbtResponse, List[TsL2EncryptedSessionAbtResponse]]:
+        self,
+        request: TsL2EncryptedSessionAbtRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to abort current Secure Channel Session and execution of L3
 		command (TROPIC01 moves to Idle Mode)."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_resend(
-        self, request: TsL2ResendRequest
-    ) -> Union[TsL2ResendResponse, List[TsL2ResendResponse]]:
+        self,
+        request: TsL2ResendRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request for TROPIC01 to resend the last L2 Response."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_sleep(
-        self, request: TsL2SleepRequest
-    ) -> Union[TsL2SleepResponse, List[TsL2SleepResponse]]:
+        self,
+        request: TsL2SleepRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request for TROPIC01 to go to Sleep Mode or Deep Sleep Mode."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_startup(
-        self, request: TsL2StartupRequest
-    ) -> Union[TsL2StartupResponse, List[TsL2StartupResponse]]:
+        self,
+        request: TsL2StartupRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request for TROPIC01 to reset."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
     def ts_l2_mutable_fw_update(
-        self, request: TsL2MutableFwUpdateRequest
-    ) -> Union[TsL2MutableFwUpdateResponse, List[TsL2MutableFwUpdateResponse]]:
+        self,
+        request: TsL2MutableFwUpdateRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to start updating mutable FW. Supported only in Start-up
 		mode (i.e. after Startup_Req with MAINTENANCE_REBOOT). Possible update
 		only same or newer version.  NOTE: Chip automatically select memory
@@ -299,8 +289,9 @@ class L2API(BaseModel):
 
     @api("l2_api")
     def ts_l2_mutable_fw_update_data(
-        self, request: TsL2MutableFwUpdateDataRequest
-    ) -> Union[TsL2MutableFwUpdateDataResponse, List[TsL2MutableFwUpdateDataResponse]]:
+        self,
+        request: TsL2MutableFwUpdateDataRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Request to write a chunk of the new mutable FW to a R-Memory bank.
 		Supported only in Start-up mode after Mutable_FW_Update_Req
 		successfully processed."""
@@ -308,7 +299,8 @@ class L2API(BaseModel):
 
     @api("l2_api")
     def ts_l2_get_log(
-        self, request: TsL2GetLogRequest
-    ) -> Union[TsL2GetLogResponse, List[TsL2GetLogResponse]]:
+        self,
+        request: TsL2GetLogRequest
+    ) -> Union[L2Response, List[L2Response]]:
         """Get log from FW running on RISCV CPU."""
         raise NotImplementedError("TODO")

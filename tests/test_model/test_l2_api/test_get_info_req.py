@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Iterator
 
 import pytest
 
 from tvl.api.l2_api import TsL2GetInfoRequest, TsL2GetInfoResponse
 from tvl.constants import L2StatusEnum
 from tvl.host.host import Host
-from tvl.messages.l2_messages import L2Response
 
 from ..utils import one_of, one_outside
 
@@ -32,88 +31,50 @@ def model_configuration(model_configuration: Dict[str, Any]):
     yield model_configuration
 
 
-def _send_no_check(host: Host, object_id: int, block_index: int) -> L2Response:
-    request = TsL2GetInfoRequest(object_id=object_id, block_index=block_index)
-    return host.send_request(request)
+def _valid_block_index() -> Iterator[int]:
+    yield from range(30)
 
 
-def _send(host: Host, object_id: int, block_index: int) -> TsL2GetInfoResponse:
-    response = _send_no_check(host, object_id, block_index)
-    assert response.status.value == L2StatusEnum.REQ_OK
-    assert isinstance(response, TsL2GetInfoResponse)
-    return response
+def _get_padded_certificate_chunk(block_index: int) -> bytes:
+    chunk = _X509_CERTIFICATE[block_index * 128 : (block_index + 1) * 128]
+    return b"\x00" * (128 - len(chunk)) + chunk
 
 
+@pytest.mark.parametrize("block_index", _valid_block_index())
 @pytest.mark.parametrize(
-    "block_index, indices",
+    "object_id, expected_data_fn",
     [
         pytest.param(
-            (b := TsL2GetInfoRequest.BlockIndexEnum.DATA_CHUNK_0_127),
-            slice(0, 128),
-            id=str(b),
+            oid := TsL2GetInfoRequest.ObjectIdEnum.X509_CERTIFICATE,
+            _get_padded_certificate_chunk,
+            id=str(oid),
         ),
-        pytest.param(
-            (b := TsL2GetInfoRequest.BlockIndexEnum.DATA_CHUNK_128_255),
-            slice(128, 256),
-            id=str(b),
-        ),
-        pytest.param(
-            (b := TsL2GetInfoRequest.BlockIndexEnum.DATA_CHUNK_256_383),
-            slice(256, 384),
-            id=str(b),
-        ),
-        pytest.param(
-            (b := TsL2GetInfoRequest.BlockIndexEnum.DATA_CHUNK_384_511),
-            slice(384, 512),
-            id=str(b),
-        ),
+        pytest.param(oid := TsL2GetInfoRequest.ObjectIdEnum.CHIP_ID, lambda x: _CHIP_ID, id=str(oid)),  # type: ignore
+        pytest.param(oid := TsL2GetInfoRequest.ObjectIdEnum.RISCV_FW_VERSION, lambda x: _RISCV_FW_VERSION, id=str(oid)),  # type: ignore
+        pytest.param(oid := TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION, lambda x: _SPECT_FW_VERSION, id=str(oid)),  # type: ignore
     ],
 )
-def test_x509_certificate(host: Host, block_index: int, indices: slice):
-    response = _send(
-        host,
-        TsL2GetInfoRequest.ObjectIdEnum.X509_CERTIFICATE,
-        block_index,
-    )
-    assert response.object.to_bytes() == _X509_CERTIFICATE[indices]
+def test(
+    host: Host,
+    block_index: int,
+    object_id: int,
+    expected_data_fn: Callable[[int], bytes],
+):
+    request = TsL2GetInfoRequest(object_id=object_id, block_index=block_index)
+    response = host.send_request(request)
 
-
-@pytest.mark.parametrize("block_index", TsL2GetInfoRequest.BlockIndexEnum)
-def test_chip_id(host: Host, block_index: int):
-    response = _send(
-        host,
-        TsL2GetInfoRequest.ObjectIdEnum.CHIP_ID,
-        block_index,
-    )
-    assert response.object.to_bytes() == _CHIP_ID
-
-
-@pytest.mark.parametrize("block_index", TsL2GetInfoRequest.BlockIndexEnum)
-def test_chip_riscv_fw_version(host: Host, block_index: int):
-    response = _send(
-        host,
-        TsL2GetInfoRequest.ObjectIdEnum.RISCV_FW_VERSION,
-        block_index,
-    )
-    assert response.object.to_bytes() == _RISCV_FW_VERSION
-
-
-@pytest.mark.parametrize("block_index", TsL2GetInfoRequest.BlockIndexEnum)
-def test_chip_spect_rom_id(host: Host, block_index: int):
-    response = _send(
-        host,
-        TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION,
-        block_index,
-    )
-    assert response.object.to_bytes() == _SPECT_FW_VERSION
+    assert response.status.value == L2StatusEnum.REQ_OK
+    assert isinstance(response, TsL2GetInfoResponse)
+    assert response.object.to_bytes() == expected_data_fn(block_index)
 
 
 def test_invalid_object_id(host: Host):
-    response = _send_no_check(
-        host=host,
+    request = TsL2GetInfoRequest(
         object_id=one_outside(TsL2GetInfoRequest.ObjectIdEnum),
-        block_index=one_of(TsL2GetInfoRequest.BlockIndexEnum),
+        block_index=one_of(_valid_block_index()),
     )
+    response = host.send_request(request)
+
     assert response.status.value == L2StatusEnum.GEN_ERR
     assert response.data_field_bytes == b""
 
@@ -144,9 +105,9 @@ def test_invalid_object_id(host: Host):
     ],
 )
 def test_invalid_block_index(host: Host, object_id: int, expected_status: int):
-    response = _send_no_check(
-        host=host,
-        object_id=object_id,
-        block_index=one_outside(TsL2GetInfoRequest.BlockIndexEnum),
+    request = TsL2GetInfoRequest(
+        object_id=object_id, block_index=one_outside(_valid_block_index())
     )
+    response = host.send_request(request)
+
     assert response.status.value == expected_status
