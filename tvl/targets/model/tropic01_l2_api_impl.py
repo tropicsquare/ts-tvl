@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from itertools import chain, islice, repeat
-from typing import List, NoReturn, cast
+from typing import List, NoReturn
 
-from ...api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk
 from ...api.l2_api import (
     L2API,
     TsL2EncryptedCmdRequest,
@@ -47,7 +46,6 @@ from .exceptions import (
     L3ProcessingError,
     ResendLastResponse,
 )
-from .meta_model import api
 
 
 class L2APIImplementation(L2API):
@@ -61,9 +59,7 @@ class L2APIImplementation(L2API):
 
         if object_id is TsL2GetInfoRequest.ObjectIdEnum.X509_CERTIFICATE:
             block_index = request.block_index.value
-            try:
-                block_index = TsL2GetInfoRequest.BlockIndexEnum(block_index)
-            except ValueError:
+            if not 0 <= block_index <= 29:
                 raise L2ProcessingErrorGeneric(f"Invalid {block_index = }") from None
             self.logger.debug(f"{block_index = }")
             slice_ = slice(
@@ -119,11 +115,7 @@ class L2APIImplementation(L2API):
             status=L2StatusEnum.REQ_OK, e_tpub=e_tpub, t_tauth=t_tauth
         )
 
-    # TsL2EncryptedCmdRequest and L2EncryptedCmdChunk are compatible
-    @api("l2_api", (TsL2EncryptedCmdRequest, L2EncryptedCmdChunk))
-    def ts_l2_encrypted_cmd(
-        self, request: TsL2EncryptedCmdRequest
-    ) -> List[TsL2EncryptedCmdResponse]:
+    def ts_l2_encrypted_cmd(self, request: TsL2EncryptedCmdRequest) -> List[L2Response]:
         if self.activate_encryption and not self.session.is_session_valid():
             raise L2ProcessingErrorNoSession("No valid session")
 
@@ -193,12 +185,11 @@ class L2APIImplementation(L2API):
                 status = L2StatusEnum.RES_CONT
             else:
                 status = L2StatusEnum.RES_OK
-            l2_chunk = L2EncryptedResChunk(status=status, encrypted_res=chunk)
+            l2_chunk = TsL2EncryptedCmdResponse(status=status, l3_chunk=chunk)
             self.logger.debug(f"Chunk {i}/{len(result_chunks)}: {l2_chunk}")
             chunks.append(l2_chunk)
 
-        # TsL2EncryptedCmdResponse and L2EncryptedResChunk are compatible
-        return cast(List[TsL2EncryptedCmdResponse], chunks)
+        return chunks
 
     def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest

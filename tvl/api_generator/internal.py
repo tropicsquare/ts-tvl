@@ -16,7 +16,7 @@ import yaml
 
 from tvl.api_generator.grammar import InoutTypeEnum, InputFileModel
 
-__version__ = "1.6"
+__version__ = "1.7"
 
 TOOL = Path(__file__).parent
 TEMPLATE_DIR = TOOL / "templates"
@@ -67,7 +67,7 @@ def generate_python_api(model: InputFileModel, _: Path) -> Dict[str, Any]:
         function_cfg = cfg.function
 
         # Update enumeration
-        enum_dct = {
+        enum_dct = {  # type: ignore
             "name": tag,
             "message_id": cfg.message_id,
             "description": cfg.description,

@@ -1,8 +1,8 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-import functools
 import logging
+from functools import partial, singledispatchmethod
 from typing import (
     Any,
     Callable,
@@ -28,7 +28,7 @@ from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
 from ...messages.l3_messages import L3Command, L3Result
 from ...random_number_generator import RandomNumberGenerator
-from ...utils import chunked
+from ...utils import split_data
 from .configuration_object_impl import ConfigurationObjectImpl
 from .exceptions import L2ProcessingError, L3ProcessingErrorUnauthorized
 from .internal.command_buffer import CommandBuffer
@@ -39,10 +39,6 @@ from .internal.pairing_keys import PairingKeys
 from .internal.spi_fsm import SpiFsm
 from .internal.user_data_partition import UserDataPartition
 from .meta_model import MetaModel, base
-
-
-def split_data(data: bytes, *, chunk_size: int = CHUNK_SIZE) -> Iterator[bytes]:
-    yield from (bytes(chunk) for chunk in chunked(data, chunk_size))
 
 
 class SupportsFromDict(Protocol):
@@ -82,7 +78,9 @@ class BaseModel(metaclass=MetaModel):
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
         busy_iter: Optional[Sequence[bool]] = None,
-        split_data_fn: Callable[[bytes], Iterator[bytes]] = split_data,
+        split_data_fn: Callable[[bytes], Iterator[bytes]] = partial(
+            split_data, chunk_size=CHUNK_SIZE
+        ),
         logger: Optional[logging.Logger] = None,
     ):
         """Initialize the model.
@@ -309,7 +307,7 @@ class BaseModel(metaclass=MetaModel):
         """
         return self._spi_send(data)
 
-    @functools.singledispatchmethod
+    @singledispatchmethod
     def _spi_send(self, data: Any) -> Any:
         raise TypeError(f"{type(data)} not supported")
 

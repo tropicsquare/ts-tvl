@@ -178,11 +178,11 @@ class {{CLASS_NAME}}(BaseModel):
     """
 {% for function in api_class.functions %}
     {%- set input_type = [CLASS_PREFIX, format_class_name(function.input), INPUT_CLASS] | join %}
-    {%- set output_type = [CLASS_PREFIX, format_class_name(function.output), OUTPUT_CLASS] | join %}
     @api({{API_LEVEL}})
     def {{METHOD_PREFIX}}{{format_function_name(function.name)}}(
-        self, {{INPUT_CLASS | lower}}: {{input_type}}
-    ) -> {{format_output_type(output_type)}}:
+        self,
+        {{INPUT_CLASS | lower}}: {{input_type}}
+    ) -> {{format_output_type(OUTPUT_CLASS_PARENT)}}:
         {%- if function.description %}
         {{['"""', function.description, '"""'] | join | wordwrap(70, wrapstring="\n\t\t")}}
         {%- endif %}

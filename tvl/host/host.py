@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import contextlib
-import functools
 import logging
+from functools import partial, singledispatchmethod
 from typing import (
     Any,
     Callable,
@@ -20,13 +20,23 @@ from typing import (
 
 from typing_extensions import Self
 
-from ..api.additional_api import L2EncryptedCmdChunk, L2EncryptedResChunk, split_data
-from ..api.l2_api import TsL2HandshakeResponse, TsL2StartupResponse
-from ..constants import ENCRYPTION_TAG_LEN, L2StatusEnum, L3ResultFieldEnum
+from ..api.l2_api import (
+    TsL2EncryptedCmdRequest,
+    TsL2EncryptedCmdResponse,
+    TsL2HandshakeResponse,
+    TsL2StartupResponse,
+)
+from ..constants import (
+    ENCRYPTION_TAG_LEN,
+    MAX_L2_FRAME_DATA_LEN,
+    L2StatusEnum,
+    L3ResultFieldEnum,
+)
 from ..crypto.encrypted_session import HostEncryptedSession
 from ..messages.l2_messages import L2Request, L2Response
 from ..messages.l3_messages import L3Command, L3EncryptedPacket, L3Result
 from ..random_number_generator import RandomNumberGenerator
+from ..utils import split_data
 from .low_level_communication import LowLevelFunctionFactory
 from .protocols import FunctionFactory, TargetDriver, TropicProtocol
 from .simple_target_driver import SimpleTargetDriver
@@ -65,7 +75,9 @@ class Host:
         s_t_pub: Optional[bytes] = None,
         pairing_key_index: Optional[int] = None,
         activate_encryption: bool = True,
-        split_data_fn: Callable[[bytes], Iterator[bytes]] = split_data,
+        split_data_fn: Callable[[bytes], Iterator[bytes]] = partial(
+            split_data, chunk_size=MAX_L2_FRAME_DATA_LEN
+        ),
         function_factory: Optional[FunctionFactory] = None,
         debug_random_value: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
@@ -74,7 +86,7 @@ class Host:
             if value is not None:
                 return value
             if callable(default):
-                return default()
+                return default()  # type: ignore
             return default
 
         if logger is None:
@@ -174,7 +186,7 @@ class Host:
     def send_request(self, request: Any) -> Any:
         return self._send_request(request)
 
-    @functools.singledispatchmethod
+    @singledispatchmethod
     def _send_request(self, request: Any) -> Any:
         raise TypeError(f"{type(request)} not supported.")
 
@@ -226,7 +238,7 @@ class Host:
         self.logger.info("++++++ Returning L2 response ++++++")
         return response
 
-    @functools.singledispatchmethod
+    @singledispatchmethod
     def _process_response(self, l2response: L2Response) -> L2Response:
         return l2response
 
@@ -269,7 +281,7 @@ class Host:
     def send_command(self, command: Any) -> Any:
         return self._send_command(command)
 
-    @functools.singledispatchmethod
+    @singledispatchmethod
     def _send_command(self, command: Any) -> Any:
         raise TypeError(f"{type(command)} not supported.")
 
@@ -290,7 +302,7 @@ class Host:
         command_chunks: List[bytes] = []
         for i, raw in enumerate(encrypted_chunks, start=1):
             self.logger.debug(f"Creating command chunk {i}/{nb_cmd_chunks}.")
-            chunk = L2EncryptedCmdChunk(encrypted_cmd=raw)
+            chunk = TsL2EncryptedCmdRequest(l3_chunk=raw)
             self.logger.debug(f"Chunk: {chunk}.")
             command_chunks.append(chunk.to_bytes())
 
@@ -307,9 +319,9 @@ class Host:
         result_chunks: List[bytes] = []
         for i, raw in enumerate(raw_result_chunks, start=1):
             self.logger.debug(f"Parsing result chunk {i}/{nb_res_chunks}.")
-            chunk = L2EncryptedResChunk.from_bytes(raw)
+            chunk = TsL2EncryptedCmdResponse.from_bytes(raw)
             self.logger.debug(f"Chunk: {chunk}.")
-            result_chunks.append(chunk.encrypted_res.to_bytes())
+            result_chunks.append(chunk.data_field_bytes)
 
         self.logger.info("Assembling result chunks.")
         if not (result_bytes := b"".join(result_chunks)):

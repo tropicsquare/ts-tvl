@@ -9,11 +9,21 @@ repos:
       name: isort
       entry: isort
       language: system
-      files: \.py$
-      exclude: ^tvl/api/l2_api.py$|^tvl/api/l3_api.py$|^tvl/targets/model/configuration_object_impl.py$
+      types: [python]
+      exclude: |
+        (?x)^(
+            tvl/api/l2_api.py|
+            tvl/api/l3_api.py|
+            tvl/targets/model/configuration_object_impl.py
+        )$
     - id: black
       name: black
       entry: black
       language: system
-      files: \.py$
-      exclude: ^tvl/api/l2_api.py$|^tvl/api/l3_api.py$|^tvl/targets/model/configuration_object_impl.py$
+      types: [python]
+      exclude: |
+        (?x)^(
+            tvl/api/l2_api.py|
+            tvl/api/l3_api.py|
+            tvl/targets/model/configuration_object_impl.py
+        )$
