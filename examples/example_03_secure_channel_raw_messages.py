@@ -60,7 +60,7 @@ e_hpub = host.session.create_handshake_request()
 
 # Create request field by field
 handshake_request_bytes = (
-    bytes([L2Enum.HANDSHAKE_REQ])  # REQ_ID
+    bytes([L2Enum.HANDSHAKE])  # REQ_ID
     + bytes([len(e_hpub) + len(pairing_key_index_bytes)])  # REQ_LEN
     + e_hpub  # e_hpub field of REQ_DATA
     + pairing_key_index_bytes  # pkey_index field of REQ_DATA
