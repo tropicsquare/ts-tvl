@@ -11,14 +11,14 @@ of TROPIC01, referred to as targets, namely:
 
 - `Tropic01Model`: the reference model, written in Python
 
-More on TROPIC01 targets [here](./tvl/targets/README.md).
+More on TROPIC01 targets [here](./targets/README.md).
 
 ## Host
 The `Host` class intends to provide a user-friendly way to communicate with a
 target. It abstracts the low-level communication details, thus allowing the user
 to focus on the content of the messages sent to the target.
 
-More on TROPIC01 host [here](./tvl/host/README.md).
+More on TROPIC01 host [here](./host/README.md).
 
 ## Messages
 The messages exchanged between the host and the target are implemented as Python
@@ -26,7 +26,7 @@ classes. These classes are defined based on the API (see above).
 They abstract the way the messages are created an perform several low-level
 operations.
 
-More on messages [here](./tvl/messages/README.md).
+More on messages [here](./messages/README.md).
 
 ## How to use
 
@@ -39,7 +39,7 @@ More on messages [here](./tvl/messages/README.md).
 ## A basic example: issue a GetInfo request
 
 This example can also be found in
-[`examples/example_01_get_info_request.py`](examples/example_01_get_info_request.py)
+[`examples/example_01_get_info_request.py`](../examples/example_01_get_info_request.py)
 
 ```python
 from tvl.api.l2_api import TsL2GetInfoRequest
@@ -68,4 +68,4 @@ print(response)
 # > TsL2GetInfoReqResponse<(status=01, length=07, object=[63, 68, 69, 70, 5f, 69, 64], crc=f253)
 ```
 
-More examples in the [`examples`](examples/) directory.
+More examples in the [`examples`](../examples/) directory.
