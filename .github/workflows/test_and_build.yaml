@@ -2,7 +2,7 @@ name: Test and build
 
 on:
   push:
-    branches: [master]
+    branches: [master, ci_dev]
 
 jobs:
   flow:
@@ -52,6 +52,7 @@ jobs:
         if: ${{ !cancelled() }}
 
       - name: build package
+        id: build
         run: poetry build --format=wheel
 
       - name: upload package
@@ -59,3 +60,10 @@ jobs:
         with:
             name: ts-tvl-package
             path: dist/*.whl
+
+      - name: release package
+        uses: actions/create-release@v1
+        with:
+            artifacts: ${{ steps.build.outputs.artifacts }}
+            tag_name: ${{ github.ref }}
+            body_path: README.md
