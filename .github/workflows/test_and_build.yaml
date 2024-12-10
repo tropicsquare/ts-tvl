@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: upload wheel file
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
