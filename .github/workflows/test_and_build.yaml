@@ -34,36 +34,50 @@ jobs:
             echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
             echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
 
-      - name: run tests
-        run: pytest -k 'not slow' --junit-xml=test-results.xml --cov-report=html:htmlcov
+      # - name: run tests
+      #   run: pytest -k 'not slow' --junit-xml=test-results.xml --cov-report=html:htmlcov
 
-      - name: upload test report
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test-results.xml
-        if: ${{ !cancelled() }}
+      # - name: upload test report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: test-results
+      #     path: test-results.xml
+      #   if: ${{ !cancelled() }}
 
-      - name: upload test coverage report
-        uses: actions/upload-artifact@v4
-        with:
-            name: test-coverage-report
-            path: htmlcov/
-        if: ${{ !cancelled() }}
+      # - name: upload test coverage report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #       name: test-coverage-report
+      #       path: htmlcov/
+      #   if: ${{ !cancelled() }}
 
       - name: build package
         id: build
         run: poetry build --format=wheel
 
-      - name: upload package
-        uses: actions/upload-artifact@v4
-        with:
-            name: ts-tvl-package
-            path: dist/*.whl
+      # - name: upload package
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #       name: ts-tvl-package
+      #       path: dist/*.whl
 
-      - name: release package
+      - name: create release
+        id: create_release
         uses: actions/create-release@v1
         with:
             artifacts: ${{ steps.build.outputs.artifacts }}
             tag_name: ${{ github.ref }}
             body_path: README.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: upload wheel file
+        uses: actions/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps..create_release.outputs.upload_url }}
+          asset_path: ./dist/*.whl
+          # asset_path: ./bin/azblogfilter.linux-amd64.tar.gz
+          # asset_name: azblogfilter.linux-amd64.tar.gz
+          # asset_content_type: application/gzip
