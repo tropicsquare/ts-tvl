@@ -61,11 +61,14 @@ jobs:
       #       name: ts-tvl-package
       #       path: dist/*.whl
 
+      # - name: version
+      #   id: version
+      #   run: echo "::set-output name=version::$(poetry version -s)"
+        
       - name: create release
         id: create_release
         uses: actions/create-release@v1
         with:
-            artifacts: ${{ steps.build.outputs.artifacts }}
             tag_name: ${{ github.ref }}
             body_path: README.md
         env:
