@@ -24,7 +24,9 @@ def configuration(configuration: Dict[str, Any]):
     # set the secure channel key to another index
     configuration["host"]["pairing_key_index"] = SECURE_CHANNEL_KEY_IDX
     configuration["model"]["i_pairing_keys"] = {
-        SECURE_CHANNEL_KEY_IDX: {"value": configuration["host"]["s_h_pub"]},
+        SECURE_CHANNEL_KEY_IDX: {
+            "value": configuration["host"]["s_h_pub"][SECURE_CHANNEL_KEY_IDX]
+        },
         SET_KEY_IDX: {"value": SET_KEY},
         BLANK_KEY_IDX: {"state": SlotState.BLANK},
         INVALID_KEY_IDX: {"state": SlotState.INVALID},

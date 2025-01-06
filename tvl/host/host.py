@@ -23,6 +23,7 @@ from typing_extensions import Self
 from ..api.l2_api import (
     TsL2EncryptedCmdRequest,
     TsL2EncryptedCmdResponse,
+    TsL2HandshakeRequest,
     TsL2HandshakeResponse,
     TsL2StartupResponse,
 )
@@ -70,8 +71,8 @@ class Host:
         *,
         target: Optional[TropicProtocol] = None,
         target_driver: Optional[TargetDriver] = None,
-        s_h_priv: Optional[bytes] = None,
-        s_h_pub: Optional[bytes] = None,
+        s_h_priv: Optional[List[bytes]] = None,
+        s_h_pub: Optional[List[bytes]] = None,
         s_t_pub: Optional[bytes] = None,
         pairing_key_index: Optional[int] = None,
         activate_encryption: bool = True,
@@ -102,9 +103,9 @@ class Host:
         else:
             self._target_driver = target_driver
         """target driver addressed by the host"""
-        self.s_h_priv = s_h_priv
+        self.s_h_priv = [] if s_h_priv is None else s_h_priv
         """Host static X25519 private key"""
-        self.s_h_pub = s_h_pub
+        self.s_h_pub = [] if s_h_pub is None else s_h_pub
         """Host static X25519 public key"""
         self.s_t_pub = s_t_pub
         """Tropic static X25519 public key and index.
@@ -247,13 +248,18 @@ class Host:
         self.logger.info(f"+ Processing {l2response} +")
         if self.s_t_pub is None:
             raise InitializationError("Host is not paired yet.")
-        if self.s_h_priv is None:
-            raise InitializationError("Host does not have any private key.")
+
+        try:
+            s_h_priv = self.s_h_priv[self.pairing_key_index]
+        except IndexError:
+            raise InitializationError(
+                f"Host does not have any private key at index #{self.pairing_key_index}"
+            )
 
         self.session.process_handshake_response(
             self.pairing_key_index,
             self.s_t_pub,
-            self.s_h_priv,
+            s_h_priv,
             l2response.e_tpub.to_bytes(),
             l2response.t_tauth.to_bytes(),
         )
@@ -384,3 +390,17 @@ class Host:
         if not self.session.is_session_valid():
             raise SessionError("Cannot decrypt result: no valid session.")
         return self.session.decrypt_response(result)
+
+
+def establish_secure_channel(
+    host: Host, pairing_key_index: Optional[int] = None
+) -> L2Response:
+    if pairing_key_index is not None:
+        host.pairing_key_index = pairing_key_index
+
+    return host.send_request(
+        TsL2HandshakeRequest(
+            e_hpub=host.session.create_handshake_request(),
+            pkey_index=host.pairing_key_index,
+        )
+    )
