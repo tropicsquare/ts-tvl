@@ -179,14 +179,17 @@ class L2APIImplementation(L2API):
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
 
         result_chunks = list(self.split_data_fn(encrypted_result.to_bytes()))
+        len_ = len(result_chunks)
 
-        for i, chunk in enumerate(result_chunks, start=1):
-            if i != len(result_chunks):
-                status = L2StatusEnum.RES_CONT
-            else:
-                status = L2StatusEnum.RES_OK
+        for i, (chunk, status) in enumerate(
+            zip(
+                result_chunks,
+                chain(repeat(L2StatusEnum.RES_CONT, len_ - 1), [L2StatusEnum.RES_OK]),
+            ),
+            start=1,
+        ):
             l2_chunk = TsL2EncryptedCmdResponse(status=status, l3_chunk=chunk)
-            self.logger.debug(f"Chunk {i}/{len(result_chunks)}: {l2_chunk}")
+            self.logger.debug(f"Chunk {i}/{len_}: {l2_chunk}")
             chunks.append(l2_chunk)
 
         return chunks

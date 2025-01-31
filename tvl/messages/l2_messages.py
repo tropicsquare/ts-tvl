@@ -19,7 +19,7 @@ def _restore(field: DataField[Any], value: int) -> Iterator[None]:
         field.value = value
 
 
-class L2Frame(Message, is_base=True):
+class L2Frame(Message):
     """Base class for L2 messages"""
 
     length: U8Scalar = datafield(is_data=False, default=AUTO)

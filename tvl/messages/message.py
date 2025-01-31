@@ -3,21 +3,10 @@
 
 import contextlib
 import functools
-import itertools
 import struct
-from collections import ChainMap, defaultdict
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    DefaultDict,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-)
+from collections import ChainMap
+from itertools import islice
+from typing import Any, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, Type
 
 from typing_extensions import (
     Annotated,
@@ -28,6 +17,7 @@ from typing_extensions import (
     get_type_hints,
 )
 
+from ..utils import iter_subclasses
 from .datafield import DataField, Params, U8Array, U8Scalar, datafield
 from .endianness import endianness
 from .exceptions import (
@@ -203,44 +193,28 @@ class BaseMessage(metaclass=_MetaMessage):
         array = struct.unpack(f"{endianness.fmt}{''.join(fmt)}", data)
         it = iter(array)
         return cls(
-            **{
-                name: list(itertools.islice(it, value[0]))
-                for name, value in fmt_dict.items()
-            }
+            **{name: list(islice(it, value[0])) for name, value in fmt_dict.items()}
         )
 
 
 class Message(BaseMessage):
-    SUBCLASSES: ClassVar[DefaultDict[int, List[Type["Message"]]]]
-    """Dictionary with subclasses and their associated id"""
     ID: ClassVar[int]
     """id of the class"""
 
-    def __init_subclass__(
-        cls, *, id: Optional[int] = None, is_base: bool = False, register: bool = True
-    ) -> None:
+    def __init_subclass__(cls, *, id: Optional[int] = None) -> None:
         """Associate an id to the subclasses of Message.
 
         Args:
             id (int, optional): ID associated to the subclass.
                 Defaults to None.
-            is_base (bool): the subclass is independent from
-                the current class and is a base to its own subclass tree.
-                Defaults to False.
-            register (bool): add the new subclass to `SUBCLASSES` if
-                id is a positive integer. Defaults to True.
         """
-        if is_base:
-            cls.SUBCLASSES = defaultdict(list)
         if id is not None:
             cls.ID = id
-            if register:
-                cls.SUBCLASSES[id].append(cls)
 
     @classmethod
     def find_subclasses(cls, id: int) -> List[Type[Self]]:
         """Find all the subclasses with the specified id."""
-        return [s for s in cls.SUBCLASSES[id] if issubclass(s, cls)]
+        return [s for s in iter_subclasses(cls) if getattr(s, "ID", None) == id]
 
     @classmethod
     def instantiate_subclass(cls, id: int, data: bytes) -> Self:
@@ -297,7 +271,7 @@ class Message(BaseMessage):
         else:
             namespace = {}
 
-        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1, register=False)  # type: ignore
+        return type(f"Default{cls.__name__}", (cls,), namespace, id=-1)  # type: ignore
 
     @classmethod
     def with_length(cls, length: int) -> Type[Self]:

@@ -49,7 +49,7 @@ class L3EncryptedPacket(BaseMessage):
         )
 
 
-class L3Packet(Message, is_base=True):
+class L3Packet(Message):
     """Base class for L3 messages"""
 
     def set_padding_if_auto(self) -> ContextManager[None]:
