@@ -67,7 +67,7 @@ class _MetaMessage(type):
         bases: Tuple[type, ...],
         namespace: Dict[str, Any],
         **kwargs: Any,
-    ) -> Type["_MetaMessage"]:
+    ) -> "_MetaMessage":
         existing_fields = {n for base in bases for n, *_ in _get_specs(base)}
 
         annotations: Dict[str, Any] = namespace.get("__annotations__", {})

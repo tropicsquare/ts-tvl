@@ -14,7 +14,6 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -83,16 +82,14 @@ class Host:
         debug_random_value: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        def __i(value: Optional[T], default: Union[T, Callable[[], T]]) -> T:
+        def __i(value: Optional[T], default: Callable[[], T]) -> T:
             if value is not None:
                 return value
-            if callable(default):
-                return default()  # type: ignore
-            return default
+            return default()
 
-        if logger is None:
-            logger = logging.getLogger(self.__class__.__name__.lower())
-        self.logger = logger
+        self.logger = __i(
+            logger, lambda: logging.getLogger(self.__class__.__name__.lower())
+        )
 
         if target is not None and target_driver is not None:
             raise InitializationError(
@@ -103,14 +100,14 @@ class Host:
         else:
             self._target_driver = target_driver
         """target driver addressed by the host"""
-        self.s_h_priv = [] if s_h_priv is None else s_h_priv
+        self.s_h_priv = __i(s_h_priv, list)
         """Host static X25519 private key"""
-        self.s_h_pub = [] if s_h_pub is None else s_h_pub
+        self.s_h_pub = __i(s_h_pub, list)
         """Host static X25519 public key"""
         self.s_t_pub = s_t_pub
         """Tropic static X25519 public key and index.
         Valid once the host and Tropic chip have been paired."""
-        self.pairing_key_index = __i(pairing_key_index, -1)
+        self.pairing_key_index = __i(pairing_key_index, lambda: -1)
         """Index at which the host public key is stored in the Tropic chip"""
         self.rng = RandomNumberGenerator(debug_random_value)
         self.session = HostEncryptedSession(random_source=self.rng)

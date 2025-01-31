@@ -13,7 +13,6 @@ from typing import (
     Protocol,
     Set,
     Tuple,
-    Type,
     TypeVar,
     cast,
 )
@@ -39,7 +38,7 @@ class MetaModel(type):
 
     def __new__(
         cls, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any]
-    ) -> Type["MetaModel"]:
+    ) -> "MetaModel":
         new_cls = super().__new__(cls, name, bases, namespace)
 
         api_bases: Dict[str, "singledispatchmethod[Any]"] = {}
