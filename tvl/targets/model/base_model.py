@@ -291,6 +291,7 @@ class BaseModel(metaclass=MetaModel):
     def spi_send(self, data: bytes) -> bytes:
         ...
 
+    @singledispatchmethod
     def spi_send(self, data: Union[List[int], bytes]) -> Union[List[int], bytes]:
         """Send data through the SPI bus in half-duplex mode.
 
@@ -300,17 +301,13 @@ class BaseModel(metaclass=MetaModel):
         Returns:
             the response of the TROPIC01.
         """
-        return self._spi_send(data)
-
-    @singledispatchmethod
-    def _spi_send(self, data: Any) -> Any:
         raise TypeError(f"{type(data)} not supported")
 
-    @_spi_send.register(list)
+    @spi_send.register(list)  # type: ignore
     def _(self, data: List[int]) -> List[int]:
-        return list(self._spi_send(bytes(data)))
+        return list(self.spi_send(bytes(data)))
 
-    @_spi_send.register
+    @spi_send.register  # type: ignore
     def _(self, data: bytes) -> bytes:
         return self.spi_fsm.process_spi_data(data)
 

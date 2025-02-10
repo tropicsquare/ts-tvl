@@ -181,11 +181,8 @@ class Host:
     def send_request(self, request: L2Request) -> L2Response:
         ...
 
-    def send_request(self, request: Any) -> Any:
-        return self._send_request(request)
-
     @singledispatchmethod
-    def _send_request(self, request: Any) -> Any:
+    def send_request(self, request: Any) -> Any:
         raise TypeError(f"{type(request)} not supported.")
 
     def _ll_send_l2(self, l2request: L2Request) -> Tuple[L2Response, bytes]:
@@ -215,7 +212,7 @@ class Host:
 
         return l2response, raw
 
-    @_send_request.register
+    @send_request.register  # type: ignore
     def _send_l2_request_bytes(self, request: bytes) -> bytes:
         self.logger.info("++++++ Sending raw L2 request ++++++")
         self.logger.debug(f"Raw L2 request: {request}.")
@@ -229,7 +226,7 @@ class Host:
         self.logger.info("++++++ Returning raw L2 response ++++++")
         return response
 
-    @_send_request.register
+    @send_request.register  # type: ignore
     def _send_l2_request(self, l2request: L2Request) -> L2Response:
         self.logger.info("++++++ Sending L2 request ++++++")
         response, _ = self._ll_send_l2(l2request)
@@ -281,14 +278,10 @@ class Host:
     def send_command(self, command: L3Command) -> L3Result:
         ...
 
-    def send_command(self, command: Any) -> Any:
-        return self._send_command(command)
-
     @singledispatchmethod
-    def _send_command(self, command: Any) -> Any:
+    def send_command(self, command: Any) -> Any:
         raise TypeError(f"{type(command)} not supported.")
 
-    @_send_command.register
     def _ll_send_l3(self, l3command: L3Command) -> bytes:
         self.logger.debug(f"L3 command: {l3command}.")
 
@@ -339,7 +332,7 @@ class Host:
         self.logger.debug(f"Decrypted result: {result}.")
         return result
 
-    @_send_command.register
+    @send_command.register  # type: ignore
     def _send_l3_command_bytes(self, command: bytes) -> bytes:
         self.logger.info("++++++ Sending raw L3 command ++++++")
         self.logger.debug(f"Raw L3 command: {command}.")
@@ -353,7 +346,7 @@ class Host:
         self.logger.info("++++++ Returning raw L3 result ++++++")
         return result
 
-    @_send_command.register
+    @send_command.register  # type: ignore
     def _send_l3_command(self, l3command: L3Command) -> L3Result:
         self.logger.info("++++++ Sending L3 command ++++++")
         result = self._ll_send_l3(l3command)
