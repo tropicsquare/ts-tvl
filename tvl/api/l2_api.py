@@ -1,4 +1,4 @@
-# GENERATED ON 2024-12-05 14:06:30.895780
+# GENERATED ON 2025-02-10 09:54:54.508273
 # BY API_GENERATOR VERSION 1.7
 # INPUT FILE: 06A25CC030E99AE88CF6F16F29E3F4C245D7ECFA874A17B75122786B0F39108E
 #
@@ -44,7 +44,15 @@ class L2Enum(HexReprIntEnum):
     """Get FW log"""
 
 
-class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
+class APIL2Request(L2Request):
+    """API base class for L2Request-derived classes"""
+
+
+class APIL2Response(L2Response):
+    """API base class for L2Response-derived classes"""
+
+
+class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
     object_id: U8Scalar
     """The Identifier of the requested object."""
     class ObjectIdEnum(HexReprIntEnum):
@@ -67,12 +75,12 @@ class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
     which size is 3840B."""
 
 
-class TsL2GetInfoResponse(L2Response, id=L2Enum.GET_INFO):
+class TsL2GetInfoResponse(APIL2Response, id=L2Enum.GET_INFO):
     object: U8Array = datafield(min_size=1, max_size=128)
     """The data content of the requested object block."""
 
 
-class TsL2HandshakeRequest(L2Request, id=L2Enum.HANDSHAKE):
+class TsL2HandshakeRequest(APIL2Request, id=L2Enum.HANDSHAKE):
     e_hpub: U8Array = datafield(size=32)  # Ephemeral Key of Host MCU.
     """The Host MCU's Ephemeral X25519 public key. A little endian encoding of
     the x-coordinate from the public Curve25519 point."""
@@ -91,40 +99,40 @@ class TsL2HandshakeRequest(L2Request, id=L2Enum.HANDSHAKE):
         """Corresponds to $S_{H3Pub}$."""
 
 
-class TsL2HandshakeResponse(L2Response, id=L2Enum.HANDSHAKE):
+class TsL2HandshakeResponse(APIL2Response, id=L2Enum.HANDSHAKE):
     e_tpub: U8Array = datafield(size=32)  # Ephemeral Key of TROPIC01.
     """TROPIC01's X25519 Ephemeral key."""
     t_tauth: U8Array = datafield(size=16)  # Authentication Tag
     """The Secure Channel Handshake Authentication Tag."""
 
 
-class TsL2EncryptedCmdRequest(L2Request, id=L2Enum.ENCRYPTED_CMD):
+class TsL2EncryptedCmdRequest(APIL2Request, id=L2Enum.ENCRYPTED_CMD):
     l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 command.
     """The encrypted L3 command or a chunk of it."""
 
 
-class TsL2EncryptedCmdResponse(L2Response, id=L2Enum.ENCRYPTED_CMD):
+class TsL2EncryptedCmdResponse(APIL2Response, id=L2Enum.ENCRYPTED_CMD):
     l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 result.
     """The encrypted L3 result or a chunk of it."""
 
 
-class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtRequest(APIL2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2EncryptedSessionAbtResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtResponse(APIL2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2ResendRequest(L2Request, id=L2Enum.RESEND):
+class TsL2ResendRequest(APIL2Request, id=L2Enum.RESEND):
     pass
 
 
-class TsL2ResendResponse(L2Response, id=L2Enum.RESEND):
+class TsL2ResendResponse(APIL2Response, id=L2Enum.RESEND):
     pass
 
 
-class TsL2SleepRequest(L2Request, id=L2Enum.SLEEP):
+class TsL2SleepRequest(APIL2Request, id=L2Enum.SLEEP):
     sleep_kind: U8Scalar  # Sleep Kind
     """The type of Sleep mode TROPIC01 moves to."""
     class SleepKindEnum(HexReprIntEnum):
@@ -134,11 +142,11 @@ class TsL2SleepRequest(L2Request, id=L2Enum.SLEEP):
         """Deep Sleep Mode"""
 
 
-class TsL2SleepResponse(L2Response, id=L2Enum.SLEEP):
+class TsL2SleepResponse(APIL2Response, id=L2Enum.SLEEP):
     pass
 
 
-class TsL2StartupRequest(L2Request, id=L2Enum.STARTUP):
+class TsL2StartupRequest(APIL2Request, id=L2Enum.STARTUP):
     startup_id: U8Scalar  # The request ID
     class StartupIdEnum(HexReprIntEnum):
         REBOOT = 0x01
@@ -148,11 +156,11 @@ class TsL2StartupRequest(L2Request, id=L2Enum.STARTUP):
         mutable FW from R-Memory."""
 
 
-class TsL2StartupResponse(L2Response, id=L2Enum.STARTUP):
+class TsL2StartupResponse(APIL2Response, id=L2Enum.STARTUP):
     pass
 
 
-class TsL2MutableFwUpdateRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE):
+class TsL2MutableFwUpdateRequest(APIL2Request, id=L2Enum.MUTABLE_FW_UPDATE):
     signature: U8Array = datafield(size=64)  # Signature of other data fields.
     """Signature of SHA256 hash of all following data in this packet."""
     hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
@@ -172,11 +180,11 @@ class TsL2MutableFwUpdateRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE):
     version: U32Scalar  # Version of FW.
 
 
-class TsL2MutableFwUpdateResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE):
+class TsL2MutableFwUpdateResponse(APIL2Response, id=L2Enum.MUTABLE_FW_UPDATE):
     pass
 
 
-class TsL2MutableFwUpdateDataRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
+class TsL2MutableFwUpdateDataRequest(APIL2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
     hash: U8Array = datafield(size=32)  # HASH of the next FW chunk.
     """SHA256 HASH of the next FW chunk of data sent using
     Mutable_FW_Update_Data."""
@@ -186,15 +194,15 @@ class TsL2MutableFwUpdateDataRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA
     """The binary data to write. Data size should be a multiple of 4."""
 
 
-class TsL2MutableFwUpdateDataResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
+class TsL2MutableFwUpdateDataResponse(APIL2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
     pass
 
 
-class TsL2GetLogRequest(L2Request, id=L2Enum.GET_LOG):
+class TsL2GetLogRequest(APIL2Request, id=L2Enum.GET_LOG):
     pass
 
 
-class TsL2GetLogResponse(L2Response, id=L2Enum.GET_LOG):
+class TsL2GetLogResponse(APIL2Response, id=L2Enum.GET_LOG):
     log_msg: U8Array = datafield(min_size=0, max_size=255)  # Log message
     """Log message of RISCV FW."""
 
@@ -212,6 +220,9 @@ class L2API(BaseModel):
         # Processing
     ```
     """
+
+    parse_request_fn = APIL2Request.instantiate_subclass
+    """Retrieve a APIL2Request from raw data"""
 
     @api("l2_api")
     def ts_l2_get_info(

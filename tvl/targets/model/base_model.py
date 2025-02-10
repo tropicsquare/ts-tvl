@@ -56,6 +56,9 @@ class BaseModel(metaclass=MetaModel):
     Functional model of the TROPIC01 chip for functional verification
     """
 
+    parse_request_fn: Callable[[int, bytes], L2Request] = L2Request.instantiate_subclass
+    parse_command_fn: Callable[[int, bytes], L3Command] = L3Command.instantiate_subclass
+
     def __init__(
         self,
         *,
@@ -346,7 +349,7 @@ class BaseModel(metaclass=MetaModel):
 
         self.logger.debug("Parsing L2 request.")
         try:
-            request = L2Request.instantiate_subclass(request.id.value, data)
+            request = self.parse_request_fn(request.id.value, data)
         except SubclassNotFoundError as exc:
             self.logger.debug(exc)
             return L2Response(status=L2StatusEnum.UNKNOWN_REQ)

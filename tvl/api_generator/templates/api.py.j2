@@ -15,6 +15,8 @@
 {%- set BUILTIN_IMPORT = BUILTIN_IMPORT | default("from typing import List, Union") %}
 {%- set INTERNAL_IMPORT = INTERNAL_IMPORT | default("from tvl.messages.l2_messages import L2Request, L2Response") %}
 
+{%- set BASE_INPUT_CLASS = "API" + INPUT_CLASS_PARENT %}
+{%- set BASE_OUTPUT_CLASS = "API" + OUTPUT_CLASS_PARENT %}
 
 {%- macro to_hex(number) -%}
     0x{{-"%02X" | format(number)}}
@@ -98,14 +100,22 @@ class {{ENUM_NAME}}(HexReprIntEnum):
     {%- endif %}
 {%- endfor %}
 
+
+class {{BASE_INPUT_CLASS}}({{INPUT_CLASS_PARENT}}):
+    """API base class for {{INPUT_CLASS_PARENT}}-derived classes"""
+
+
+class {{BASE_OUTPUT_CLASS}}({{OUTPUT_CLASS_PARENT}}):
+    """API base class for {{OUTPUT_CLASS_PARENT}}-derived classes"""
+
 {% for message in messages %}
 {%- if message.io_type == "input" %}
     {%- set class_type = INPUT_CLASS %}
-    {%- set parent = INPUT_CLASS_PARENT %}
+    {%- set parent = BASE_INPUT_CLASS %}
     {%- set verify_result_choices = False %}
 {%- else %}
     {%- set class_type = OUTPUT_CLASS %}
-    {%- set parent = OUTPUT_CLASS_PARENT %}
+    {%- set parent = BASE_OUTPUT_CLASS %}
     {%- set verify_result_choices = True %}
 {%- endif %}
 class {{CLASS_PREFIX}}{{format_class_name(message.name)}}{{class_type}}({{parent}}, id={{ENUM_NAME}}.{{format_id(message.tag)}}):
@@ -176,6 +186,9 @@ class {{CLASS_NAME}}(BaseModel):
         # Processing
     ```
     """
+
+    parse_{{INPUT_CLASS | lower}}_fn = {{BASE_INPUT_CLASS}}.instantiate_subclass
+    """Retrieve a {{BASE_INPUT_CLASS}} from raw data"""
 {% for function in api_class.functions %}
     {%- set input_type = [CLASS_PREFIX, format_class_name(function.input), INPUT_CLASS] | join %}
     @api({{API_LEVEL}})

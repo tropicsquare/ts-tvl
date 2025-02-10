@@ -152,7 +152,7 @@ class L2APIImplementation(L2API):
 
         self.logger.debug(f"Parsing raw L3 command {req_data}.")
         try:
-            command = L3Command.instantiate_subclass(
+            command = self.parse_command_fn(
                 L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
                 req_data,
             )

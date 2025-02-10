@@ -1,4 +1,4 @@
-# GENERATED ON 2024-12-05 14:06:31.358480
+# GENERATED ON 2025-02-10 09:54:54.982582
 # BY API_GENERATOR VERSION 1.7
 # INPUT FILE: D4A8258CBCE2EB9235F4ED4C5E40C0D197882025E64674A61E012CF2154BAB1F
 #
@@ -71,17 +71,25 @@ class L3Enum(HexReprIntEnum):
     """Get Serial Code"""
 
 
-class TsL3PingCommand(L3Command, id=L3Enum.PING):
+class APIL3Command(L3Command):
+    """API base class for L3Command-derived classes"""
+
+
+class APIL3Result(L3Result):
+    """API base class for L3Result-derived classes"""
+
+
+class TsL3PingCommand(APIL3Command, id=L3Enum.PING):
     data_in: U8Array = datafield(min_size=0, max_size=4096)  # Data in
     """The input data"""
 
 
-class TsL3PingResult(L3Result, id=L3Enum.PING):
+class TsL3PingResult(APIL3Result, id=L3Enum.PING):
     data_out: U8Array = datafield(min_size=0, max_size=4096)  # Data out
     """The output data (loopback of the DATA_IN L3 Field)."""
 
 
-class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
+class TsL3PairingKeyWriteCommand(APIL3Command, id=L3Enum.PAIRING_KEY_WRITE):
     slot: U16Scalar  # Slot to write in
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
@@ -100,11 +108,11 @@ class TsL3PairingKeyWriteCommand(L3Command, id=L3Enum.PAIRING_KEY_WRITE):
     in the SLOT field."""
 
 
-class TsL3PairingKeyWriteResult(L3Result, id=L3Enum.PAIRING_KEY_WRITE):
+class TsL3PairingKeyWriteResult(APIL3Result, id=L3Enum.PAIRING_KEY_WRITE):
     pass
 
 
-class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
+class TsL3PairingKeyReadCommand(APIL3Command, id=L3Enum.PAIRING_KEY_READ):
     slot: U16Scalar  # Slot to Read
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
@@ -118,7 +126,7 @@ class TsL3PairingKeyReadCommand(L3Command, id=L3Enum.PAIRING_KEY_READ):
         """Corresponds to $S_{H3Pub}$."""
 
 
-class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
+class TsL3PairingKeyReadResult(APIL3Result, id=L3Enum.PAIRING_KEY_READ):
     class ResultEnum(HexReprIntEnum):
         PAIRING_KEY_EMPTY = 0x15
         """The Pairing key slot is in "Blank" state. A Pairing Key has not
@@ -133,7 +141,7 @@ class TsL3PairingKeyReadResult(L3Result, id=L3Enum.PAIRING_KEY_READ):
     in the SLOT field."""
 
 
-class TsL3PairingKeyInvalidateCommand(L3Command, id=L3Enum.PAIRING_KEY_INVALIDATE):
+class TsL3PairingKeyInvalidateCommand(APIL3Command, id=L3Enum.PAIRING_KEY_INVALIDATE):
     slot: U16Scalar  # Slot to Invalidate
     """The Pairing Key slot. Valid values are 0 - 3."""
     class SlotEnum(HexReprIntEnum):
@@ -147,11 +155,11 @@ class TsL3PairingKeyInvalidateCommand(L3Command, id=L3Enum.PAIRING_KEY_INVALIDAT
         """Corresponds to $S_{H3Pub}$."""
 
 
-class TsL3PairingKeyInvalidateResult(L3Result, id=L3Enum.PAIRING_KEY_INVALIDATE):
+class TsL3PairingKeyInvalidateResult(APIL3Result, id=L3Enum.PAIRING_KEY_INVALIDATE):
     pass
 
 
-class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
+class TsL3RConfigWriteCommand(APIL3Command, id=L3Enum.R_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
     padding: U8Scalar = datafield(default=AUTO)  # Padding
@@ -160,54 +168,54 @@ class TsL3RConfigWriteCommand(L3Command, id=L3Enum.R_CONFIG_WRITE):
     """The CO value to write in the computed address."""
 
 
-class TsL3RConfigWriteResult(L3Result, id=L3Enum.R_CONFIG_WRITE):
+class TsL3RConfigWriteResult(APIL3Result, id=L3Enum.R_CONFIG_WRITE):
     pass
 
 
-class TsL3RConfigReadCommand(L3Command, id=L3Enum.R_CONFIG_READ):
+class TsL3RConfigReadCommand(APIL3Command, id=L3Enum.R_CONFIG_READ):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
 
 
-class TsL3RConfigReadResult(L3Result, id=L3Enum.R_CONFIG_READ):
+class TsL3RConfigReadResult(APIL3Result, id=L3Enum.R_CONFIG_READ):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
 
 
-class TsL3RConfigEraseCommand(L3Command, id=L3Enum.R_CONFIG_ERASE):
+class TsL3RConfigEraseCommand(APIL3Command, id=L3Enum.R_CONFIG_ERASE):
     pass
 
 
-class TsL3RConfigEraseResult(L3Result, id=L3Enum.R_CONFIG_ERASE):
+class TsL3RConfigEraseResult(APIL3Result, id=L3Enum.R_CONFIG_ERASE):
     pass
 
 
-class TsL3IConfigWriteCommand(L3Command, id=L3Enum.I_CONFIG_WRITE):
+class TsL3IConfigWriteCommand(APIL3Command, id=L3Enum.I_CONFIG_WRITE):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
     bit_index: U8Scalar  # Bit to write.
     """The bit to write from 1 to 0. Valid values are 0-31."""
 
 
-class TsL3IConfigWriteResult(L3Result, id=L3Enum.I_CONFIG_WRITE):
+class TsL3IConfigWriteResult(APIL3Result, id=L3Enum.I_CONFIG_WRITE):
     pass
 
 
-class TsL3IConfigReadCommand(L3Command, id=L3Enum.I_CONFIG_READ):
+class TsL3IConfigReadCommand(APIL3Command, id=L3Enum.I_CONFIG_READ):
     address: U16Scalar  # Configuration object address
     """The CO address offset for TROPIC01 to compute the actual CO address."""
 
 
-class TsL3IConfigReadResult(L3Result, id=L3Enum.I_CONFIG_READ):
+class TsL3IConfigReadResult(APIL3Result, id=L3Enum.I_CONFIG_READ):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     value: U32Scalar  # Configuration object value
     """The CO value TROPIC01 read from the computed address."""
 
 
-class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
+class TsL3RMemDataWriteCommand(APIL3Command, id=L3Enum.R_MEM_DATA_WRITE):
     udata_slot: U16Scalar  # Slot to write
     """The slot of the User Data partition. Valid values are 0 - 511."""
     padding: U8Scalar = datafield(default=AUTO)  # Padding
@@ -217,7 +225,7 @@ class TsL3RMemDataWriteCommand(L3Command, id=L3Enum.R_MEM_DATA_WRITE):
     L3 field."""
 
 
-class TsL3RMemDataWriteResult(L3Result, id=L3Enum.R_MEM_DATA_WRITE):
+class TsL3RMemDataWriteResult(APIL3Result, id=L3Enum.R_MEM_DATA_WRITE):
     class ResultEnum(HexReprIntEnum):
         WRITE_FAIL = 0x10
         """The slot is already written in."""
@@ -225,12 +233,12 @@ class TsL3RMemDataWriteResult(L3Result, id=L3Enum.R_MEM_DATA_WRITE):
         """The writing operation limit is reached for the slot."""
 
 
-class TsL3RMemDataReadCommand(L3Command, id=L3Enum.R_MEM_DATA_READ):
+class TsL3RMemDataReadCommand(APIL3Command, id=L3Enum.R_MEM_DATA_READ):
     udata_slot: U16Scalar  # Slot to read
     """The slot of the User Data partition. Valid values are 0 - 511."""
 
 
-class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
+class TsL3RMemDataReadResult(APIL3Result, id=L3Enum.R_MEM_DATA_READ):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     data: U8Array = datafield(min_size=0, max_size=444)  # Data to read
@@ -238,21 +246,21 @@ class TsL3RMemDataReadResult(L3Result, id=L3Enum.R_MEM_DATA_READ):
     field."""
 
 
-class TsL3RMemDataEraseCommand(L3Command, id=L3Enum.R_MEM_DATA_ERASE):
+class TsL3RMemDataEraseCommand(APIL3Command, id=L3Enum.R_MEM_DATA_ERASE):
     udata_slot: U16Scalar  # Slot to erase
     """The slot of the User Data partition. Valid values are 0 - 511."""
 
 
-class TsL3RMemDataEraseResult(L3Result, id=L3Enum.R_MEM_DATA_ERASE):
+class TsL3RMemDataEraseResult(APIL3Result, id=L3Enum.R_MEM_DATA_ERASE):
     pass
 
 
-class TsL3RandomValueGetCommand(L3Command, id=L3Enum.RANDOM_VALUE_GET):
+class TsL3RandomValueGetCommand(APIL3Command, id=L3Enum.RANDOM_VALUE_GET):
     n_bytes: U8Scalar  # Number of bytes to get.
     """The number of random bytes to get."""
 
 
-class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
+class TsL3RandomValueGetResult(APIL3Result, id=L3Enum.RANDOM_VALUE_GET):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     random_data: U8Array = datafield(min_size=0, max_size=255)  # Random data
@@ -260,7 +268,7 @@ class TsL3RandomValueGetResult(L3Result, id=L3Enum.RANDOM_VALUE_GET):
     N_BYTES L3 Field."""
 
 
-class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
+class TsL3EccKeyGenerateCommand(APIL3Command, id=L3Enum.ECC_KEY_GENERATE):
     slot: U16Scalar  # ECC Key slot
     """The slot to write the generated key. Valid values are 0 - 31."""
     curve: U8Scalar  # Elliptic Curve
@@ -272,11 +280,11 @@ class TsL3EccKeyGenerateCommand(L3Command, id=L3Enum.ECC_KEY_GENERATE):
         """Ed25519 Curve - 32-byte long public key."""
 
 
-class TsL3EccKeyGenerateResult(L3Result, id=L3Enum.ECC_KEY_GENERATE):
+class TsL3EccKeyGenerateResult(APIL3Result, id=L3Enum.ECC_KEY_GENERATE):
     pass
 
 
-class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
+class TsL3EccKeyStoreCommand(APIL3Command, id=L3Enum.ECC_KEY_STORE):
     slot: U16Scalar  # ECC Key slot
     """The slot to write the K L3 Field. Valid values are 0 - 31."""
     curve: U8Scalar  # The type of Elliptic Curve the K L3 Field belongs to.
@@ -293,16 +301,16 @@ class TsL3EccKeyStoreCommand(L3Command, id=L3Enum.ECC_KEY_STORE):
     the curve specified in the CURVE L3 Field."""
 
 
-class TsL3EccKeyStoreResult(L3Result, id=L3Enum.ECC_KEY_STORE):
+class TsL3EccKeyStoreResult(APIL3Result, id=L3Enum.ECC_KEY_STORE):
     pass
 
 
-class TsL3EccKeyReadCommand(L3Command, id=L3Enum.ECC_KEY_READ):
+class TsL3EccKeyReadCommand(APIL3Command, id=L3Enum.ECC_KEY_READ):
     slot: U16Scalar  # ECC Key slot
     """The slot to read the public ECC Key from. Valid values are 0 - 31."""
 
 
-class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
+class TsL3EccKeyReadResult(APIL3Result, id=L3Enum.ECC_KEY_READ):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist."""
@@ -327,16 +335,16 @@ class TsL3EccKeyReadResult(L3Result, id=L3Enum.ECC_KEY_READ):
     Field."""
 
 
-class TsL3EccKeyEraseCommand(L3Command, id=L3Enum.ECC_KEY_ERASE):
+class TsL3EccKeyEraseCommand(APIL3Command, id=L3Enum.ECC_KEY_ERASE):
     slot: U16Scalar  # ECC Key slot
     """The slot to erase. Valid values are 0 - 31."""
 
 
-class TsL3EccKeyEraseResult(L3Result, id=L3Enum.ECC_KEY_ERASE):
+class TsL3EccKeyEraseResult(APIL3Result, id=L3Enum.ECC_KEY_ERASE):
     pass
 
 
-class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
+class TsL3EcdsaSignCommand(APIL3Command, id=L3Enum.ECDSA_SIGN):
     slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     ECDSA signing."""
@@ -346,7 +354,7 @@ class TsL3EcdsaSignCommand(L3Command, id=L3Enum.ECDSA_SIGN):
     """The hash of the message to sign (max size of 32 bytes)."""
 
 
-class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
+class TsL3EcdsaSignResult(APIL3Result, id=L3Enum.ECDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
@@ -358,7 +366,7 @@ class TsL3EcdsaSignResult(L3Result, id=L3Enum.ECDSA_SIGN):
     """ECDSA signature - The S part"""
 
 
-class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
+class TsL3EddsaSignCommand(APIL3Command, id=L3Enum.EDDSA_SIGN):
     slot: U16Scalar  # ECC Key slot
     """The slot (from the ECC Keys partition in R-Memory) to read the key for
     EdDSA signing."""
@@ -368,7 +376,7 @@ class TsL3EddsaSignCommand(L3Command, id=L3Enum.EDDSA_SIGN):
     """The message to sign (max size of 4096 bytes)."""
 
 
-class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
+class TsL3EddsaSignResult(APIL3Result, id=L3Enum.EDDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
         """The key in the requested slot does not exist, or is invalid."""
@@ -380,7 +388,7 @@ class TsL3EddsaSignResult(L3Result, id=L3Enum.EDDSA_SIGN):
     """EdDSA signature - The S part"""
 
 
-class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
+class TsL3McounterInitCommand(APIL3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
     15."""
@@ -390,17 +398,17 @@ class TsL3McounterInitCommand(L3Command, id=L3Enum.MCOUNTER_INIT):
     """The initialization value of the Monotonic Counter."""
 
 
-class TsL3McounterInitResult(L3Result, id=L3Enum.MCOUNTER_INIT):
+class TsL3McounterInitResult(APIL3Result, id=L3Enum.MCOUNTER_INIT):
     pass
 
 
-class TsL3McounterUpdateCommand(L3Command, id=L3Enum.MCOUNTER_UPDATE):
+class TsL3McounterUpdateCommand(APIL3Command, id=L3Enum.MCOUNTER_UPDATE):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to update. Valid values are 0 -
     15."""
 
 
-class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
+class TsL3McounterUpdateResult(APIL3Result, id=L3Enum.MCOUNTER_UPDATE):
     class ResultEnum(HexReprIntEnum):
         UPDATE_ERR = 0x13
         """Failure to update the specified Monotonic Counter. The
@@ -410,13 +418,13 @@ class TsL3McounterUpdateResult(L3Result, id=L3Enum.MCOUNTER_UPDATE):
             counter must be reinitialized."""
 
 
-class TsL3McounterGetCommand(L3Command, id=L3Enum.MCOUNTER_GET):
+class TsL3McounterGetCommand(APIL3Command, id=L3Enum.MCOUNTER_GET):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to get the value of. Valid index
     values are 0 - 15."""
 
 
-class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
+class TsL3McounterGetResult(APIL3Result, id=L3Enum.MCOUNTER_GET):
     class ResultEnum(HexReprIntEnum):
         COUNTER_INVALID = 0x14
         """The Monotonic Counter detects an attack and is locked. The
@@ -428,7 +436,7 @@ class TsL3McounterGetResult(L3Result, id=L3Enum.MCOUNTER_GET):
     Field."""
 
 
-class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
+class TsL3MacAndDestroyCommand(APIL3Command, id=L3Enum.MAC_AND_DESTROY):
     slot: U16Scalar  # Mac-and-Destroy slot
     """The slot (from the MAC-and-Destroy data partition in R-Memory) to
     execute the MAC_And_Destroy sequence. Valid values are 0 - 127."""
@@ -438,18 +446,18 @@ class TsL3MacAndDestroyCommand(L3Command, id=L3Enum.MAC_AND_DESTROY):
     """The data input for the MAC-and-Destroy sequence."""
 
 
-class TsL3MacAndDestroyResult(L3Result, id=L3Enum.MAC_AND_DESTROY):
+class TsL3MacAndDestroyResult(APIL3Result, id=L3Enum.MAC_AND_DESTROY):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     data_out: U8Array = datafield(size=32)  # Output data
     """The data output from the MAC-and-Destroy sequence."""
 
 
-class TsL3SerialCodeGetCommand(L3Command, id=L3Enum.SERIAL_CODE_GET):
+class TsL3SerialCodeGetCommand(APIL3Command, id=L3Enum.SERIAL_CODE_GET):
     pass
 
 
-class TsL3SerialCodeGetResult(L3Result, id=L3Enum.SERIAL_CODE_GET):
+class TsL3SerialCodeGetResult(APIL3Result, id=L3Enum.SERIAL_CODE_GET):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     serial_code: U8Array = datafield(size=32)  # Serial code
@@ -469,6 +477,9 @@ class L3API(BaseModel):
         # Processing
     ```
     """
+
+    parse_command_fn = APIL3Command.instantiate_subclass
+    """Retrieve a APIL3Command from raw data"""
 
     @api("l3_api")
     def ts_l3_ping(
