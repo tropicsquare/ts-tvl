@@ -78,14 +78,14 @@ class L3Command(L3Packet):
 
     id: U8Scalar = datafield(priority=-999, is_data=False, default=AUTO)
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         try:
-            self.ID
+            cls.ID
         except AttributeError:
             raise UnauthorizedInstantiationError(
-                f"Instantiating {self.__class__} forbidden: ID undefined."
+                f"Instantiating {cls} forbidden: ID undefined."
             ) from None
-        super().__init__(**kwargs)
+        return super().__new__(cls)
 
     def set_id_if_auto(self) -> ContextManager[None]:
         """Update the ID field of the message if set to AUTO."""
