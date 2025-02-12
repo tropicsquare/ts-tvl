@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import IntEnum
-from typing import Tuple
+from typing import Tuple, Type, TypeVar
 
-from pydantic import conbytes, conint
+from pydantic import conbytes, conint, conlist
+
+T = TypeVar("T")
 
 
 class SizedBytes:
@@ -45,6 +47,21 @@ class RangedInt:
     def __class_getitem__(cls, param: Tuple[int, int]):
         mn, mx = param
         return conint(strict=True, ge=mn, le=mx)
+
+
+class SizedList:
+    """
+    Type hint that specifies size-constrained lists
+
+    Args:
+        item_type (type): type of items in list
+        min_size (int): minimum size
+        max_size (int): maximum size
+    """
+
+    def __class_getitem__(cls, param: Tuple[Type[T], int, int]):
+        tp, mn, mx = param
+        return conlist(tp, min_items=mn, max_items=mx)
 
 
 class HexReprIntEnum(IntEnum):

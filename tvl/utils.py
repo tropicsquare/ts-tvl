@@ -1,8 +1,8 @@
 # Copyright 2023 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
-from itertools import islice
-from typing import Iterable, Iterator, List, TypeVar
+from itertools import chain, islice
+from typing import Iterable, Iterator, List, Type, TypeVar
 
 T = TypeVar("T")
 
@@ -24,3 +24,16 @@ def split_data(data: bytes, *, chunk_size: int) -> Iterator[bytes]:
         the chunks
     """
     yield from map(bytes, chunked(data, chunk_size))
+
+
+def iter_subclasses(__cls: Type[T], /) -> Iterator[Type[T]]:
+    """Iterate on the subclasses of a class
+
+    Args:
+        __cls (Type[T]): the class to scan
+
+    Yields:
+        the subclasses of the class
+    """
+    yield from __cls.__subclasses__()
+    yield from chain.from_iterable(map(iter_subclasses, __cls.__subclasses__()))

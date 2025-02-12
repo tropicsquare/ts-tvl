@@ -61,7 +61,7 @@ class Dtype(str, Enum):
     UINT32 = "I"
     UINT64 = "Q"
 
-    __str__ = str.__str__  # type: ignore
+    __str__ = str.__str__
 
     @property
     def nb_bytes(self) -> int:

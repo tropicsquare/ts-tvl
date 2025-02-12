@@ -3,6 +3,7 @@
 
 import os
 import random
+from typing import Any, Dict
 
 import pytest
 
@@ -41,7 +42,7 @@ def test_ecc_key_find_subclass():
 
 
 def test_ecc_key_dict():
-    init_dict = {
+    init_dict: Dict[str, Any] = {
         "a": os.urandom(32),
         "d": os.urandom(32),
         "w": os.urandom(64),
@@ -175,7 +176,7 @@ def test_signing():
 
 
 def test_dict():
-    key_init_dict = {
+    key_init_dict: Dict[str, Any] = {
         "a": os.urandom(32),
         "d": os.urandom(32),
         "w": os.urandom(64),

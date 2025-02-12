@@ -35,7 +35,7 @@ class SlotState(str, Enum):
     WRITTEN = "written"
     INVALID = "invalid"
 
-    __str__ = str.__str__  # type: ignore
+    __str__ = str.__str__
 
 
 @dataclass

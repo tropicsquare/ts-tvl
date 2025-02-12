@@ -23,7 +23,7 @@ from .targets.model.internal.mcounter import MCountersModel
 from .targets.model.internal.mac_and_destroy import MacAndDestroyDataModel
 from .targets.model.internal.pairing_keys import PairingKeysModel
 from .targets.model.internal.user_data_partition import UserDataPartitionModel
-from .typing_utils import FixedSizeBytes, RangedInt, SizedBytes
+from .typing_utils import FixedSizeBytes, RangedInt, SizedBytes, SizedList
 
 
 class _BaseModel(BaseModel):
@@ -33,8 +33,8 @@ class _BaseModel(BaseModel):
 
 
 class HostConfigurationModel(_BaseModel):
-    s_h_priv: FixedSizeBytes[DH_LEN]
-    s_h_pub: FixedSizeBytes[DH_LEN]
+    s_h_priv: SizedList[FixedSizeBytes[DH_LEN], 0, S_HI_PUB_NB_SLOTS]
+    s_h_pub: SizedList[FixedSizeBytes[DH_LEN], 0, S_HI_PUB_NB_SLOTS]
     s_t_pub: FixedSizeBytes[DH_LEN]
     pairing_key_index: RangedInt[0, S_HI_PUB_NB_SLOTS - 1]
     activate_encryption: Optional[StrictBool]

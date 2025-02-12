@@ -62,7 +62,7 @@ def one_of(__enum: Type[IntEnum], /) -> Callable[[], int]:
     Returns:
         an element of the enumeration
     """
-    return lambda: choice(list(__enum))
+    return lambda: choice(tuple(__enum))
 
 
 def scrutinize(

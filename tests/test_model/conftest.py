@@ -13,19 +13,21 @@ from tvl.targets.model.tropic01_model import Tropic01Model
 
 
 @pytest.fixture(scope="function")
-def configuration():
+def configuration():  # type: ignore
     tropic_priv_key_ = X25519PrivateKey.generate()
     tropic_priv_key_bytes = tropic_priv_key_.private_bytes_raw()
     tropic_pub_key_bytes = tropic_priv_key_.public_key().public_bytes_raw()
 
-    host_priv_key_ = X25519PrivateKey.generate()
-    host_priv_key_bytes = host_priv_key_.private_bytes_raw()
-    host_pub_key_bytes = host_priv_key_.public_key().public_bytes_raw()
+    host_priv_keys_ = [X25519PrivateKey.generate() for _ in range(S_HI_PUB_NB_SLOTS)]
+    host_priv_keys_bytes = [key.private_bytes_raw() for key in host_priv_keys_]
+    host_pub_keys_bytes = [
+        key.public_key().public_bytes_raw() for key in host_priv_keys_
+    ]
 
     yield {
         "host": {
-            "s_h_priv": host_priv_key_bytes,
-            "s_h_pub": host_pub_key_bytes,
+            "s_h_priv": host_priv_keys_bytes,
+            "s_h_pub": host_pub_keys_bytes,
             "s_t_pub": tropic_pub_key_bytes,
             "pairing_key_index": (pki := random.randrange(S_HI_PUB_NB_SLOTS)),
         },
@@ -34,7 +36,7 @@ def configuration():
             "s_t_pub": tropic_pub_key_bytes,
             "i_pairing_keys": {
                 pki: {
-                    "value": host_pub_key_bytes,
+                    "value": host_pub_keys_bytes[pki],
                 },
             },
         },

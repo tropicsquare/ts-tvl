@@ -26,7 +26,7 @@ class Colors(str, Enum):
     CYAN = "\x1b[96m"
     NONE = "\x1b[0m"
 
-    __str__ = str.__str__  # type: ignore
+    __str__ = str.__str__
 
 
 class TVLFormatter(logging.Formatter):

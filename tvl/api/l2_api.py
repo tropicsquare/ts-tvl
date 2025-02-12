@@ -1,20 +1,13 @@
-# GENERATED ON 2024-12-05 14:06:30.895780
+# GENERATED ON 2025-02-12 10:47:04.510841
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 06A25CC030E99AE88CF6F16F29E3F4C245D7ECFA874A17B75122786B0F39108E
+# INPUT FILE: D5C8F91061251E32D25B25F38886B526ADF1D213A4893068B9D290D75358F705
 #
 # Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
-from tvl.messages.datafield import (
-    AUTO,
-    U8Array,
-    U8Scalar,
-    U16Scalar,
-    U32Scalar,
-    datafield,
-)
+from tvl.messages.datafield import U8Array, U8Scalar, datafield
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -36,15 +29,19 @@ class L2Enum(HexReprIntEnum):
     """Move to Sleep"""
     STARTUP = 0xB3
     """Reset the chip."""
-    MUTABLE_FW_UPDATE = 0xB0
-    """Request to enable write new FW."""
-    MUTABLE_FW_UPDATE_DATA = 0xB1
-    """Write new FW."""
     GET_LOG = 0xA2
     """Get FW log"""
 
 
-class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
+class APIL2Request(L2Request):
+    """API base class for L2Request-derived classes"""
+
+
+class APIL2Response(L2Response):
+    """API base class for L2Response-derived classes"""
+
+
+class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
     object_id: U8Scalar
     """The Identifier of the requested object."""
     class ObjectIdEnum(HexReprIntEnum):
@@ -58,21 +55,18 @@ class TsL2GetInfoRequest(L2Request, id=L2Enum.GET_INFO):
         """The RISCV current running FW version (4 Bytes)"""
         SPECT_FW_VERSION = 0x04
         """The SPECT FW version (4 Bytes)"""
-        FW_BANK = 0xB0
-        """The FW header read from the selected bank id (shown as an index).
-        Supported only in Start-up mode."""
     block_index: U8Scalar  # The index of the 128 Byte long block to request
     """In case the requested object is larger than 128B use chunk number.
     First chunk has index 0 and maximum value is 29 for X.509 certificate
     which size is 3840B."""
 
 
-class TsL2GetInfoResponse(L2Response, id=L2Enum.GET_INFO):
+class TsL2GetInfoResponse(APIL2Response, id=L2Enum.GET_INFO):
     object: U8Array = datafield(min_size=1, max_size=128)
     """The data content of the requested object block."""
 
 
-class TsL2HandshakeRequest(L2Request, id=L2Enum.HANDSHAKE):
+class TsL2HandshakeRequest(APIL2Request, id=L2Enum.HANDSHAKE):
     e_hpub: U8Array = datafield(size=32)  # Ephemeral Key of Host MCU.
     """The Host MCU's Ephemeral X25519 public key. A little endian encoding of
     the x-coordinate from the public Curve25519 point."""
@@ -91,40 +85,40 @@ class TsL2HandshakeRequest(L2Request, id=L2Enum.HANDSHAKE):
         """Corresponds to $S_{H3Pub}$."""
 
 
-class TsL2HandshakeResponse(L2Response, id=L2Enum.HANDSHAKE):
+class TsL2HandshakeResponse(APIL2Response, id=L2Enum.HANDSHAKE):
     e_tpub: U8Array = datafield(size=32)  # Ephemeral Key of TROPIC01.
     """TROPIC01's X25519 Ephemeral key."""
     t_tauth: U8Array = datafield(size=16)  # Authentication Tag
     """The Secure Channel Handshake Authentication Tag."""
 
 
-class TsL2EncryptedCmdRequest(L2Request, id=L2Enum.ENCRYPTED_CMD):
+class TsL2EncryptedCmdRequest(APIL2Request, id=L2Enum.ENCRYPTED_CMD):
     l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 command.
     """The encrypted L3 command or a chunk of it."""
 
 
-class TsL2EncryptedCmdResponse(L2Response, id=L2Enum.ENCRYPTED_CMD):
+class TsL2EncryptedCmdResponse(APIL2Response, id=L2Enum.ENCRYPTED_CMD):
     l3_chunk: U8Array = datafield(min_size=1, max_size=252)  # L3 result.
     """The encrypted L3 result or a chunk of it."""
 
 
-class TsL2EncryptedSessionAbtRequest(L2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtRequest(APIL2Request, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2EncryptedSessionAbtResponse(L2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
+class TsL2EncryptedSessionAbtResponse(APIL2Response, id=L2Enum.ENCRYPTED_SESSION_ABT):
     pass
 
 
-class TsL2ResendRequest(L2Request, id=L2Enum.RESEND):
+class TsL2ResendRequest(APIL2Request, id=L2Enum.RESEND):
     pass
 
 
-class TsL2ResendResponse(L2Response, id=L2Enum.RESEND):
+class TsL2ResendResponse(APIL2Response, id=L2Enum.RESEND):
     pass
 
 
-class TsL2SleepRequest(L2Request, id=L2Enum.SLEEP):
+class TsL2SleepRequest(APIL2Request, id=L2Enum.SLEEP):
     sleep_kind: U8Scalar  # Sleep Kind
     """The type of Sleep mode TROPIC01 moves to."""
     class SleepKindEnum(HexReprIntEnum):
@@ -134,11 +128,11 @@ class TsL2SleepRequest(L2Request, id=L2Enum.SLEEP):
         """Deep Sleep Mode"""
 
 
-class TsL2SleepResponse(L2Response, id=L2Enum.SLEEP):
+class TsL2SleepResponse(APIL2Response, id=L2Enum.SLEEP):
     pass
 
 
-class TsL2StartupRequest(L2Request, id=L2Enum.STARTUP):
+class TsL2StartupRequest(APIL2Request, id=L2Enum.STARTUP):
     startup_id: U8Scalar  # The request ID
     class StartupIdEnum(HexReprIntEnum):
         REBOOT = 0x01
@@ -148,53 +142,15 @@ class TsL2StartupRequest(L2Request, id=L2Enum.STARTUP):
         mutable FW from R-Memory."""
 
 
-class TsL2StartupResponse(L2Response, id=L2Enum.STARTUP):
+class TsL2StartupResponse(APIL2Response, id=L2Enum.STARTUP):
     pass
 
 
-class TsL2MutableFwUpdateRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE):
-    signature: U8Array = datafield(size=64)  # Signature of other data fields.
-    """Signature of SHA256 hash of all following data in this packet."""
-    hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
-    """SHA256 HASH of first FW chunk of data sent using
-    Mutable_FW_Update_Data."""
-    type: U16Scalar  # FW type.
-    """FW type which is going to be updated."""
-    class TypeEnum(HexReprIntEnum):
-        FW_TYPE_CPU = 0x01
-        """FW for RISC-V main CPU."""
-        FW_TYPE_SPECT = 0x02
-        """FW for SPECT coprocessor."""
-    padding: U8Scalar = datafield(default=AUTO)  # U32 padding byte.
-    """Zero value."""
-    header_version: U8Scalar  # Version of used header.
-    """Current value is 1."""
-    version: U32Scalar  # Version of FW.
-
-
-class TsL2MutableFwUpdateResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE):
+class TsL2GetLogRequest(APIL2Request, id=L2Enum.GET_LOG):
     pass
 
 
-class TsL2MutableFwUpdateDataRequest(L2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
-    hash: U8Array = datafield(size=32)  # HASH of the next FW chunk.
-    """SHA256 HASH of the next FW chunk of data sent using
-    Mutable_FW_Update_Data."""
-    offset: U16Scalar  # Offset of the bank to write the FW chunk to.
-    """The offset of the specific bank to write the FW chunk data to."""
-    data: U8Array = datafield(min_size=4, max_size=220)  # The binary data to write.
-    """The binary data to write. Data size should be a multiple of 4."""
-
-
-class TsL2MutableFwUpdateDataResponse(L2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
-    pass
-
-
-class TsL2GetLogRequest(L2Request, id=L2Enum.GET_LOG):
-    pass
-
-
-class TsL2GetLogResponse(L2Response, id=L2Enum.GET_LOG):
+class TsL2GetLogResponse(APIL2Response, id=L2Enum.GET_LOG):
     log_msg: U8Array = datafield(min_size=0, max_size=255)  # Log message
     """Log message of RISCV FW."""
 
@@ -212,6 +168,9 @@ class L2API(BaseModel):
         # Processing
     ```
     """
+
+    parse_request_fn = APIL2Request.instantiate_subclass
+    """Retrieve a APIL2Request from raw data"""
 
     @api("l2_api")
     def ts_l2_get_info(
@@ -274,27 +233,6 @@ class L2API(BaseModel):
         request: TsL2StartupRequest
     ) -> Union[L2Response, List[L2Response]]:
         """Request for TROPIC01 to reset."""
-        raise NotImplementedError("TODO")
-
-    @api("l2_api")
-    def ts_l2_mutable_fw_update(
-        self,
-        request: TsL2MutableFwUpdateRequest
-    ) -> Union[L2Response, List[L2Response]]:
-        """Request to start updating mutable FW. Supported only in Start-up
-		mode (i.e. after Startup_Req with MAINTENANCE_REBOOT). Possible update
-		only same or newer version.  NOTE: Chip automatically select memory
-		space for FW storage and erase it."""
-        raise NotImplementedError("TODO")
-
-    @api("l2_api")
-    def ts_l2_mutable_fw_update_data(
-        self,
-        request: TsL2MutableFwUpdateDataRequest
-    ) -> Union[L2Response, List[L2Response]]:
-        """Request to write a chunk of the new mutable FW to a R-Memory bank.
-		Supported only in Start-up mode after Mutable_FW_Update_Req
-		successfully processed."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")

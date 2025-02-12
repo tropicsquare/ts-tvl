@@ -4,6 +4,8 @@
 from contextlib import contextmanager, nullcontext
 from typing import Any, ContextManager, Iterator, Tuple
 
+from typing_extensions import Self
+
 from ..crypto.hash import crc16
 from .datafield import AUTO, DataField, U8Scalar, U16Scalar, datafield
 from .exceptions import UnauthorizedInstantiationError
@@ -19,7 +21,7 @@ def _restore(field: DataField[Any], value: int) -> Iterator[None]:
         field.value = value
 
 
-class L2Frame(Message, is_base=True):
+class L2Frame(Message):
     """Base class for L2 messages"""
 
     length: U8Scalar = datafield(is_data=False, default=AUTO)
@@ -94,14 +96,14 @@ class L2Request(L2Frame):
 
     id: U8Scalar = datafield(priority=-999, is_data=False, default=AUTO)
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         try:
-            self.ID
+            cls.ID
         except AttributeError:
             raise UnauthorizedInstantiationError(
-                f"Instantiating {self.__class__} forbidden: ID undefined."
+                f"Instantiating {cls} forbidden: ID undefined."
             ) from None
-        super().__init__(**kwargs)
+        return super().__new__(cls)
 
     def set_id_if_auto(self) -> ContextManager[None]:
         """Update the ID field of the message if set to AUTO."""

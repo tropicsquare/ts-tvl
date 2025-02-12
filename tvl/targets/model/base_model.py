@@ -57,6 +57,9 @@ class BaseModel(metaclass=MetaModel):
     Functional model of the TROPIC01 chip for functional verification
     """
 
+    parse_request_fn: Callable[[int, bytes], L2Request] = L2Request.instantiate_subclass
+    parse_command_fn: Callable[[int, bytes], L3Command] = L3Command.instantiate_subclass
+
     def __init__(
         self,
         *,
@@ -296,6 +299,7 @@ class BaseModel(metaclass=MetaModel):
     def spi_send(self, data: bytes) -> bytes:
         ...
 
+    @singledispatchmethod
     def spi_send(self, data: Union[List[int], bytes]) -> Union[List[int], bytes]:
         """Send data through the SPI bus in half-duplex mode.
 
@@ -305,17 +309,13 @@ class BaseModel(metaclass=MetaModel):
         Returns:
             the response of the TROPIC01.
         """
-        return self._spi_send(data)
-
-    @singledispatchmethod
-    def _spi_send(self, data: Any) -> Any:
         raise TypeError(f"{type(data)} not supported")
 
-    @_spi_send.register(list)
+    @spi_send.register(list)  # type: ignore
     def _(self, data: List[int]) -> List[int]:
-        return list(self._spi_send(bytes(data)))
+        return list(self.spi_send(bytes(data)))
 
-    @_spi_send.register
+    @spi_send.register  # type: ignore
     def _(self, data: bytes) -> bytes:
         return self.spi_fsm.process_spi_data(data)
 
@@ -354,7 +354,7 @@ class BaseModel(metaclass=MetaModel):
 
         self.logger.debug("Parsing L2 request.")
         try:
-            request = L2Request.instantiate_subclass(request.id.value, data)
+            request = self.parse_request_fn(request.id.value, data)
         except SubclassNotFoundError as exc:
             self.logger.debug(exc)
             return L2Response(status=L2StatusEnum.UNKNOWN_REQ)

@@ -14,7 +14,6 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -23,6 +22,7 @@ from typing_extensions import Self
 from ..api.l2_api import (
     TsL2EncryptedCmdRequest,
     TsL2EncryptedCmdResponse,
+    TsL2HandshakeRequest,
     TsL2HandshakeResponse,
     TsL2StartupResponse,
 )
@@ -70,8 +70,8 @@ class Host:
         *,
         target: Optional[TropicProtocol] = None,
         target_driver: Optional[TargetDriver] = None,
-        s_h_priv: Optional[bytes] = None,
-        s_h_pub: Optional[bytes] = None,
+        s_h_priv: Optional[List[bytes]] = None,
+        s_h_pub: Optional[List[bytes]] = None,
         s_t_pub: Optional[bytes] = None,
         pairing_key_index: Optional[int] = None,
         activate_encryption: bool = True,
@@ -82,16 +82,14 @@ class Host:
         debug_random_value: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        def __i(value: Optional[T], default: Union[T, Callable[[], T]]) -> T:
+        def __i(value: Optional[T], default: Callable[[], T]) -> T:
             if value is not None:
                 return value
-            if callable(default):
-                return default()  # type: ignore
-            return default
+            return default()
 
-        if logger is None:
-            logger = logging.getLogger(self.__class__.__name__.lower())
-        self.logger = logger
+        self.logger = __i(
+            logger, lambda: logging.getLogger(self.__class__.__name__.lower())
+        )
 
         if target is not None and target_driver is not None:
             raise InitializationError(
@@ -102,14 +100,14 @@ class Host:
         else:
             self._target_driver = target_driver
         """target driver addressed by the host"""
-        self.s_h_priv = s_h_priv
+        self.s_h_priv = __i(s_h_priv, list)
         """Host static X25519 private key"""
-        self.s_h_pub = s_h_pub
+        self.s_h_pub = __i(s_h_pub, list)
         """Host static X25519 public key"""
         self.s_t_pub = s_t_pub
         """Tropic static X25519 public key and index.
         Valid once the host and Tropic chip have been paired."""
-        self.pairing_key_index = __i(pairing_key_index, -1)
+        self.pairing_key_index = __i(pairing_key_index, lambda: -1)
         """Index at which the host public key is stored in the Tropic chip"""
         self.rng = RandomNumberGenerator(debug_random_value)
         self.session = HostEncryptedSession(random_source=self.rng)
@@ -183,11 +181,8 @@ class Host:
     def send_request(self, request: L2Request) -> L2Response:
         ...
 
-    def send_request(self, request: Any) -> Any:
-        return self._send_request(request)
-
     @singledispatchmethod
-    def _send_request(self, request: Any) -> Any:
+    def send_request(self, request: Any) -> Any:
         raise TypeError(f"{type(request)} not supported.")
 
     def _ll_send_l2(self, l2request: L2Request) -> Tuple[L2Response, bytes]:
@@ -217,7 +212,7 @@ class Host:
 
         return l2response, raw
 
-    @_send_request.register
+    @send_request.register  # type: ignore
     def _send_l2_request_bytes(self, request: bytes) -> bytes:
         self.logger.info("++++++ Sending raw L2 request ++++++")
         self.logger.debug(f"Raw L2 request: {request}.")
@@ -231,7 +226,7 @@ class Host:
         self.logger.info("++++++ Returning raw L2 response ++++++")
         return response
 
-    @_send_request.register
+    @send_request.register  # type: ignore
     def _send_l2_request(self, l2request: L2Request) -> L2Response:
         self.logger.info("++++++ Sending L2 request ++++++")
         response, _ = self._ll_send_l2(l2request)
@@ -247,13 +242,18 @@ class Host:
         self.logger.info(f"+ Processing {l2response} +")
         if self.s_t_pub is None:
             raise InitializationError("Host is not paired yet.")
-        if self.s_h_priv is None:
-            raise InitializationError("Host does not have any private key.")
+
+        try:
+            s_h_priv = self.s_h_priv[self.pairing_key_index]
+        except IndexError:
+            raise InitializationError(
+                f"Host does not have any private key at index #{self.pairing_key_index}"
+            )
 
         self.session.process_handshake_response(
             self.pairing_key_index,
             self.s_t_pub,
-            self.s_h_priv,
+            s_h_priv,
             l2response.e_tpub.to_bytes(),
             l2response.t_tauth.to_bytes(),
         )
@@ -278,14 +278,10 @@ class Host:
     def send_command(self, command: L3Command) -> L3Result:
         ...
 
-    def send_command(self, command: Any) -> Any:
-        return self._send_command(command)
-
     @singledispatchmethod
-    def _send_command(self, command: Any) -> Any:
+    def send_command(self, command: Any) -> Any:
         raise TypeError(f"{type(command)} not supported.")
 
-    @_send_command.register
     def _ll_send_l3(self, l3command: L3Command) -> bytes:
         self.logger.debug(f"L3 command: {l3command}.")
 
@@ -336,7 +332,7 @@ class Host:
         self.logger.debug(f"Decrypted result: {result}.")
         return result
 
-    @_send_command.register
+    @send_command.register  # type: ignore
     def _send_l3_command_bytes(self, command: bytes) -> bytes:
         self.logger.info("++++++ Sending raw L3 command ++++++")
         self.logger.debug(f"Raw L3 command: {command}.")
@@ -350,7 +346,7 @@ class Host:
         self.logger.info("++++++ Returning raw L3 result ++++++")
         return result
 
-    @_send_command.register
+    @send_command.register  # type: ignore
     def _send_l3_command(self, l3command: L3Command) -> L3Result:
         self.logger.info("++++++ Sending L3 command ++++++")
         result = self._ll_send_l3(l3command)
@@ -384,3 +380,17 @@ class Host:
         if not self.session.is_session_valid():
             raise SessionError("Cannot decrypt result: no valid session.")
         return self.session.decrypt_response(result)
+
+
+def establish_secure_channel(
+    host: Host, pairing_key_index: Optional[int] = None
+) -> L2Response:
+    if pairing_key_index is not None:
+        host.pairing_key_index = pairing_key_index
+
+    return host.send_request(
+        TsL2HandshakeRequest(
+            e_hpub=host.session.create_handshake_request(),
+            pkey_index=host.pairing_key_index,
+        )
+    )

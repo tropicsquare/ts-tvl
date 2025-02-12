@@ -5,7 +5,7 @@
 
 from argparse import ArgumentParser
 from pathlib import Path
-from random import choice
+from random import randrange
 from typing import Any, Dict
 
 import yaml
@@ -30,9 +30,11 @@ def get_filename() -> Path:
 
 def generate_configuration() -> Dict[str, Any]:
     # Host keys
-    host_private_key = X25519PrivateKey.generate()
-    host_private_key_bytes = host_private_key.private_bytes_raw()
-    host_public_key_bytes = host_private_key.public_key().public_bytes_raw()
+    host_private_keys = [X25519PrivateKey.generate() for _ in range(4)]
+    host_private_key_bytes = [key.private_bytes_raw() for key in host_private_keys]
+    host_public_key_bytes = [
+        key.public_key().public_bytes_raw() for key in host_private_keys
+    ]
 
     # Model keys
     tropic_private_key = X25519PrivateKey.generate()
@@ -40,9 +42,9 @@ def generate_configuration() -> Dict[str, Any]:
     tropic_public_key_bytes = tropic_private_key.public_key().public_bytes_raw()
 
     # Four pairing key indices are available
-    pairing_key_index = choice([0, 1, 2, 3])
+    pairing_key_index = randrange(4)
 
-    configuration = {
+    configuration = {  # type: ignore
         "host": {
             "s_h_priv": host_private_key_bytes,
             "s_h_pub": host_public_key_bytes,
@@ -54,7 +56,7 @@ def generate_configuration() -> Dict[str, Any]:
             "s_t_pub": tropic_public_key_bytes,
             "i_pairing_keys": {
                 pairing_key_index: {
-                    "value": host_public_key_bytes,
+                    "value": host_public_key_bytes[pairing_key_index],
                 },
             },
         },
@@ -62,7 +64,7 @@ def generate_configuration() -> Dict[str, Any]:
 
     # Validate the configuration
     ConfigurationFileModel.validate(configuration)
-    return configuration
+    return configuration  # type: ignore
 
 
 def main():

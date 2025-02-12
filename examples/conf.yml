@@ -1,17 +1,31 @@
 host:
-  pairing_key_index: 2
-  s_h_priv: !!binary |
-    IJxFKNm5cd3Gxda6aW8qRaPmKDgqSObIUp8vw7RGM0A=
-  s_h_pub: !!binary |
-    QpBKphyTzbp23E73CGvmgRpxhqpMZK+BkfkTDE54YH0=
+  pairing_key_index: 0
+  s_h_priv:
+  - !!binary |
+    qHZ26pN9PqDH+abPIqi1Ao6N+0jdnFhLC4Iq4kUFfV4=
+  - !!binary |
+    KOCu+htGSTW8BvOtcAs1jXNtZem+3aPMtrBLvvqk51g=
+  - !!binary |
+    aNyihQP/zCfIWX2YeBSsViqa8Fk1hqcOFGdLYsD+P2c=
+  - !!binary |
+    uNLBD+erlc8EoRv7btJSP8dXq7xQmR/HjbM78fIq01M=
+  s_h_pub:
+  - !!binary |
+    oOswZVZnUuX8HaexIOefVX65j1B9J0ueJRYuoLndxCo=
+  - !!binary |
+    LWtjEMTjCfhRSdd2AiAcGGYaNYrFdg36n3ozY33SKl8=
+  - !!binary |
+    cSN+ezsXTMDvoeegL9wGjwxiLb+o3NawE3HmmsrtwHU=
+  - !!binary |
+    n6raOfrxVb5MYeKOZtgWqw7csbRx50A3jYe9OEjcxi0=
   s_t_pub: !!binary |
-    3nDhioUMbO0A8CEwgkGXOOdallSW1KFr4+cQF87FORY=
+    25AvIORLmif8T6uMyO6MB5GhukNCdlo+5UnTvlC+ZSA=
 model:
   i_pairing_keys:
-    2:
+    0:
       value: !!binary |
-        QpBKphyTzbp23E73CGvmgRpxhqpMZK+BkfkTDE54YH0=
+        oOswZVZnUuX8HaexIOefVX65j1B9J0ueJRYuoLndxCo=
   s_t_priv: !!binary |
-    +L8kKM+XOyfhkHw+01FczoaHejABssHQq1F15J4EzF0=
+    0Bbxb5BN9jlYn7OTjPSlYn1wv/CPFoNkAzdDvhFRdlQ=
   s_t_pub: !!binary |
-    3nDhioUMbO0A8CEwgkGXOOdallSW1KFr4+cQF87FORY=
+    25AvIORLmif8T6uMyO6MB5GhukNCdlo+5UnTvlC+ZSA=

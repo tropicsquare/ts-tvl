@@ -5,6 +5,7 @@ import contextlib
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import IntEnum
+from itertools import chain
 from typing import (
     Any,
     ClassVar,
@@ -30,6 +31,7 @@ from ....crypto.ecdsa import (
 )
 from ....crypto.eddsa import EDDSA_KEY_SIZE, eddsa_key_setup, eddsa_sign
 from ....typing_utils import FixedSizeBytes
+from ....utils import iter_subclasses
 from .generic_partition import GenericModel
 
 KEY_SIZE = 32
@@ -113,7 +115,7 @@ class EccKey:
     @classmethod
     def find_subclass_from_curve(cls, curve: int) -> Type[ECCKeySubClass]:
         """Find a subclass with the associated type of curve."""
-        for subclass in cls.__subclasses__():
+        for subclass in iter_subclasses(cls):
             if subclass.CURVE == curve:
                 return subclass  # type: ignore
         raise ECCKeySubClassNotFoundError(f"No subclass with {curve=}.")
@@ -139,9 +141,7 @@ class EccKey:
         Returns:
             a new key layout object
         """
-        with contextlib.suppress(TypeError):
-            return cls(**__mapping)  # type: ignore
-        for subclass in cls.__subclasses__():
+        for subclass in chain([cls], iter_subclasses(cls)):
             with contextlib.suppress(TypeError):
                 return subclass(**__mapping)  # type: ignore
         raise ECCKeySubClassNotFoundError("No subclass matches dict layout.")
