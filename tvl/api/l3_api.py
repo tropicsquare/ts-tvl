@@ -1,6 +1,6 @@
-# GENERATED ON 2025-02-10 09:54:54.982582
+# GENERATED ON 2025-02-12 10:47:05.091082
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: D4A8258CBCE2EB9235F4ED4C5E40C0D197882025E64674A61E012CF2154BAB1F
+# INPUT FILE: BA28ABE6FFA154F8277DE65ADA2B783F838F44C27CA9ABFBABE8380E5CEF6843
 #
 # Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
@@ -229,8 +229,6 @@ class TsL3RMemDataWriteResult(APIL3Result, id=L3Enum.R_MEM_DATA_WRITE):
     class ResultEnum(HexReprIntEnum):
         WRITE_FAIL = 0x10
         """The slot is already written in."""
-        SLOT_EXPIRED = 0x11
-        """The writing operation limit is reached for the slot."""
 
 
 class TsL3RMemDataReadCommand(APIL3Command, id=L3Enum.R_MEM_DATA_READ):

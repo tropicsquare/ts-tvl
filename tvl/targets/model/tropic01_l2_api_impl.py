@@ -16,10 +16,6 @@ from ...api.l2_api import (
     TsL2GetLogResponse,
     TsL2HandshakeRequest,
     TsL2HandshakeResponse,
-    TsL2MutableFwUpdateDataRequest,
-    TsL2MutableFwUpdateDataResponse,
-    TsL2MutableFwUpdateRequest,
-    TsL2MutableFwUpdateResponse,
     TsL2ResendRequest,
     TsL2SleepRequest,
     TsL2SleepResponse,
@@ -73,11 +69,6 @@ class L2APIImplementation(L2API):
             object_, len_ = self.riscv_fw_version, RISCV_FW_VERSION_SIZE
         elif object_id is TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION:
             object_, len_ = self.spect_fw_version, SPECT_FW_VERSION_SIZE
-        elif object_id is TsL2GetInfoRequest.ObjectIdEnum.FW_BANK:
-            # Start-up mode is not modelled
-            raise L2ProcessingErrorGeneric(
-                f"{object_id} supported only in start-up mode."
-            )
         else:
             raise NotImplementedError(f"Unsupported object id {object_id}")
         return TsL2GetInfoResponse(
@@ -256,18 +247,6 @@ class L2APIImplementation(L2API):
 
         self.logger.debug("Chip reset.")
         return TsL2StartupResponse(status=L2StatusEnum.REQ_OK)
-
-    def ts_l2_mutable_fw_update(
-        self, request: TsL2MutableFwUpdateRequest
-    ) -> TsL2MutableFwUpdateResponse:
-        # Start-up mode is not modelled
-        return TsL2MutableFwUpdateResponse(status=L2StatusEnum.REQ_OK)
-
-    def ts_l2_mutable_fw_update_data(
-        self, request: TsL2MutableFwUpdateDataRequest
-    ) -> TsL2MutableFwUpdateDataResponse:
-        # Start-up mode is not modelled
-        return TsL2MutableFwUpdateDataResponse(status=L2StatusEnum.REQ_OK)
 
     def ts_l2_get_log(self, request: TsL2GetLogRequest) -> TsL2GetLogResponse:
         # Return OK status to avoid issues during tests

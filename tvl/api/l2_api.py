@@ -1,20 +1,13 @@
-# GENERATED ON 2025-02-10 09:54:54.508273
+# GENERATED ON 2025-02-12 10:47:04.510841
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 06A25CC030E99AE88CF6F16F29E3F4C245D7ECFA874A17B75122786B0F39108E
+# INPUT FILE: D5C8F91061251E32D25B25F38886B526ADF1D213A4893068B9D290D75358F705
 #
 # Copyright 2024 TropicSquare
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
-from tvl.messages.datafield import (
-    AUTO,
-    U8Array,
-    U8Scalar,
-    U16Scalar,
-    U32Scalar,
-    datafield,
-)
+from tvl.messages.datafield import U8Array, U8Scalar, datafield
 from tvl.messages.l2_messages import L2Request, L2Response
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -36,10 +29,6 @@ class L2Enum(HexReprIntEnum):
     """Move to Sleep"""
     STARTUP = 0xB3
     """Reset the chip."""
-    MUTABLE_FW_UPDATE = 0xB0
-    """Request to enable write new FW."""
-    MUTABLE_FW_UPDATE_DATA = 0xB1
-    """Write new FW."""
     GET_LOG = 0xA2
     """Get FW log"""
 
@@ -66,9 +55,6 @@ class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
         """The RISCV current running FW version (4 Bytes)"""
         SPECT_FW_VERSION = 0x04
         """The SPECT FW version (4 Bytes)"""
-        FW_BANK = 0xB0
-        """The FW header read from the selected bank id (shown as an index).
-        Supported only in Start-up mode."""
     block_index: U8Scalar  # The index of the 128 Byte long block to request
     """In case the requested object is larger than 128B use chunk number.
     First chunk has index 0 and maximum value is 29 for X.509 certificate
@@ -160,44 +146,6 @@ class TsL2StartupResponse(APIL2Response, id=L2Enum.STARTUP):
     pass
 
 
-class TsL2MutableFwUpdateRequest(APIL2Request, id=L2Enum.MUTABLE_FW_UPDATE):
-    signature: U8Array = datafield(size=64)  # Signature of other data fields.
-    """Signature of SHA256 hash of all following data in this packet."""
-    hash: U8Array = datafield(size=32)  # HASH of the first FW chunk.
-    """SHA256 HASH of first FW chunk of data sent using
-    Mutable_FW_Update_Data."""
-    type: U16Scalar  # FW type.
-    """FW type which is going to be updated."""
-    class TypeEnum(HexReprIntEnum):
-        FW_TYPE_CPU = 0x01
-        """FW for RISC-V main CPU."""
-        FW_TYPE_SPECT = 0x02
-        """FW for SPECT coprocessor."""
-    padding: U8Scalar = datafield(default=AUTO)  # U32 padding byte.
-    """Zero value."""
-    header_version: U8Scalar  # Version of used header.
-    """Current value is 1."""
-    version: U32Scalar  # Version of FW.
-
-
-class TsL2MutableFwUpdateResponse(APIL2Response, id=L2Enum.MUTABLE_FW_UPDATE):
-    pass
-
-
-class TsL2MutableFwUpdateDataRequest(APIL2Request, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
-    hash: U8Array = datafield(size=32)  # HASH of the next FW chunk.
-    """SHA256 HASH of the next FW chunk of data sent using
-    Mutable_FW_Update_Data."""
-    offset: U16Scalar  # Offset of the bank to write the FW chunk to.
-    """The offset of the specific bank to write the FW chunk data to."""
-    data: U8Array = datafield(min_size=4, max_size=220)  # The binary data to write.
-    """The binary data to write. Data size should be a multiple of 4."""
-
-
-class TsL2MutableFwUpdateDataResponse(APIL2Response, id=L2Enum.MUTABLE_FW_UPDATE_DATA):
-    pass
-
-
 class TsL2GetLogRequest(APIL2Request, id=L2Enum.GET_LOG):
     pass
 
@@ -285,27 +233,6 @@ class L2API(BaseModel):
         request: TsL2StartupRequest
     ) -> Union[L2Response, List[L2Response]]:
         """Request for TROPIC01 to reset."""
-        raise NotImplementedError("TODO")
-
-    @api("l2_api")
-    def ts_l2_mutable_fw_update(
-        self,
-        request: TsL2MutableFwUpdateRequest
-    ) -> Union[L2Response, List[L2Response]]:
-        """Request to start updating mutable FW. Supported only in Start-up
-		mode (i.e. after Startup_Req with MAINTENANCE_REBOOT). Possible update
-		only same or newer version.  NOTE: Chip automatically select memory
-		space for FW storage and erase it."""
-        raise NotImplementedError("TODO")
-
-    @api("l2_api")
-    def ts_l2_mutable_fw_update_data(
-        self,
-        request: TsL2MutableFwUpdateDataRequest
-    ) -> Union[L2Response, List[L2Response]]:
-        """Request to write a chunk of the new mutable FW to a R-Memory bank.
-		Supported only in Start-up mode after Mutable_FW_Update_Req
-		successfully processed."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
