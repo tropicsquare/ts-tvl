@@ -5,7 +5,7 @@ from functools import reduce
 from itertools import chain, product
 from math import log2
 from operator import xor
-from typing import List, Protocol, Reversible, Sequence
+from typing import List, Literal, Protocol, Reversible, Sequence
 
 from ..utils import chunked
 from .conversion import bit, bitlist_to_bytes, ints_to_bitlist
@@ -95,14 +95,13 @@ MASKS = [2**i - 1 for i in range(65)]
 
 
 class keccak_p:
-    def __init__(self, b: int, nr: int) -> None:
+    def __init__(self, b: Literal[25, 50, 100, 200, 400, 800, 1600], nr: int) -> None:
         """Keccak-p permutation function as defined in NIST.FIPS.202 3.3
 
         Args:
-            b (int): width of the permutation
+            b (Literal[25, 50, 100, 200, 400, 800, 1600]): width of the permutation
             nr (int): number of rounds
         """
-        assert b in {25, 50, 100, 200, 400, 800, 1600}
         self.b = b
         self.nr = nr
         self._W = self.b // 25
@@ -140,11 +139,11 @@ class keccak_p:
             self.round(s, ir)
 
 
-def keccak_f(b: int):
+def keccak_f(b: Literal[25, 50, 100, 200, 400, 800, 1600]):
     """Keccak-f permutation function as defined in NIST.FIPS.202 3.4
 
     Args:
-        b (int): width of the permutation
+        b (Literal[25, 50, 100, 200, 400, 800, 1600]): width of the permutation
 
     Returns:
         the permutation function keccak-f
@@ -289,11 +288,11 @@ def pad10s1(x: int, m: int) -> List[bit]:
     return [bit(1)] + [bit(0)] * j + [bit(1)]
 
 
-def keccak(b: int):
-    """KECCAK sponge as defined in NIST.FIPS.202 6.2
+def keccak(b: Literal[25, 50, 100, 200, 400, 800, 1600]):
+    """KECCAK sponge as defined in NIST.FIPS.202 5.2
 
     Args:
-        b (int): width of the permutation
+        b (Literal[25, 50, 100, 200, 400, 800, 1600]): width of the permutation
     """
 
     def call(r: int):
@@ -303,7 +302,7 @@ def keccak(b: int):
 
 
 def keccak_c(c: int):
-    """KECCAK[c] sponge as defined in NIST.FIPS.202 6.2
+    """KECCAK[c] sponge as defined in NIST.FIPS.202 5.2
 
     Args:
         c (int): capacity

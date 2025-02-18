@@ -46,9 +46,8 @@ class _MetaMessage(type):
     """
     Metaclass of the Message class.
 
-    Make sure the field names are unique and move the DataField objects to the
-    class field _FIELD_MODELS so they can used during the instantiation of
-    a new Message object.
+    Make sure the field names are unique
+    and add parameters to the DataField objects
     """
 
     def __new__(
@@ -101,19 +100,16 @@ class BaseMessage(metaclass=_MetaMessage):
         return sorted(_get_specs(cls), key=lambda x: x[2].priority)
 
     def __init__(self, **kwargs: Any) -> None:
-        for name, type_, params_ in self.specs():
-            if (value := kwargs.get(name)) is None:
-                value = params_.default
-            setattr(self, name, type_(value=value, params=params_))
+        for name, type_, params in self.specs():
+            value = kwargs.get(name, params.default)
+            setattr(self, name, type_(value=value, params=params))
 
     def __eq__(self, __other: Any) -> bool:
         if __other is self:
             return True
-        try:
-            other_to_bytes = __other.to_bytes()
-        except AttributeError:
-            return NotImplemented
-        return other_to_bytes == self.to_bytes()
+        if isinstance(__other, BaseMessage):
+            return __other.to_bytes() == self.to_bytes()
+        return NotImplemented
 
     def __iter__(self) -> Iterator[Tuple[str, DataField[Any]]]:
         yield from self.__dict__.items()
