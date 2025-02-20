@@ -9,8 +9,8 @@ import jinja2
 
 __version__ = "0.4"
 
-TOOL = Path(__file__)
-TEMPLATE_DIR = TOOL.parent
+TOOL = Path(__file__).parent
+TEMPLATE_DIR = TOOL / "templates"
 
 __logger = logging.getLogger(TOOL.stem.lower())
 
@@ -95,7 +95,6 @@ class Converter:
 
 class HeaderDict(TypedDict):
     date: datetime
-    tool: str
     version: str
     hash: str
 
@@ -111,7 +110,6 @@ def compute_sha256(filepath: Path) -> str:
 def create_header(input_file: Path) -> HeaderDict:
     return {
         "date": datetime.now(),
-        "tool": TOOL.name,
         "version": __version__,
         "hash": compute_sha256(input_file),
     }
