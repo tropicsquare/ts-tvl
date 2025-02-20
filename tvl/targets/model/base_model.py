@@ -74,7 +74,6 @@ class BaseModel(metaclass=MetaModel):
         chip_id: bytes = b"chip_id",
         riscv_fw_version: bytes = b"riscv_fw_version",
         spect_fw_version: bytes = b"spect_fw_version",
-        serial_code: bytes = b"\x00\x01\x02\x03",
         activate_encryption: bool = True,
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
@@ -109,8 +108,6 @@ class BaseModel(metaclass=MetaModel):
                 Defaults to b"riscv_fw_version".
             spect_fw_version (bytes, optional): version of the SPECT.
                 Defaults to b"spect_fw_version".
-            serial_code (bytes, optional): chip's serial code.
-                Defaults to b"serial_code".
             activate_encryption (bool, optional): enable encrypted L3 layer.
                 Defaults to True.
             debug_random_value (bytes, optional): TRNG2 initial random value.
@@ -154,7 +151,6 @@ class BaseModel(metaclass=MetaModel):
         self.chip_id = chip_id
         self.riscv_fw_version = riscv_fw_version
         self.spect_fw_version = spect_fw_version
-        self.serial_code = serial_code
 
         # --- Others ---
         self.activate_encryption = activate_encryption
@@ -219,7 +215,6 @@ class BaseModel(metaclass=MetaModel):
             chip_id=self.chip_id,
             riscv_fw_version=self.riscv_fw_version,
             spect_fw_version=self.spect_fw_version,
-            serial_code=self.serial_code,
             activate_encryption=self.activate_encryption,
             debug_random_value=self.trng2.debug_random_value,
             init_byte=self.spi_fsm.init_byte,
@@ -260,7 +255,6 @@ class BaseModel(metaclass=MetaModel):
             **__s("chip_id"),
             **__s("riscv_fw_version"),
             **__s("spect_fw_version"),
-            **__s("serial_code"),
             **__s("activate_encryption"),
             **__s("debug_random_value"),
             **__s("init_byte"),

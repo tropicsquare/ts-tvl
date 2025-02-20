@@ -90,9 +90,6 @@ RISCV_FW_VERSION_SIZE = 4
 SPECT_FW_VERSION_SIZE = 4
 """Length of the SPECT ROM ID"""
 
-SERIAL_CODE_SIZE = 4
-"""Length of the Serial Code"""
-
 CHUNK_SIZE = 128
 """Size of chunks sent by the model"""
 
