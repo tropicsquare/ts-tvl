@@ -26,7 +26,6 @@ classDiagram
         chip_id
         riscv_fw_version
         spect_rom_id
-        serial_code
         activate_encryption
     }
     class ConfigurationObjectImpl{
@@ -112,7 +111,6 @@ model = Tropic01Model.from_dict(
         "s_t_priv": b"TROPIC_PRIVATE_KEY",
         "s_t_pub": b"TROPIC_PUBLIC_KEY",
         "x509_certificate": b"X509_CERTIFICATE",
-        "serial_code": b"12345678",
         "i_pairing_keys": {
             1: {"value": b"HOST_1_PUBLIC_KEY"},
             2: {"value": b"HOST_2_PUBLIC_KEY"},
@@ -159,7 +157,6 @@ model_configuration = {
         "s_t_priv": b"TROPIC_PRIVATE_KEY",
         "s_t_pub": b"TROPIC_PUBLIC_KEY",
         "x509_certificate": b"X509_CERTIFICATE",
-        "serial_code": b"12345678",
         "i_pairing_keys": {
             1: {"value": b"HOST_1_PUBLIC_KEY"},
             2: {"value": b"HOST_2_PUBLIC_KEY"},

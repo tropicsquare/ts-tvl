@@ -188,8 +188,8 @@ class L2APIImplementation(L2API):
     def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest
     ) -> TsL2EncryptedSessionAbtResponse:
-        self.command_buffer.reset()
         self.invalidate_session()
+        self.command_buffer.reset()
 
         self.logger.debug("Encrypted session aborted.")
         return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
@@ -204,9 +204,7 @@ class L2APIImplementation(L2API):
         try:
             sleep_kind = TsL2SleepRequest.SleepKindEnum(request_sleep_kind)
         except ValueError:
-            raise L2ProcessingErrorGeneric(
-                f"Unexpected value: {request_sleep_kind}."
-            ) from None
+            raise L2ProcessingErrorGeneric(f"Invalid {request_sleep_kind = }") from None
         self.logger.debug(f"{sleep_kind = }")
 
         if (
@@ -216,19 +214,8 @@ class L2APIImplementation(L2API):
             self.logger.debug("Sleep mode disabled.")
             return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
 
-        if (
-            sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE
-            and self.config.cfg_sleep_mode.deep_sleep_mode_en == 0
-        ):
-            self.logger.debug("Deep sleep mode disabled.")
-            return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
-
         self.invalidate_session()
         self.command_buffer.reset()
-
-        if sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE:
-            self.spi_fsm.response_buffer.reset()
-            self._config = None
 
         self.logger.debug("Entered in sleep mode.")
         return TsL2SleepResponse(status=L2StatusEnum.REQ_OK)

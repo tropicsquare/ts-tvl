@@ -4,7 +4,6 @@
 from typing import Any, Dict
 
 import pytest
-from _pytest.fixtures import SubRequest
 
 from tvl.api.l2_api import TsL2HandshakeRequest, TsL2SleepRequest, TsL2SleepResponse
 from tvl.constants import L2StatusEnum
@@ -41,20 +40,6 @@ def test_sleep_mode(host: Host, model: Tropic01Model):
     assert model.spi_fsm.response_buffer.latest() == response.to_bytes()
 
 
-@pytest.mark.xfail(reason="Response buffer to be emptied upon deep sleep mode request")
-def test_deep_sleep_mode(host: Host, model: Tropic01Model):
-    response = host.send_request(
-        TsL2SleepRequest(sleep_kind=TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE)
-    )
-
-    assert response.status.value == L2StatusEnum.REQ_OK
-    assert isinstance(response, TsL2SleepResponse)
-    assert not model.session.is_session_valid()
-    assert model.command_buffer.is_empty()
-    assert model.spi_fsm.response_buffer.is_empty()
-    assert model.spi_fsm.response_buffer.latest() == b""
-
-
 @pytest.mark.parametrize(
     "sleep_kind", sample_outside(TsL2SleepRequest.SleepKindEnum, nb_bytes=1, k=10)
 )
@@ -64,20 +49,10 @@ def test_invalid_sleep_kind(host: Host, sleep_kind: int):
     assert response.status.value == L2StatusEnum.GEN_ERR
 
 
-@pytest.fixture(
-    params=[
-        pytest.param(
-            (_m := TsL2SleepRequest.SleepKindEnum.SLEEP_MODE, 0b10), id=str(_m)
-        ),
-        pytest.param(
-            (_m := TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE, 0b01), id=str(_m)
-        ),
-    ]
-)
-def sleep_kind(model_configuration: Dict[str, Any], request: SubRequest):
-    _sleep_kind, register_value = request.param
-    model_configuration["i_config"] = {"cfg_sleep_mode": register_value}
-    yield _sleep_kind
+@pytest.fixture
+def sleep_kind(model_configuration: Dict[str, Any]):
+    model_configuration["i_config"] = {"cfg_sleep_mode": 0}
+    yield TsL2SleepRequest.SleepKindEnum.SLEEP_MODE
 
 
 def test_disabled(sleep_kind: int, host: Host):

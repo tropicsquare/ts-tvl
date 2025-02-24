@@ -51,8 +51,6 @@ from ...api.l3_api import (
     TsL3RMemDataReadResult,
     TsL3RMemDataWriteCommand,
     TsL3RMemDataWriteResult,
-    TsL3SerialCodeGetCommand,
-    TsL3SerialCodeGetResult,
 )
 from ...constants import L3ResultFieldEnum
 from .exceptions import (
@@ -428,17 +426,6 @@ class L3APIImplementation(L3API):
         self.logger.debug(f"Random data: {random_data}.")
         return TsL3RandomValueGetResult(
             result=L3ResultFieldEnum.OK, random_data=random_data
-        )
-
-    def ts_l3_serial_code_get(
-        self, command: TsL3SerialCodeGetCommand
-    ) -> TsL3SerialCodeGetResult:
-        self.check_access_privileges(
-            "serial_code", self.config.cfg_uap_serial_code_get.serial_code
-        )
-        self.logger.debug(f"Serial code: {self.serial_code}.")
-        return TsL3SerialCodeGetResult(
-            result=L3ResultFieldEnum.OK, serial_code=self.serial_code
         )
 
     def ts_l3_mcounter_init(
