@@ -20,7 +20,7 @@ from typing_extensions import Self
 
 from ...constants import CHUNK_SIZE, ENCRYPTION_TAG_LEN, S_HI_PUB_NB_SLOTS, L2StatusEnum
 from ...crypto.encrypted_session import TropicEncryptedSession
-from ...logging_utils import Labeller
+from ...logging_utils import Labeller, LogIter
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
 from ...messages.l2_messages import L2Request, L2Response
 from ...messages.l3_messages import L3Command, L3Result
@@ -199,24 +199,24 @@ class BaseModel(MetaModel):
         Returns:
             the configuration dumped as a dict
         """
-        return dict(
-            r_config=self.r_config.to_dict(),
-            r_ecc_keys=self.r_ecc_keys.to_dict(),
-            r_user_data=self.r_user_data.to_dict(),
-            r_mcounters=self.r_mcounters.to_dict(),
-            i_config=self.i_config.to_dict(),
-            i_pairing_keys=self.i_pairing_keys.to_dict(),
-            s_t_priv=self.s_t_priv,
-            s_t_pub=self.s_t_pub,
-            x509_certificate=self.x509_certificate,
-            chip_id=self.chip_id,
-            riscv_fw_version=self.riscv_fw_version,
-            spect_fw_version=self.spect_fw_version,
-            activate_encryption=self.activate_encryption,
-            debug_random_value=self.trng2.debug_random_value,
-            init_byte=self.spi_fsm.init_byte,
-            busy_iter=self.spi_fsm.busy_iter,
-        )
+        return {
+            "r_config": self.r_config.to_dict(),
+            "r_ecc_keys": self.r_ecc_keys.to_dict(),
+            "r_user_data": self.r_user_data.to_dict(),
+            "r_mcounters": self.r_mcounters.to_dict(),
+            "i_config": self.i_config.to_dict(),
+            "i_pairing_keys": self.i_pairing_keys.to_dict(),
+            "s_t_priv": self.s_t_priv,
+            "s_t_pub": self.s_t_pub,
+            "x509_certificate": self.x509_certificate,
+            "chip_id": self.chip_id,
+            "riscv_fw_version": self.riscv_fw_version,
+            "spect_fw_version": self.spect_fw_version,
+            "activate_encryption": self.activate_encryption,
+            "debug_random_value": self.trng2.debug_random_value,
+            "init_byte": self.spi_fsm.init_byte,
+            "busy_iter": self.spi_fsm.busy_iter,
+        }
 
     @classmethod
     def from_dict(cls, __mapping: Mapping[str, Any], /) -> Self:
@@ -317,19 +317,17 @@ class BaseModel(MetaModel):
         responses = self._process_input(data)
 
         if not isinstance(responses, list):
-            self.logger.info(f"Returning L2 response: {responses}")
+            self.logger.info("Returning L2 response: %s", responses)
             return responses.to_bytes()
 
-        self.logger.info(
-            f"Returning L2 responses: {[str(response) for response in responses]}"
-        )
+        self.logger.info("Returning L2 responses: %s", LogIter(responses))
         return [response.to_bytes() for response in responses]
 
     def _process_input(self, data: bytes) -> Union[L2Response, List[L2Response]]:
-        self.logger.debug(f"Parsing raw L2 request {data}.")
+        self.logger.debug("Parsing raw L2 request %s.", data)
         request = L2Request.with_length(len(data)).from_bytes(data)
 
-        self.logger.info(f"Checking checksum of {request}")
+        self.logger.info("Checking checksum of %s", request)
         if not request.has_valid_crc():
             self.logger.debug("Checksum is incorrect.")
             return L2Response(status=L2StatusEnum.CRC_ERR)
@@ -345,7 +343,7 @@ class BaseModel(MetaModel):
             self.logger.debug(exc)
             return L2Response(status=L2StatusEnum.CRC_ERR)
 
-        self.logger.info(f"Processing L2 request {request}")
+        self.logger.info("Processing L2 request %s", request)
         try:
             return self.process_l2_request(request)
         except L2ProcessingError as exc:
@@ -425,12 +423,12 @@ class BaseModel(MetaModel):
                 privileges to access the feature guarded by the register.
         """
         name = name.upper()
-        self.uap_logger.info(f"Checking access privileges for {name}.")
+        self.uap_logger.info("Checking access privileges for %s.", name)
         if not self.activate_encryption:
             self.uap_logger.debug("Encryption deactivated, bypassing check.")
             return
-        self.uap_logger.debug(f"Pairing key slot #{self.pairing_key_slot}")
-        self.uap_logger.debug(f"Configuration field: {value:#b}")
+        self.uap_logger.debug("Pairing key slot #%d", self.pairing_key_slot)
+        self.uap_logger.debug("Configuration field: %s", bin(value))
         if not 0 <= self.pairing_key_slot < S_HI_PUB_NB_SLOTS:
             raise RuntimeError("Chip not paired yet.")
         if not value & 2**self.pairing_key_slot:
@@ -439,7 +437,7 @@ class BaseModel(MetaModel):
                 f"does not have access to {name}."
             )
         self.uap_logger.debug(
-            f"Pairing key slot #{self.pairing_key_slot} has access to {name}."
+            "Pairing key slot #%d has access to %s.", self.pairing_key_slot, name
         )
 
     def invalidate_session(self) -> None:

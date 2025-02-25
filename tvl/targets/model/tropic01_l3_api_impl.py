@@ -87,12 +87,12 @@ from .internal.user_data_partition import SlotAlreadyWrittenError
 class L3APIImplementation(L3API):
     def ts_l3_ping(self, command: TsL3PingCommand) -> TsL3PingResult:
         self.check_access_privileges("ping", self.config.cfg_uap_ping.ping)
-        self.logger.debug(f"ping: {command}")
+        self.logger.debug("ping: %s", command)
 
         result = TsL3PingResult(
             result=L3ResultFieldEnum.OK, data_out=command.data_in.value
         )
-        self.logger.debug(f"pong: {result}")
+        self.logger.debug("pong: %s", result)
         return result
 
     def _check_pairing_key_slot_access_privileges(
@@ -112,7 +112,7 @@ class L3APIImplementation(L3API):
             pkey_slot = TsL3PairingKeyWriteCommand.SlotEnum(pkey_slot)
         except ValueError:
             raise L3ProcessingErrorUnauthorized(f"Invalid {pkey_slot = }") from None
-        self.logger.debug(f"{pkey_slot = }")
+        self.logger.debug("pkey_slot = %s", pkey_slot)
 
         config = self.config.cfg_uap_pairing_key_write
         self._check_pairing_key_slot_access_privileges(
@@ -126,7 +126,7 @@ class L3APIImplementation(L3API):
         )
 
         s_hipub_bytes = command.s_hipub.to_bytes()
-        self.logger.debug(f"Writing pairing key: {s_hipub_bytes}")
+        self.logger.debug("Writing pairing key: %s", s_hipub_bytes)
 
         try:
             self.i_pairing_keys[pkey_slot].write(s_hipub_bytes)
@@ -134,7 +134,7 @@ class L3APIImplementation(L3API):
             self.logger.info(exc)
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Pairing key slot #{pkey_slot} written.")
+        self.logger.debug("Pairing key slot #%d written.", pkey_slot)
         return TsL3PairingKeyWriteResult(result=L3ResultFieldEnum.OK)
 
     def ts_l3_pairing_key_read(
@@ -145,7 +145,7 @@ class L3APIImplementation(L3API):
             pkey_slot = TsL3PairingKeyReadCommand.SlotEnum(pkey_slot)
         except ValueError:
             raise L3ProcessingErrorUnauthorized(f"Invalid {pkey_slot = }") from None
-        self.logger.debug(f"{pkey_slot = }")
+        self.logger.debug("pkey_slot = %s", pkey_slot)
 
         config = self.config.cfg_uap_pairing_key_read
         self._check_pairing_key_slot_access_privileges(
@@ -171,7 +171,7 @@ class L3APIImplementation(L3API):
                 exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_INVALID
             ) from None
 
-        self.logger.debug(f"Read pairing key: {s_hipub_bytes}")
+        self.logger.debug("Read pairing key: %s", s_hipub_bytes)
         return TsL3PairingKeyReadResult(
             result=L3ResultFieldEnum.OK, s_hipub=s_hipub_bytes
         )
@@ -184,7 +184,7 @@ class L3APIImplementation(L3API):
             pkey_slot = TsL3PairingKeyInvalidateCommand.SlotEnum(pkey_slot)
         except ValueError:
             raise L3ProcessingErrorUnauthorized(f"Invalid {pkey_slot = }") from None
-        self.logger.debug(f"{pkey_slot = }")
+        self.logger.debug("pkey_slot = %s", pkey_slot)
 
         config = self.config.cfg_uap_pairing_key_invalidate
         self._check_pairing_key_slot_access_privileges(
@@ -203,7 +203,7 @@ class L3APIImplementation(L3API):
             self.logger.info(exc)
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Invalidated pairing key in slot #{pkey_slot}.")
+        self.logger.debug("Invalidated pairing key in slot #%d.", pkey_slot)
         return TsL3PairingKeyInvalidateResult(result=L3ResultFieldEnum.OK)
 
     def _check_config_access_privileges(
@@ -230,10 +230,10 @@ class L3APIImplementation(L3API):
         )
 
         address = command.address.value
-        self.logger.debug(f"Register address: {address:#04x}.")
+        self.logger.debug("Register address: %#04x.", address)
 
         value = command.value.value
-        self.logger.debug(f"Writing value: {value:#010x}.")
+        self.logger.debug("Writing value: %#010x.", value)
 
         try:
             self.r_config.write(address, value)
@@ -255,7 +255,7 @@ class L3APIImplementation(L3API):
             ("r_config_read_cfg", config.r_config_read_cfg),
         )
 
-        self.logger.debug(f"Register address: {address:#04x}.")
+        self.logger.debug("Register address: %#04x.", address)
 
         try:
             value = self.r_config.read(address)
@@ -264,7 +264,7 @@ class L3APIImplementation(L3API):
         except AddressNotAlignedError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Read value: {value:#010x}.")
+        self.logger.debug("Read value: %#010x.", value)
         return TsL3RConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
 
     def ts_l3_r_config_erase(
@@ -290,9 +290,9 @@ class L3APIImplementation(L3API):
             ("i_config_write_cfg", config.i_config_write_cfg),
         )
 
-        self.logger.debug(f"Register address: {address:#04x}.")
+        self.logger.debug("Register address: %#04x.", address)
         bit_index = command.bit_index.value
-        self.logger.debug(f"Bit index: {bit_index}.")
+        self.logger.debug("Bit index: %d.", bit_index)
 
         try:
             self.i_config.write_bit(address, bit_index)
@@ -314,7 +314,7 @@ class L3APIImplementation(L3API):
             ("i_config_read_cfg", config.i_config_read_cfg),
         )
 
-        self.logger.debug(f"Register address: {address:#04x}.")
+        self.logger.debug("Register address: %#04x.", address)
 
         try:
             value = self.i_config.read(address)
@@ -323,7 +323,7 @@ class L3APIImplementation(L3API):
         except AddressNotAlignedError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Read value: {value:#010x}.")
+        self.logger.debug("Read value: %#010x.", value)
         return TsL3IConfigReadResult(result=L3ResultFieldEnum.OK, value=value)
 
     def _check_ranged_access_privileges(
@@ -354,9 +354,9 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"User data slot address: {address:#06x}.")
+        self.logger.debug("User data slot address: %#06x.", address)
         data = command.data.to_bytes()
-        self.logger.debug(f"Writing value: {data}.")
+        self.logger.debug("Writing value: %s.", data)
         try:
             self.r_user_data[address].write(data)
         except SlotAlreadyWrittenError as exc:
@@ -382,10 +382,10 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"User data slot address: {address:#06x}.")
+        self.logger.debug("User data slot address: %#06x.", address)
         data = self.r_user_data[address].read()
 
-        self.logger.debug(f"Read value: {data}.")
+        self.logger.debug("Read value: %s.", data)
         return TsL3RMemDataReadResult(result=L3ResultFieldEnum.OK, data=data)
 
     def ts_l3_r_mem_data_erase(
@@ -402,7 +402,7 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"User data slot address: {address:#06x}.")
+        self.logger.debug("User data slot address: %#06x.", address)
         self.r_user_data[address].erase()
 
         self.logger.debug("User data slot erased.")
@@ -417,10 +417,10 @@ class L3APIImplementation(L3API):
         )
 
         n_bytes = command.n_bytes.value
-        self.logger.debug(f"Number of random bytes: {n_bytes}.")
+        self.logger.debug("Number of random bytes: %d.", n_bytes)
 
         random_data = self.trng2.urandom(n_bytes)
-        self.logger.debug(f"Random data: {random_data}.")
+        self.logger.debug("Random data: %s.", random_data)
         return TsL3RandomValueGetResult(
             result=L3ResultFieldEnum.OK, random_data=random_data
         )
@@ -441,7 +441,7 @@ class L3APIImplementation(L3API):
         )
 
         mcounter_val = command.mcounter_val.value
-        self.logger.debug(f"Mcounter index: {index}; value: {mcounter_val:#x}.")
+        self.logger.debug("Mcounter index: %d; value: %#x.", index, mcounter_val)
         try:
             self.r_mcounters[index].init(mcounter_val)
         except MCounterWrongInitValueError as exc:
@@ -465,10 +465,10 @@ class L3APIImplementation(L3API):
             raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
-        self.logger.debug(f"MCounter index: {index}.")
+        self.logger.debug("MCounter index: %d.", index)
         try:
             self.r_mcounters[index].update()
-            self.logger.debug(f"Updated mcounter {index=}.")
+            self.logger.debug("Updated mcounter index=%d.", index)
         except MCounterNotInitializedError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
@@ -497,7 +497,7 @@ class L3APIImplementation(L3API):
             raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
-        self.logger.debug(f"Mcounter index {index}.")
+        self.logger.debug("Mcounter index %d.", index)
         try:
             mcounter_val = self.r_mcounters[index].get()
         except MCounterNotInitializedError as exc:
@@ -505,7 +505,7 @@ class L3APIImplementation(L3API):
                 exc, result=TsL3McounterUpdateResult.ResultEnum.COUNTER_INVALID
             ) from None
 
-        self.logger.debug(f"Read value: {mcounter_val:#x}.")
+        self.logger.debug("Read value: %#x.", mcounter_val)
         return TsL3McounterGetResult(
             result=L3ResultFieldEnum.OK, mcounter_val=mcounter_val
         )
@@ -529,13 +529,13 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"ECC key slot: {slot}.")
+        self.logger.debug("ECC key slot: %d.", slot)
         try:
             self.r_ecc_keys.generate(slot, curve, self.trng2)
         except ECCKeyExistsInSlotError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Generated ECC key in {slot=}.")
+        self.logger.debug("Generated ECC key in slot=%d.", slot)
         return TsL3EccKeyGenerateResult(result=L3ResultFieldEnum.OK)
 
     def ts_l3_ecc_key_store(
@@ -557,13 +557,13 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"ECC key slot: {slot}.")
+        self.logger.debug("ECC key slot: %d.", slot)
         try:
             self.r_ecc_keys.store(slot, curve, command.k.to_bytes())
         except (ECCKeyExistsInSlotError, ECCKeySetupError) as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Stored ECC key in {slot=}.")
+        self.logger.debug("Stored ECC key in slot=%d.", slot)
         return TsL3EccKeyStoreResult(result=L3ResultFieldEnum.OK)
 
     def ts_l3_ecc_key_read(
@@ -580,7 +580,7 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"ECC key slot: {slot}.")
+        self.logger.debug("ECC key slot: %d.", slot)
         try:
             curve, pub_key, origin = self.r_ecc_keys.read(slot)
         except ECCKeyDoesNotExistInSlotError as exc:
@@ -588,8 +588,11 @@ class L3APIImplementation(L3API):
                 exc, result=TsL3EccKeyReadResult.ResultEnum.INVALID_KEY
             ) from None
         self.logger.debug(
-            f"Read ECC key from {slot=}: {curve=}; {pub_key=}; "
-            f"randomly generated={origin}."
+            "Read ECC key from slot=%d: curve=%d; pub_key=%s; randomly generated=%d.",
+            slot,
+            curve,
+            pub_key,
+            origin,
         )
 
         return TsL3EccKeyReadResult(
@@ -613,10 +616,10 @@ class L3APIImplementation(L3API):
             ],
         )
 
-        self.logger.debug(f"ECC key slot: {slot}.")
+        self.logger.debug("ECC key slot: %d.", slot)
         self.r_ecc_keys.erase(slot)
 
-        self.logger.debug(f"Erased ECC key in {slot=}.")
+        self.logger.debug("Erased ECC key in slot=%d.", slot)
         return TsL3EccKeyEraseResult(result=L3ResultFieldEnum.OK)
 
     def ts_l3_ecdsa_sign(self, command: TsL3EcdsaSignCommand) -> TsL3EcdsaSignResult:
@@ -632,7 +635,7 @@ class L3APIImplementation(L3API):
         )
 
         msg_hash = command.msg_hash.to_bytes()
-        self.logger.debug(f"Message hash: {msg_hash}.")
+        self.logger.debug("Message hash: %s.", msg_hash)
         try:
             r, s = self.r_ecc_keys.ecdsa_sign(
                 slot,
@@ -655,7 +658,7 @@ class L3APIImplementation(L3API):
         except SignatureFailedError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-        self.logger.debug(f"Signed message hash with ECDSA: {r=}; {s=}.")
+        self.logger.debug("Signed message hash with ECDSA: r=%s; s=%s.", r, s)
         return TsL3EcdsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_eddsa_sign(self, command: TsL3EddsaSignCommand) -> TsL3EddsaSignResult:
@@ -671,7 +674,7 @@ class L3APIImplementation(L3API):
         )
 
         msg_bytes = command.msg.to_bytes()
-        self.logger.debug(f"Message: {msg_bytes}.")
+        self.logger.debug("Message: %s.", msg_bytes)
         try:
             r, s = self.r_ecc_keys.eddsa_sign(
                 slot,
@@ -692,7 +695,7 @@ class L3APIImplementation(L3API):
                 result=TsL3EcdsaSignResult.ResultEnum.INVALID_KEY
             ) from None
 
-        self.logger.debug(f"Signed message with EdDSA: {r=}; {s=}.")
+        self.logger.debug("Signed message with EdDSA: r=%s; s=%s.", r, s)
         return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_mac_and_destroy(

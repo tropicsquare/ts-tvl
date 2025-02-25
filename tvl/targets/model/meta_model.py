@@ -114,13 +114,13 @@ def _log(method: F) -> F:
 
     @wraps(method)
     def __log_processing(self: HasLogger, request: Any) -> Any:
-        self.logger.debug(f"Executing {method.__qualname__}")
+        self.logger.debug("Executing %s", method.__qualname__)
         try:
             return method(self, request)
         except Exception as exc:
             self.logger.info(exc)
             raise
         finally:
-            self.logger.debug(f"Done executing {method.__qualname__}")
+            self.logger.debug("Done executing %s", method.__qualname__)
 
     return cast(F, __log_processing)

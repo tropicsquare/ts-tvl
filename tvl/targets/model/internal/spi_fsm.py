@@ -79,10 +79,10 @@ class SpiFsm:
         self._init_byte = value
 
     def process_spi_data(self, rx_data: bytes) -> bytes:
-        self.logger.debug(f"Received {rx_data}")
-        self.logger.debug(f"State: {self.current_state.__name__}")
+        self.logger.debug("Received %s", rx_data)
+        self.logger.debug("State: %s", self.current_state.__name__)
         tx_data = self.current_state(self, rx_data)
-        self.logger.debug(f"Returning {tx_data}")
+        self.logger.debug("Returning %s", tx_data)
         return tx_data
 
     def set_next_state(self, state: State) -> None:
