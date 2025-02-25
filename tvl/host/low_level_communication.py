@@ -39,7 +39,7 @@ class Info(NamedTuple):
 ReceiveFn = Callable[[TropicProtocol, logging.Logger], bytes]
 
 
-class TimeoutError(Exception):
+class TargetTimeoutError(Exception):
     pass
 
 
@@ -120,7 +120,7 @@ def ll_receive(
         target.spi_drive_csn_high()
 
     else:
-        raise TimeoutError(f"Target not ready after {max_polling} attempts.")
+        raise TargetTimeoutError(f"Target not ready after {max_polling} attempts.")
 
     # start accumulating bytes
     response = recvd[1:]
