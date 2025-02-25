@@ -48,7 +48,7 @@ T = TypeVar("T")
 D = TypeVar("D", bound=SupportsFromDict)
 
 
-class BaseModel(metaclass=MetaModel):
+class BaseModel(MetaModel):
     """
     Functional model of the TROPIC01 chip for functional verification
     """
