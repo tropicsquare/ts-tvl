@@ -92,7 +92,7 @@ class EncryptedSessionBase:
     def is_session_valid(self) -> bool:
         return self.nonce_cmd >= 0
 
-    def _check_nonce_sync(self):
+    def _check_nonce_sync(self) -> None:
         # Sanity check.
         # At the beginning and at the end of each encrypt/decrypt pair
         # both nonces should be synchronized.
@@ -170,7 +170,7 @@ class HostEncryptedSession(EncryptedSessionBase):
         nonce = self.nonce_cmd.to_bytes(IV_LEN, "little")
         self.nonce_cmd += 1
         command_ciphertext = encrypt(self.k_cmd, nonce, command_plaintext)
-        if self.nonce_resp > MAX_NONCE:
+        if self.nonce_cmd > MAX_NONCE:
             self.nonce_cmd = 0
             self.k_cmd = b""
 
@@ -185,7 +185,7 @@ class HostEncryptedSession(EncryptedSessionBase):
             self.reset()
             return None
 
-        if self.nonce_cmd > MAX_NONCE:
+        if self.nonce_resp > MAX_NONCE:
             self.reset()
 
         self._check_nonce_sync()
