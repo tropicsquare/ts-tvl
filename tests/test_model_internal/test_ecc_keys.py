@@ -43,7 +43,7 @@ def test_ecc_key_dict():
         "a": os.urandom(32),
         "d": os.urandom(32),
         "w": os.urandom(64),
-        "origin": Origins.Ecc_Key_Generate,
+        "origin": Origins.ECC_KEY_GENERATE,
     }
 
     ecc_key_0 = ECDSAKeyMemLayout(**init_dict)  # type: ignore
@@ -101,7 +101,7 @@ def test_read_stored():
     )
 
     curve, a, origin = ecc.read(slot_0)
-    assert origin == Origins.Ecc_Key_Store
+    assert origin == Origins.ECC_KEY_STORE
     assert curve == curve_type_0.CURVE
     assert isinstance(a, bytes)
 
@@ -120,7 +120,7 @@ def test_read_generated():
     )
 
     curve, a, origin = ecc.read(slot_0)
-    assert origin == Origins.Ecc_Key_Generate
+    assert origin == Origins.ECC_KEY_GENERATE
     assert curve == curve_type_0.CURVE
     assert isinstance(a, bytes)
 
@@ -177,7 +177,7 @@ def test_dict():
         "a": os.urandom(32),
         "d": os.urandom(32),
         "w": os.urandom(64),
-        "origin": Origins.Ecc_Key_Generate,
+        "origin": Origins.ECC_KEY_GENERATE,
     }
     ecc_init_dict = {(slot := _get_int()): key_init_dict}
     ecc = EccKeys.from_dict(ecc_init_dict)

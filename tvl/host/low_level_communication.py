@@ -305,7 +305,7 @@ class LowLevelFunctionFactory:
         tx_param, rx_param = self.get_l2_params(__type, __id)
         return partialize(
             partialize(ll_send_l2_request, tx_param),
-            dict(receive_fn=partialize(ll_receive, rx_param)),
+            {"receive_fn": partialize(ll_receive, rx_param)},
         )
 
     @lru_cache
@@ -315,14 +315,14 @@ class LowLevelFunctionFactory:
         tx_param, rx_param = self.get_l3_params(__type, __id)
         return partialize(
             partialize(ll_send_l3_command, tx_param),
-            dict(
-                send_chunk_fn=self.create_ll_l2_fn(TsL2EncryptedCmdRequest),
-                l3_receive_fn=partialize(ll_receive, rx_param),
-                receive_chunk_fn=partialize(
+            {
+                "send_chunk_fn": self.create_ll_l2_fn(TsL2EncryptedCmdRequest),
+                "l3_receive_fn": partialize(ll_receive, rx_param),
+                "receive_chunk_fn": partialize(
                     ll_receive,
                     self._get_info(TsL2EncryptedCmdResponse, L2Response).param,
                 ),
-            ),
+            },
         )
 
 

@@ -7,8 +7,8 @@ class Endianness:
     def __init__(self) -> None:
         self._endianness: Literal["little", "big"] = "little"
 
-    def set(self, endianness: Literal["little", "big"]) -> None:
-        self._endianness = endianness
+    def set(self, __endianness: Literal["little", "big"], /) -> None:
+        self._endianness = __endianness
 
     def get(self) -> Literal["little", "big"]:
         return self._endianness

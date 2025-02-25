@@ -106,7 +106,7 @@ class keccak_p:
         self._ROT = [[x % self._W for x in row] for row in ROTATION_CONSTANTS]
 
     def _rol(self, value: int, left: int) -> int:
-        top = value >> (x := (self._W - left))
+        top = value >> (x := self._W - left)
         bot = (value & MASKS[x]) << left
         return bot + top
 

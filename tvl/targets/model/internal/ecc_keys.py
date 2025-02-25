@@ -80,9 +80,9 @@ class Origins(IntEnum):
     Values must be the same as in the API.
     """
 
-    Ecc_Key_Generate = 1
+    ECC_KEY_GENERATE = 1
     """Ecc Key randomly generated"""
-    Ecc_Key_Store = 2
+    ECC_KEY_STORE = 2
     """Ecc Key imported from host"""
 
 
@@ -242,7 +242,7 @@ class EccKeys:
                 "Generate: an ECC key already exists in the requested slot."
             )
         self.slots[slot] = EccKey.find_subclass_from_curve(curve).from_random_source(
-            rng, Origins.Ecc_Key_Generate
+            rng, Origins.ECC_KEY_GENERATE
         )
 
     def store(self, slot: int, curve: int, k: bytes) -> None:
@@ -261,7 +261,7 @@ class EccKeys:
                 "Store: an ECC key already exists in the requested slot."
             )
         self.slots[slot] = EccKey.find_subclass_from_curve(curve).from_key(
-            k, Origins.Ecc_Key_Store
+            k, Origins.ECC_KEY_STORE
         )
 
     def read(self, slot: int) -> Tuple[int, bytes, int]:

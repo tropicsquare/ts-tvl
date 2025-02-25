@@ -13,9 +13,7 @@ TAG_LEN = 16
 class MinNbBytesDescriptor:
     def __get__(self, _, owner: Type["L3EncryptedPacket"]) -> int:
         return sum(
-            params.dtype.nb_bytes * params.min_size
-            for name, _, params in owner.specs()
-            if name in ("size", "tag")
+            params.min_size * params.dtype.nb_bytes for *_, params in owner.specs()
         )
 
 

@@ -102,10 +102,10 @@ def setup_logging(config: Optional[Dict[str, Any]] = None) -> None:
 
 
 class LogIter:
-    def __init__(self, iter: Iterable[Any], fmt: str = "%s", sep: str = ",") -> None:
-        self.iterable = iter
+    def __init__(self, it: Iterable[Any], fmt: str = "%s", sep: str = ",") -> None:
+        self.it = it
         self.fmt = fmt
         self.sep = sep
 
     def __str__(self) -> str:
-        return self.sep.join(self.fmt % elt for elt in self.iterable)
+        return self.sep.join(self.fmt % elt for elt in self.it)

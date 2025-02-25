@@ -160,19 +160,19 @@ def process(
 
     # choose command to execute depending on the tag's value.
     if tag is TagEnum.SPI_DRIVE_CSN_LOW:
-        execute_command = lambda: target.spi_drive_csn_low()
+        execute_command = target.spi_drive_csn_low
 
     elif tag is TagEnum.SPI_DRIVE_CSN_HIGH:
-        execute_command = lambda: target.spi_drive_csn_high()
+        execute_command = target.spi_drive_csn_high
 
     elif tag is TagEnum.SPI_SEND:
         execute_command = lambda: target.spi_send(buffer.payload)
 
     elif tag is TagEnum.POWER_ON:
-        execute_command = lambda: target.power_on()
+        execute_command = target.power_on
 
     elif tag is TagEnum.POWER_OFF:
-        execute_command = lambda: target.power_off()
+        execute_command = target.power_off
 
     elif tag is TagEnum.WAIT:
         wait_time = _from_bytes(buffer.payload)

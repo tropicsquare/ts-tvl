@@ -56,7 +56,7 @@ def run_server_over_tcp(
     port: int,
     configuration: Optional[Path],
     logger: logging.Logger,
-    **kwargs: Any,
+    **_: Any,
 ) -> None:
     run_server(
         TCPConnection(address, port, logger),

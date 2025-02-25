@@ -132,34 +132,32 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
             )
 
         # Otherwise send NO_RESP
-        else:
-            fsm.set_next_state(send_no_resp_state)
-            return pad(
-                bytes([L1ChipStatusFlag.READY]),
-                bytes([L2StatusEnum.NO_RESP]),
-                len(data),
-            )
+        fsm.set_next_state(send_no_resp_state)
+        return pad(
+            bytes([L1ChipStatusFlag.READY]),
+            bytes([L2StatusEnum.NO_RESP]),
+            len(data),
+        )
 
     # The model processes only one request at a time, therefore
     # all the responses have to be fetched before sending a new request
-    elif fsm.odata:
+    if fsm.odata:
         raise RuntimeError("Response buffer not empty.")
 
     # Process the request that was just received
+    try:
+        responses_ = fsm.process_input_fn(data)
+    except ResendLastResponse as exc:
+        fsm.logger.info(exc)
+        fsm.odata = fsm.response_buffer.latest()
+        if not fsm.odata:
+            raise RuntimeError("Should not happen: no latest response.") from None
     else:
-        try:
-            responses_ = fsm.process_input_fn(data)
-        except ResendLastResponse as exc:
-            fsm.logger.info(exc)
-            fsm.odata = fsm.response_buffer.latest()
-            if not fsm.odata:
-                raise RuntimeError("Should not happen: no latest response.")
-        else:
-            fsm.response_buffer.add(responses_)
-            fsm.odata = fsm.response_buffer.next()
+        fsm.response_buffer.add(responses_)
+        fsm.odata = fsm.response_buffer.next()
 
-        fsm.set_next_state(send_init_byte_state)
-        return pad(bytes([not L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
+    fsm.set_next_state(send_init_byte_state)
+    return pad(bytes([not L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
 
 
 def send_response_state(fsm: SpiFsm, data: bytes) -> bytes:

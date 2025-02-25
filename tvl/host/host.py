@@ -96,7 +96,7 @@ class Host:
             self.set_target(target)
         else:
             self._target_driver = target_driver
-        """target driver addressed by the host"""
+            """target driver addressed by the host"""
         self.s_h_priv = __i(s_h_priv, list)
         """Host static X25519 private key"""
         self.s_h_pub = __i(s_h_pub, list)
@@ -245,7 +245,7 @@ class Host:
         except IndexError:
             raise InitializationError(
                 f"Host does not have any private key at index #{self.pairing_key_index}"
-            )
+            ) from None
 
         self.session.process_handshake_response(
             self.pairing_key_index,

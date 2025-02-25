@@ -52,13 +52,13 @@ class LogDict:
 
 
 class LogIter:
-    def __init__(self, iter: Iterable[Any], fmt: str, sep: str = ",") -> None:
-        self.iterable = iter
+    def __init__(self, it: Iterable[Any], fmt: str, sep: str = ",") -> None:
+        self.it = it
         self.fmt = fmt
         self.sep = sep
 
     def __str__(self) -> str:
-        return self.sep.join(self.fmt % elt for elt in self.iterable)
+        return self.sep.join(self.fmt % elt for elt in self.it)
 
 
 def configure_logging(filepath: Optional[Path] = None) -> None:
@@ -69,5 +69,5 @@ def configure_logging(filepath: Optional[Path] = None) -> None:
     logging.config.dictConfig(config)
 
 
-def dump_logging_configuration(**kwargs: Any) -> None:
+def dump_logging_configuration(**_: Any) -> None:
     yaml.dump(DEFAULT_LOGGING_CONFIG, stream=sys.stdout, sort_keys=False)

@@ -48,7 +48,7 @@ class _MetaMessage(type):
     """
 
     def __new__(
-        cls,
+        mcs,
         name: str,
         bases: Tuple[type, ...],
         namespace: Dict[str, Any],
@@ -63,7 +63,7 @@ class _MetaMessage(type):
                 raise ReservedFieldNameError(
                     f"Cannot add field '{field_name}': name reserved."
                 )
-            elif field_name in existing_fields:
+            if field_name in existing_fields:
                 raise FieldAlreadyExistsError(
                     f"Cannot add field '{field_name}': already exists."
                 )
@@ -82,7 +82,7 @@ class _MetaMessage(type):
 
             annotations[field_name] = Annotated[tp, params]  # type: ignore
 
-        return super().__new__(cls, name, bases, namespace, **kwargs)
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
 
 
 class BaseMessage(metaclass=_MetaMessage):

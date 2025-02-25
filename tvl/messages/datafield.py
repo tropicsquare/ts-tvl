@@ -165,7 +165,8 @@ class ValueDescriptor(Generic[T]):
         """
 
         if value is AUTO:
-            return setattr(instance, self.name, value)
+            setattr(instance, self.name, value)
+            return
 
         value = _format_to_list(value, instance)
 
