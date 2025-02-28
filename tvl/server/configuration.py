@@ -1,6 +1,6 @@
 import logging
 from binascii import hexlify
-from functools import lru_cache
+from functools import lru_cache, singledispatch
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     load_pem_public_key,
 )
-from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
+from cryptography.x509 import load_pem_x509_certificate
 from pydantic import root_validator  # type: ignore
 from pydantic import BaseModel, Extra, FilePath, StrictBytes
 
@@ -55,6 +55,80 @@ def merge_dicts(*dcts: Dict[Any, Any]) -> Dict[Any, Any]:
     return result
 
 
+@singledispatch
+def load_private_key(__value: Any) -> X25519PrivateKey:
+    """Load a X25519 private key."""
+    raise NotImplementedError(f"{type(__value)} not supported")
+
+
+@load_private_key.register
+def _(__value: bytes) -> X25519PrivateKey:
+    return X25519PrivateKey.from_private_bytes(__value)
+
+
+@load_private_key.register
+def _(__value: Path) -> X25519PrivateKey:
+    if __value.suffix == ".pem":
+        private_key = load_pem_private_key(__value.read_bytes(), None)
+    if __value.suffix == ".der":
+        private_key = load_der_private_key(__value.read_bytes(), None)
+    else:
+        raise TypeError("Private key not in DER nor PEM format")
+
+    if not isinstance(private_key, (expected := X25519PrivateKey)):
+        raise KeyTypeError("Private", type(private_key), expected)
+
+    return private_key
+
+
+@singledispatch
+def load_public_key(__value: Any) -> X25519PublicKey:
+    """Load a X25519 public key."""
+    raise NotImplementedError(f"{type(__value)} not supported")
+
+
+@load_public_key.register
+def _(__value: bytes) -> X25519PublicKey:
+    return X25519PublicKey.from_public_bytes(__value)
+
+
+@load_public_key.register
+def _(__value: Path) -> X25519PublicKey:
+    if __value.suffix == ".pem":
+        public_key = load_pem_public_key(__value.read_bytes(), None)
+    if __value.suffix == ".der":
+        public_key = load_der_public_key(__value.read_bytes(), None)
+    else:
+        raise TypeError("Private key not in DER nor PEM format")
+
+    if not isinstance(public_key, (expected := X25519PublicKey)):
+        raise KeyTypeError("Private", type(public_key), expected)
+
+    return public_key
+
+
+@singledispatch
+def load_certificate(__value: Any) -> bytes:
+    """Load a x509 certificate in bytes format."""
+    raise NotImplementedError(f"{type(__value)} not supported")
+
+
+@load_certificate.register
+def _(__value: bytes) -> bytes:
+    return __value
+
+
+@load_certificate.register
+def _(__value: Path) -> bytes:
+    if __value.suffix == ".pem":
+        return load_pem_x509_certificate(__value.read_bytes()).public_bytes(
+            Encoding.DER
+        )
+    if __value.suffix == ".der":
+        return __value.read_bytes()
+    raise TypeError("Private key not in DER nor PEM format")
+
+
 class ConfigurationModel(BaseModel, extra=Extra.allow):
     """Pydantic model to validate the configuration file"""
 
@@ -66,47 +140,21 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
     def process_values(cls, values: Dict[str, Union[bytes, Path]]):
         # process public key
         if (s_t_pub := values.get("s_t_pub")) is not None:
-            if isinstance(s_t_pub, bytes):
-                public_key = X25519PublicKey.from_public_bytes(s_t_pub)
-            elif s_t_pub.suffix == ".pem":
-                public_key = load_pem_public_key(s_t_pub.read_bytes())
-            elif s_t_pub.suffix == ".der":
-                public_key = load_der_public_key(s_t_pub.read_bytes())
-            else:
-                raise TypeError("Public key not in DER nor PEM format")
-
-            if not isinstance(public_key, (expected := X25519PublicKey)):
-                raise KeyTypeError("Public", type(public_key), expected)
+            public_key = load_public_key(s_t_pub)
             values["s_t_pub"] = public_key.public_bytes_raw()
 
         # process private key
         if (s_t_priv := values.get("s_t_priv")) is not None:
-            if isinstance(s_t_priv, bytes):
-                private_key = X25519PrivateKey.from_private_bytes(s_t_priv)
-            elif s_t_priv.suffix == ".pem":
-                private_key = load_pem_private_key(s_t_priv.read_bytes(), None)
-            elif s_t_priv.suffix == ".der":
-                private_key = load_der_private_key(s_t_priv.read_bytes(), None)
-            else:
-                raise TypeError("Private key not in DER nor PEM format")
-
-            if not isinstance(private_key, (expected := X25519PrivateKey)):
-                raise KeyTypeError("Private", type(private_key), expected)
+            private_key = load_private_key(s_t_priv)
             values["s_t_priv"] = private_key.private_bytes_raw()
+
             # define tropic public key if not defined
             if values.get("s_t_pub") is None:
                 values["s_t_pub"] = private_key.public_key().public_bytes_raw()
 
         # process certificate
         if (cert := values.get("x509_certificate")) is not None:
-            if isinstance(cert, Path):
-                if cert.suffix == ".pem":
-                    certificate = load_pem_x509_certificate(cert.read_bytes())
-                elif cert.suffix == ".der":
-                    certificate = load_der_x509_certificate(cert.read_bytes())
-                else:
-                    raise TypeError("Certificate not in DER nor PEM format")
-                values["x509_certificate"] = certificate.public_bytes(Encoding.DER)
+            values["x509_certificate"] = load_certificate(cert)
 
         return values
 
