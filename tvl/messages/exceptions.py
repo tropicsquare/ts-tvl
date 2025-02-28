@@ -22,6 +22,10 @@ class FieldAlreadyExistsError(MessageError):
     """Field is already instantiated in base class."""
 
 
+class UnsupportedTypeAnnotationError(MessageError):
+    """Type of annotation is not supported"""
+
+
 class UnsupportedFieldTypeError(MessageError):
     """Type of field is not supported"""
 
