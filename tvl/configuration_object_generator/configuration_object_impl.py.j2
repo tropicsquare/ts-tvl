@@ -1,12 +1,7 @@
-{#- Copyright 2023 TropicSquare -#}
-{#- SPDX-License-Identifier: Apache-2.0 -#}
 # GENERATED ON {{header.date}}
 # BY {{header.tool}} VERSION {{header.version}}
 # INPUT FILE: {{header.hash}}
 #
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 {% macro to_camelcase(string) -%}
     {%- set words = [] -%}
     {%- for word in string.split("_") -%}

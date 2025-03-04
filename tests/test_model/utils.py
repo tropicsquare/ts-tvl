@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import os
 from random import getrandbits, randint, randrange, sample
 from typing import Any, Iterable, Iterator, List, Optional, Sequence, TypeVar

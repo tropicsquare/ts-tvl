@@ -1,7 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-
 import pytest
 
 from tvl.api.l3_api import TsL3PingCommand, TsL3PingResult

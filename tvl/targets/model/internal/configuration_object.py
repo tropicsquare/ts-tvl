@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import contextlib
 from typing import Any, Dict, Iterator, Mapping, Tuple
 

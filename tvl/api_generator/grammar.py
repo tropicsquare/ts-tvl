@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from collections import Counter
 from enum import Enum
 from typing import Any, Dict, List, Optional

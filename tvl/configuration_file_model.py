@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 

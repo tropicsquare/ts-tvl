@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from argparse import ArgumentParser
 from pathlib import Path
 from random import randrange

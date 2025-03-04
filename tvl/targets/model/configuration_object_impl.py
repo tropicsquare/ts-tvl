@@ -2,9 +2,6 @@
 # BY internal.py VERSION 0.4
 # INPUT FILE: 8e0b7d81d7ac0252fdbff9726bbb6ae084d7d9bab49f27cdbda22da3832091d8
 #
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from typing import Optional
 
 from pydantic import StrictInt

@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from binascii import unhexlify as _u
 from hashlib import sha256 as _sha256
 from typing import NamedTuple

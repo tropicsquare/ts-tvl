@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from hashlib import sha512
 from typing import Literal, Protocol, Tuple
 
