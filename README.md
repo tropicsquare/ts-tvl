@@ -1,9 +1,9 @@
 # TROPIC Verification Library
 
 The TROPIC Verification Library (TVL) is a [Python](https://www.python.org/)
-package for evaluating TROPIC01 functionalities.
-It is written from the TROPIC01 datasheet and API documents.
+package for evaluating [TROPIC01 chip](https://github.com/tropicsquare/TROPIC01).
 
+For more info about TROPIC01 chip check out developers resources in [TROPIC01](https://github.com/tropicsquare/tropic01) repository.
 ## Installation
 
 ### Download the TVL package
@@ -105,3 +105,6 @@ specify the option `--configuration` when running the model server.
 ```shell
 model_server tcp --configuration=model_config.yml
 ```
+# License 
+
+See the [LICENSE.md](LICENSE.md) file in the root of this repository or consult license information at [Tropic Square website](http:/tropicsquare.com/license).
