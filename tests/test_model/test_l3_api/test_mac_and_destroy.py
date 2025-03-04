@@ -1,7 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-
 from tvl.api.l3_api import TsL3MacAndDestroyCommand
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host

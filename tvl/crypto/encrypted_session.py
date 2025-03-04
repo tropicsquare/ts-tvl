@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from hashlib import sha256
 from hmac import HMAC
 from typing import Optional, Protocol, Tuple

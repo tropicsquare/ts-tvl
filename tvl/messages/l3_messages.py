@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from contextlib import contextmanager, nullcontext
 from typing import Any, ContextManager, Iterator, Type
 

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from functools import reduce

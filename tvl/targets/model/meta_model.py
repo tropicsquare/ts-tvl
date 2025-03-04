@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from collections import defaultdict
 from functools import reduce, singledispatchmethod, wraps
