@@ -1,12 +1,10 @@
+stages:
+  - test
+  - build
+
 default:
   tags:
     - shell
-
-stages:
-  - test
-
-non-regression tests:
-  stage: test
   cache:
     - key:
         files:
@@ -20,6 +18,10 @@ non-regression tests:
     - pip install poetry
     - poetry config virtualenvs.in-project true
     - poetry install --no-root --no-interaction --with=dev
+
+
+tests:
+  stage: test
   script:
     - pytest -v --color=no --junit-xml=results.xml --cov-report=html:htmlcov
   coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
@@ -31,3 +33,13 @@ non-regression tests:
     expose_as: tests coverage report
     reports:
       junit: results.xml
+
+
+package:
+  stage: build
+  needs: []
+  script:
+    - poetry build --format=wheel
+  artifacts:
+    paths:
+      - dist/
