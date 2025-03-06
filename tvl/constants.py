@@ -61,7 +61,7 @@ class L3ResultFieldEnum(HexReprIntEnum):
     """Unknown L3 Command packet (Invalid CMD_ID)"""
 
 
-CERTIFICATE_SIZE = 512
+CERTIFICATE_SIZE = 3840
 """Length of a X509 certificate"""
 CERTIFICATE_BLOCK_SIZE = 128
 """Length of a transmitted certificate block"""
