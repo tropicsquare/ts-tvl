@@ -1,6 +1,3 @@
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from enum import IntEnum
 from functools import partial
 from random import choice, getrandbits, randint

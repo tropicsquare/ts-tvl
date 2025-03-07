@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from enum import IntEnum
 from typing import Tuple, Type, TypeVar
 

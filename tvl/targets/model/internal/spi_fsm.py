@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from itertools import cycle
 from random import sample
@@ -82,10 +79,10 @@ class SpiFsm:
         self._init_byte = value
 
     def process_spi_data(self, rx_data: bytes) -> bytes:
-        self.logger.debug(f"Received {rx_data}")
-        self.logger.debug(f"State: {self.current_state.__name__}")
+        self.logger.debug("Received %s", rx_data)
+        self.logger.debug("State: %s", self.current_state.__name__)
         tx_data = self.current_state(self, rx_data)
-        self.logger.debug(f"Returning {tx_data}")
+        self.logger.debug("Returning %s", tx_data)
         return tx_data
 
     def set_next_state(self, state: State) -> None:
@@ -135,34 +132,32 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
             )
 
         # Otherwise send NO_RESP
-        else:
-            fsm.set_next_state(send_no_resp_state)
-            return pad(
-                bytes([L1ChipStatusFlag.READY]),
-                bytes([L2StatusEnum.NO_RESP]),
-                len(data),
-            )
+        fsm.set_next_state(send_no_resp_state)
+        return pad(
+            bytes([L1ChipStatusFlag.READY]),
+            bytes([L2StatusEnum.NO_RESP]),
+            len(data),
+        )
 
     # The model processes only one request at a time, therefore
     # all the responses have to be fetched before sending a new request
-    elif fsm.odata:
+    if fsm.odata:
         raise RuntimeError("Response buffer not empty.")
 
     # Process the request that was just received
+    try:
+        responses_ = fsm.process_input_fn(data)
+    except ResendLastResponse as exc:
+        fsm.logger.info(exc)
+        fsm.odata = fsm.response_buffer.latest()
+        if not fsm.odata:
+            raise RuntimeError("Should not happen: no latest response.") from None
     else:
-        try:
-            responses_ = fsm.process_input_fn(data)
-        except ResendLastResponse as exc:
-            fsm.logger.info(exc)
-            fsm.odata = fsm.response_buffer.latest()
-            if not fsm.odata:
-                raise RuntimeError("Should not happen: no latest response.")
-        else:
-            fsm.response_buffer.add(responses_)
-            fsm.odata = fsm.response_buffer.next()
+        fsm.response_buffer.add(responses_)
+        fsm.odata = fsm.response_buffer.next()
 
-        fsm.set_next_state(send_init_byte_state)
-        return pad(bytes([not L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
+    fsm.set_next_state(send_init_byte_state)
+    return pad(bytes([not L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
 
 
 def send_response_state(fsm: SpiFsm, data: bytes) -> bytes:

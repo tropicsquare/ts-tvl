@@ -1,7 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-
 class MessageError(Exception):
     """Generic error during message handling"""
 
@@ -24,6 +20,10 @@ class TypeNotSupportedError(MessageError):
 
 class FieldAlreadyExistsError(MessageError):
     """Field is already instantiated in base class."""
+
+
+class UnsupportedTypeAnnotationError(MessageError):
+    """Type of annotation is not supported"""
 
 
 class UnsupportedFieldTypeError(MessageError):

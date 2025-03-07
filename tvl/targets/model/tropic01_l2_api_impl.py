@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from itertools import chain, islice, repeat
 from typing import List, NoReturn
 
@@ -51,13 +48,13 @@ class L2APIImplementation(L2API):
             object_id = TsL2GetInfoRequest.ObjectIdEnum(object_id)
         except ValueError:
             raise L2ProcessingErrorGeneric(f"Invalid {object_id = }") from None
-        self.logger.debug(f"{object_id = }")
+        self.logger.debug("object_id = %s", object_id)
 
         if object_id is TsL2GetInfoRequest.ObjectIdEnum.X509_CERTIFICATE:
             block_index = request.block_index.value
             if not 0 <= block_index <= 29:
                 raise L2ProcessingErrorGeneric(f"Invalid {block_index = }") from None
-            self.logger.debug(f"{block_index = }")
+            self.logger.debug("block_index = %s", block_index)
             slice_ = slice(
                 block_index * CERTIFICATE_BLOCK_SIZE,
                 (block_index + 1) * CERTIFICATE_BLOCK_SIZE,
@@ -82,7 +79,7 @@ class L2APIImplementation(L2API):
             pkey_index = TsL2HandshakeRequest.PkeyIndexEnum(pkey_index)
         except ValueError:
             raise L2ProcessingErrorHandshake(f"Invalid {pkey_index = }") from None
-        self.logger.debug(f"{pkey_index = }")
+        self.logger.debug("pkey_index = %s", pkey_index)
 
         s_h_pubkey = self.i_pairing_keys[pkey_index]
 
@@ -113,17 +110,17 @@ class L2APIImplementation(L2API):
         data_field_bytes = request.data_field_bytes
 
         self.logger.info("L3 command chunk received.")
-        self.logger.debug(f"Raw L3 command chunk: {data_field_bytes}.")
+        self.logger.debug("Raw L3 command chunk: %s.", data_field_bytes)
         if self.command_buffer.is_empty():
             self.logger.debug("Received first chunk of L3 command.")
             total_command_length = (
                 L3EncryptedPacket.MIN_NB_BYTES
                 + L3EncryptedPacket.from_bytes(data_field_bytes).size.value
             )
-            self.logger.debug(f"Total command length: {total_command_length}.")
+            self.logger.debug("Total command length: %d.", total_command_length)
             self.command_buffer.initialize(total_command_length)
 
-        self.logger.debug(f"Add chunk {data_field_bytes}.")
+        self.logger.debug("Add chunk %s.", data_field_bytes)
         self.command_buffer.add_chunk(data_field_bytes)
         if self.command_buffer.is_command_incomplete():
             raise L2ProcessingErrorContinue(
@@ -133,15 +130,15 @@ class L2APIImplementation(L2API):
         self.logger.info("All chunks received, L3 command complete.")
 
         raw_command = self.command_buffer.get_raw_command()
-        self.logger.debug(f"Parsing raw encrypted L3 command from {raw_command}.")
+        self.logger.debug("Parsing raw encrypted L3 command from %s.", raw_command)
         encrypted_command = L3EncryptedPacket.from_bytes(raw_command)
 
-        self.logger.info(f"Decrypting L3 command {encrypted_command}.")
+        self.logger.info("Decrypting L3 command %s.", encrypted_command)
         req_data = self.decrypt_command(encrypted_command.data_field_bytes)
         if req_data is None:
             raise L2ProcessingErrorTag("Invalid TAG in encrypted command request")
 
-        self.logger.debug(f"Parsing raw L3 command {req_data}.")
+        self.logger.debug("Parsing raw L3 command %s.", req_data)
         try:
             command = self.parse_command_fn(
                 L3Command.with_length(len(req_data)).from_bytes(req_data).id.value,
@@ -154,17 +151,17 @@ class L2APIImplementation(L2API):
             self.logger.debug(exc)
             result = L3Result(result=L3ResultFieldEnum.FAIL)
         else:
-            self.logger.info(f"Processing L3 command {command}.")
+            self.logger.info("Processing L3 command %s.", command)
             try:
                 result = self.process_l3_command(command)
             except L3ProcessingError as exc:
                 result = L3Result(result=exc.result)
 
-        self.logger.info(f"Encrypting L3 result {result}.")
+        self.logger.info("Encrypting L3 result %s.", result)
         encrypted_result = L3EncryptedPacket.from_encrypted(
             self.encrypt_result(result.to_bytes())
         )
-        self.logger.debug(f"Encrypted result: {encrypted_result}")
+        self.logger.debug("Encrypted result: %s", encrypted_result)
 
         self.logger.info("Splitting encrypted L3 result into L2 chunk(s).")
         chunks = [L2Response(status=L2StatusEnum.REQ_OK)]
@@ -180,7 +177,7 @@ class L2APIImplementation(L2API):
             start=1,
         ):
             l2_chunk = TsL2EncryptedCmdResponse(status=status, l3_chunk=chunk)
-            self.logger.debug(f"Chunk {i}/{len_}: {l2_chunk}")
+            self.logger.debug("Chunk %d/%d: %s", i, len_, l2_chunk)
             chunks.append(l2_chunk)
 
         return chunks
@@ -188,8 +185,8 @@ class L2APIImplementation(L2API):
     def ts_l2_encrypted_session_abt(
         self, request: TsL2EncryptedSessionAbtRequest
     ) -> TsL2EncryptedSessionAbtResponse:
-        self.command_buffer.reset()
         self.invalidate_session()
+        self.command_buffer.reset()
 
         self.logger.debug("Encrypted session aborted.")
         return TsL2EncryptedSessionAbtResponse(status=L2StatusEnum.REQ_OK)
@@ -204,10 +201,8 @@ class L2APIImplementation(L2API):
         try:
             sleep_kind = TsL2SleepRequest.SleepKindEnum(request_sleep_kind)
         except ValueError:
-            raise L2ProcessingErrorGeneric(
-                f"Unexpected value: {request_sleep_kind}."
-            ) from None
-        self.logger.debug(f"{sleep_kind = }")
+            raise L2ProcessingErrorGeneric(f"Invalid {request_sleep_kind = }") from None
+        self.logger.debug("sleep_kind = %s", sleep_kind)
 
         if (
             sleep_kind is TsL2SleepRequest.SleepKindEnum.SLEEP_MODE
@@ -216,19 +211,8 @@ class L2APIImplementation(L2API):
             self.logger.debug("Sleep mode disabled.")
             return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
 
-        if (
-            sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE
-            and self.config.cfg_sleep_mode.deep_sleep_mode_en == 0
-        ):
-            self.logger.debug("Deep sleep mode disabled.")
-            return TsL2SleepResponse(status=L2StatusEnum.RESP_DISABLED)
-
         self.invalidate_session()
         self.command_buffer.reset()
-
-        if sleep_kind is TsL2SleepRequest.SleepKindEnum.DEEP_SLEEP_MODE:
-            self.spi_fsm.response_buffer.reset()
-            self._config = None
 
         self.logger.debug("Entered in sleep mode.")
         return TsL2SleepResponse(status=L2StatusEnum.REQ_OK)

@@ -3,14 +3,14 @@ name = "tvl"
 version = "0.10.1"
 description = "TROPIC Verification Library"
 authors = ["hlhote <henri.lhote@tropicsquare.com>"]
-license = "Apache-2.0"
+license = "BSD-3-Clause-Clear"
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
 typing-extensions = "^4.8.0"
 crcmod = "^1.7"
-cryptography = "^41.0.7"
+cryptography = "^43"
 pycryptodome = "^3.19.0"
 pyyaml = "^6.0.1"
 pydantic = "^1.10.0"

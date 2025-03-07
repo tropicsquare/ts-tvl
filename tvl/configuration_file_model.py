@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -14,7 +11,6 @@ from .constants import (
     DH_LEN,
     RISCV_FW_VERSION_SIZE,
     S_HI_PUB_NB_SLOTS,
-    SERIAL_CODE_SIZE,
     SPECT_FW_VERSION_SIZE,
 )
 from .targets.model.configuration_object_impl import ConfigurationObjectImplModel
@@ -58,7 +54,6 @@ class ModelConfigurationModel(_BaseModel):
     chip_id: Optional[SizedBytes[1, CHIP_ID_SIZE]]
     riscv_fw_version: Optional[FixedSizeBytes[RISCV_FW_VERSION_SIZE]]
     spect_fw_version: Optional[FixedSizeBytes[SPECT_FW_VERSION_SIZE]]
-    serial_code: Optional[FixedSizeBytes[SERIAL_CODE_SIZE]]
     debug_random_value: Optional[StrictBytes]
     activate_encryption: Optional[StrictBool]
     init_byte: Optional[FixedSizeBytes[1]]

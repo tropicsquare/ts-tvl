@@ -1,8 +1,5 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-from contextlib import contextmanager, nullcontext
-from typing import Any, ContextManager, Iterator, Type
+from contextlib import nullcontext
+from typing import Any, ContextManager, Type
 
 from typing_extensions import Self
 
@@ -16,19 +13,8 @@ TAG_LEN = 16
 class MinNbBytesDescriptor:
     def __get__(self, _, owner: Type["L3EncryptedPacket"]) -> int:
         return sum(
-            params.dtype.nb_bytes * params.min_size
-            for name, _, params in owner.specs()
-            if name in ("size", "tag")
+            params.min_size * params.dtype.nb_bytes for *_, params in owner.specs()
         )
-
-
-@contextmanager
-def _restore(field: DataField[Any], value: int) -> Iterator[None]:
-    """Context manager that restores the field value upon exit."""
-    try:
-        yield
-    finally:
-        field.value = value
 
 
 class L3EncryptedPacket(BaseMessage):
@@ -55,13 +41,14 @@ class L3Packet(Message):
     def set_padding_if_auto(self) -> ContextManager[None]:
         """Fill the `padding` field of the message if set to AUTO."""
         try:
-            padding_field = getattr(self, "padding")
+            padding_field: DataField[Any] = getattr(self, "padding")
         except AttributeError:
             return nullcontext()
 
-        if (padding_save := padding_field.value) is AUTO:
-            padding_field.value = []
-        return _restore(padding_field, padding_save)
+        if padding_field.value is AUTO:
+            return padding_field.temporarily_set_to([])
+
+        return nullcontext()
 
     def to_bytes(self) -> bytes:
         with self.set_padding_if_auto():
@@ -89,9 +76,10 @@ class L3Command(L3Packet):
 
     def set_id_if_auto(self) -> ContextManager[None]:
         """Update the ID field of the message if set to AUTO."""
-        if (id_save := self.id.value) is AUTO:
-            self.id.value = self.ID
-        return _restore(self.id, id_save)
+        if self.id.value is AUTO:
+            return self.id.temporarily_set_to(self.ID)
+
+        return nullcontext()
 
     def has_valid_id(self) -> bool:
         """Check if the ID field is valid.

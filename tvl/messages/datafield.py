@@ -1,7 +1,5 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import struct
+from contextlib import contextmanager
 from dataclasses import InitVar, dataclass
 from enum import Enum
 from functools import singledispatch
@@ -10,6 +8,7 @@ from typing import (
     Any,
     Callable,
     Generic,
+    Iterator,
     List,
     Optional,
     TypedDict,
@@ -22,7 +21,7 @@ from typing_extensions import Annotated, Self, Unpack
 from .endianness import endianness
 from .exceptions import DataValueError, ListTooLongError, TypeNotSupportedError
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Union[int, List[int]])
 
 DataFieldInputData = Union[int, List[int], bytes]
 
@@ -166,20 +165,21 @@ class ValueDescriptor(Generic[T]):
         """
 
         if value is AUTO:
-            return setattr(instance, self.name, value)
+            setattr(instance, self.name, value)
+            return
 
         value = _format_to_list(value, instance)
 
         # check list length
-        if (length := len(value)) > instance.params.max_size:
-            raise ListTooLongError(f"{length=} > {instance.params.max_size}.")
+        if (length := len(value)) > (_max := instance.params.max_size):
+            raise ListTooLongError(f"{length=} > {_max}.")
 
         # pad with zeroes
         if instance.params.has_variable_size():
             min_length = instance.params.min_size
         else:
             min_length = instance.params.max_size
-        if (padding_length := min_length - len(value)) > 0:
+        if (padding_length := min_length - length) > 0:
             value.extend([0] * padding_length)
 
         setattr(instance, self.name, value)
@@ -222,6 +222,19 @@ class DataField(Generic[T]):
         # dummy setter for IDE during message initialization
         def __set__(self, instance: object, value: DataFieldInputData) -> None:
             ...
+
+    @contextmanager
+    def temporarily_set_to(self, value: DataFieldInputData) -> Iterator[None]:
+        """
+        Temporarily set the field's value to `value`
+        and restore its previous value upon exit.
+        """
+        previous_value = self.value
+        try:
+            self.value = value
+            yield
+        finally:
+            self.value = previous_value
 
     def to_bytes(self) -> bytes:
         assert isinstance(self._value, list), f"'{self._value}' is not a list"

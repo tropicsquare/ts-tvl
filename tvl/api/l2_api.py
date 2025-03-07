@@ -1,9 +1,7 @@
-# GENERATED ON 2025-02-12 10:47:04.510841
+# GENERATED ON 2025-03-04 10:01:45.159815
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: D5C8F91061251E32D25B25F38886B526ADF1D213A4893068B9D290D75358F705
+# INPUT FILE: 65EA2863A0F27797E60C6626ACE3FF2A25BB707E9C5CC943358D73F704FBFB4D
 #
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
@@ -124,8 +122,6 @@ class TsL2SleepRequest(APIL2Request, id=L2Enum.SLEEP):
     class SleepKindEnum(HexReprIntEnum):
         SLEEP_MODE = 0x05
         """Sleep Mode"""
-        DEEP_SLEEP_MODE = 0x0A
-        """Deep Sleep Mode"""
 
 
 class TsL2SleepResponse(APIL2Response, id=L2Enum.SLEEP):
@@ -224,7 +220,7 @@ class L2API(BaseModel):
         self,
         request: TsL2SleepRequest
     ) -> Union[L2Response, List[L2Response]]:
-        """Request for TROPIC01 to go to Sleep Mode or Deep Sleep Mode."""
+        """Request for TROPIC01 to go to Sleep Mode."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")

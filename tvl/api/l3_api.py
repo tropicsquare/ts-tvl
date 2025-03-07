@@ -1,9 +1,7 @@
-# GENERATED ON 2025-02-12 10:47:05.091082
+# GENERATED ON 2025-03-04 10:01:45.784073
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: BA28ABE6FFA154F8277DE65ADA2B783F838F44C27CA9ABFBABE8380E5CEF6843
+# INPUT FILE: 06FED9D804F95313581FF81E85C42697553E02B73CFD4A5F877C73DF4303C45C
 #
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
 
 
 from tvl.messages.datafield import (
@@ -67,8 +65,6 @@ class L3Enum(HexReprIntEnum):
     """Read Monotonic Counter"""
     MAC_AND_DESTROY = 0x90
     """MAC-and-Destroy"""
-    SERIAL_CODE_GET = 0xA0
-    """Get Serial Code"""
 
 
 class APIL3Command(L3Command):
@@ -451,17 +447,6 @@ class TsL3MacAndDestroyResult(APIL3Result, id=L3Enum.MAC_AND_DESTROY):
     """The data output from the MAC-and-Destroy sequence."""
 
 
-class TsL3SerialCodeGetCommand(APIL3Command, id=L3Enum.SERIAL_CODE_GET):
-    pass
-
-
-class TsL3SerialCodeGetResult(APIL3Result, id=L3Enum.SERIAL_CODE_GET):
-    padding: U8Array = datafield(size=3, default=AUTO)  # Padding
-    """The padding by dummy data."""
-    serial_code: U8Array = datafield(size=32)  # Serial code
-    """The unique per-chip identifier."""
-
-
 class L3API(BaseModel):
     """
     Implementation of the TASSIC functional model.
@@ -671,12 +656,4 @@ class L3API(BaseModel):
         command: TsL3MacAndDestroyCommand
     ) -> L3Result:
         """Command to execute the MAC-and-Destroy sequence."""
-        raise NotImplementedError("TODO")
-
-    @api("l3_api")
-    def ts_l3_serial_code_get(
-        self,
-        command: TsL3SerialCodeGetCommand
-    ) -> L3Result:
-        """Command to obtain the unique per-chip identifier."""
         raise NotImplementedError("TODO")

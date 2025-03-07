@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from pathlib import Path
 from typing import Any, Optional, Union, cast
@@ -55,7 +52,7 @@ def run_server_over_serial(
     baudrate: int,
     configuration: Optional[Path],
     logger: logging.Logger,
-    **kwargs: Any,
+    **_: Any,
 ) -> None:
     run_server(
         SerialConnection(port, baudrate, logger),

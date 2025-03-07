@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 from enum import IntFlag
 
 from .typing_utils import HexReprIntEnum
@@ -64,7 +61,7 @@ class L3ResultFieldEnum(HexReprIntEnum):
     """Unknown L3 Command packet (Invalid CMD_ID)"""
 
 
-CERTIFICATE_SIZE = 512
+CERTIFICATE_SIZE = 3840
 """Length of a X509 certificate"""
 CERTIFICATE_BLOCK_SIZE = 128
 """Length of a transmitted certificate block"""
@@ -89,9 +86,6 @@ RISCV_FW_VERSION_SIZE = 4
 
 SPECT_FW_VERSION_SIZE = 4
 """Length of the SPECT ROM ID"""
-
-SERIAL_CODE_SIZE = 4
-"""Length of the Serial Code"""
 
 CHUNK_SIZE = 128
 """Size of chunks sent by the model"""

@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from pathlib import Path
 from socket import create_server, socket
@@ -59,7 +56,7 @@ def run_server_over_tcp(
     port: int,
     configuration: Optional[Path],
     logger: logging.Logger,
-    **kwargs: Any,
+    **_: Any,
 ) -> None:
     run_server(
         TCPConnection(address, port, logger),

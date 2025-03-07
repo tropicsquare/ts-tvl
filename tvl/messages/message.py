@@ -1,6 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import contextlib
 import functools
 import struct
@@ -18,7 +15,7 @@ from typing_extensions import (
 )
 
 from ..utils import iter_subclasses
-from .datafield import DataField, Params, U8Array, U8Scalar, datafield
+from .datafield import DataField, Dtype, Params, U8Array, U8Scalar, datafield
 from .endianness import endianness
 from .exceptions import (
     FieldAlreadyExistsError,
@@ -28,6 +25,7 @@ from .exceptions import (
     ReservedFieldNameError,
     SubclassNotFoundError,
     UnsupportedFieldTypeError,
+    UnsupportedTypeAnnotationError,
 )
 
 _RESERVED_FIELD_NAMES = {"data_field_bytes"}
@@ -46,13 +44,12 @@ class _MetaMessage(type):
     """
     Metaclass of the Message class.
 
-    Make sure the field names are unique and move the DataField objects to the
-    class field _FIELD_MODELS so they can used during the instantiation of
-    a new Message object.
+    Make sure the field names are unique
+    and add parameters to the DataField objects
     """
 
     def __new__(
-        cls,
+        mcs,
         name: str,
         bases: Tuple[type, ...],
         namespace: Dict[str, Any],
@@ -67,26 +64,28 @@ class _MetaMessage(type):
                 raise ReservedFieldNameError(
                     f"Cannot add field '{field_name}': name reserved."
                 )
-            elif field_name in existing_fields:
+            if field_name in existing_fields:
                 raise FieldAlreadyExistsError(
                     f"Cannot add field '{field_name}': already exists."
                 )
 
-            if (origin := get_origin(field_annot)) is Annotated:
-                tp, *params_args = get_args(field_annot)
-            elif origin is None:
-                tp, params_args = field_annot, {}
-            else:
+            if (origin := get_origin(field_annot)) is ClassVar:
                 continue
+            elif origin is not Annotated:
+                raise UnsupportedTypeAnnotationError(
+                    f"Only {ClassVar} and {Annotated} are supported; got {origin}"
+                )
+
+            tp, *params_args = get_args(field_annot)
 
             if not issubclass(tp, DataField):
                 raise UnsupportedFieldTypeError(f"Field type {tp} not supported.")
 
-            params = Params(**ChainMap(*params_args, namespace.pop(field_name, {})))  # type: ignore
+            params = Params(**ChainMap(*params_args, namespace.pop(field_name, {})))
 
             annotations[field_name] = Annotated[tp, params]  # type: ignore
 
-        return super().__new__(cls, name, bases, namespace, **kwargs)
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
 
 
 class BaseMessage(metaclass=_MetaMessage):
@@ -101,19 +100,16 @@ class BaseMessage(metaclass=_MetaMessage):
         return sorted(_get_specs(cls), key=lambda x: x[2].priority)
 
     def __init__(self, **kwargs: Any) -> None:
-        for name, type_, params_ in self.specs():
-            if (value := kwargs.get(name)) is None:
-                value = params_.default
-            setattr(self, name, type_(value=value, params=params_))
+        for name, type_, params in self.specs():
+            value = kwargs.get(name, params.default)
+            setattr(self, name, type_(value=value, params=params))
 
     def __eq__(self, __other: Any) -> bool:
         if __other is self:
             return True
-        try:
-            other_to_bytes = __other.to_bytes()
-        except AttributeError:
-            return NotImplemented
-        return other_to_bytes == self.to_bytes()
+        if isinstance(__other, BaseMessage):
+            return __other.to_bytes() == self.to_bytes()
+        return NotImplemented
 
     def __iter__(self) -> Iterator[Tuple[str, DataField[Any]]]:
         yield from self.__dict__.items()
@@ -161,40 +157,45 @@ class BaseMessage(metaclass=_MetaMessage):
         Returns:
             Message instance
         """
+        fmt_dict: Dict[str, Tuple[int, Dtype]] = {}
+        varsize_field_name: Optional[str] = None
 
-        fmt_dict: Dict[str, Tuple[int, str]] = {}
+        # Collect the minimum size and the datatype of each field
+        for name, _, params in filter(fn, cls.specs()):
+            fmt_dict[name] = (params.min_size, params.dtype)
 
-        _second_pass = None
-        _known_len = 0
-        for name, _, params_ in filter(fn, cls.specs()):
-            # compute length of a variable size field during the second pass
-            if params_.has_variable_size():
-                fmt_dict[name] = (-1, "")
-                _second_pass = name, params_
-            else:
-                fmt_dict[name] = (params_.min_size, params_.dtype)
-                _known_len += params_.min_size * params_.dtype.nb_bytes
+            # If a field has a variable size, mark it and perform a second pass
+            if params.has_variable_size():
+                if varsize_field_name is not None:
+                    raise RuntimeError(
+                        "Only one field is allowed to have a variable size"
+                    )
+                varsize_field_name = name
 
-        if _second_pass is not None:
-            _name, _params = _second_pass
-            _nb_bytes_left = len(data) - _known_len
-            _min_nb_bytes = _params.min_size * _params.dtype.nb_bytes
-            if _nb_bytes_left < _min_nb_bytes:
-                raise InsuficientDataLengthError(
-                    f"{_nb_bytes_left} bytes left; "
-                    f"field '{_name}' requires at least {_min_nb_bytes}."
-                )
-            fmt_dict[_name] = (
-                _nb_bytes_left // _params.dtype.nb_bytes,
-                _params.dtype,
+        # One field was found that has a variable size, compute its format now
+        if varsize_field_name is not None:
+            min_size, dtype = fmt_dict[varsize_field_name]
+
+            known_len = sum(
+                min_size * dtype.nb_bytes
+                for name, (min_size, dtype) in fmt_dict.items()
+                if name != varsize_field_name
             )
+            nb_bytes_left = len(data) - known_len
+            min_nb_bytes = min_size * dtype.nb_bytes
 
-        fmt = (f"{sz}{dt}" for sz, dt in fmt_dict.values())
-        array = struct.unpack(f"{endianness.fmt}{''.join(fmt)}", data)
-        it = iter(array)
-        return cls(
-            **{name: list(islice(it, value[0])) for name, value in fmt_dict.items()}
-        )
+            if nb_bytes_left < min_nb_bytes:
+                raise InsuficientDataLengthError(
+                    f"{nb_bytes_left} bytes left; "
+                    f"field '{varsize_field_name}' requires at least {min_nb_bytes}."
+                )
+            fmt_dict[varsize_field_name] = (nb_bytes_left // dtype.nb_bytes, dtype)
+
+        # Unpack each field and instantiate a new instance of the class
+        fmt = endianness.fmt + "".join(f"{sz}{dt}" for sz, dt in fmt_dict.values())
+        it = iter(struct.unpack(fmt, data))
+
+        return cls(**{name: list(islice(it, sz)) for name, (sz, _) in fmt_dict.items()})
 
 
 class Message(BaseMessage):
@@ -280,5 +281,4 @@ class Message(BaseMessage):
         Returns:
             the new subclass
         """
-        empty_length = len(cls.with_data_length(0)())
-        return cls.with_data_length(length - empty_length)
+        return cls.with_data_length(length - len(cls.with_data_length(0)()))

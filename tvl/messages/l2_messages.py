@@ -1,8 +1,5 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-from contextlib import contextmanager, nullcontext
-from typing import Any, ContextManager, Iterator, Tuple
+from contextlib import nullcontext
+from typing import Any, ContextManager, Tuple
 
 from typing_extensions import Self
 
@@ -10,15 +7,6 @@ from ..crypto.hash import crc16
 from .datafield import AUTO, DataField, U8Scalar, U16Scalar, datafield
 from .exceptions import UnauthorizedInstantiationError
 from .message import Message
-
-
-@contextmanager
-def _restore(field: DataField[Any], value: int) -> Iterator[None]:
-    """Context manager that restores the field value upon exit."""
-    try:
-        yield
-    finally:
-        field.value = value
 
 
 class L2Frame(Message):
@@ -29,22 +17,24 @@ class L2Frame(Message):
 
     def set_length_if_auto(self) -> ContextManager[None]:
         """Update the LENGTH field of the message if set to AUTO."""
-        if (length_save := self.length.value) is AUTO:
-            self.length.value = sum(
-                len(field) for _, field in self if field.params.is_data
+        if self.length.value is AUTO:
+            return self.length.temporarily_set_to(
+                sum(len(field) for _, field in self if field.params.is_data)
             )
-        return _restore(self.length, length_save)
+
+        return nullcontext()
 
     def set_padding_if_auto(self) -> ContextManager[None]:
         """Fill the `padding` field of the message if set to AUTO."""
         try:
-            padding_field = getattr(self, "padding")
+            padding_field: DataField[Any] = getattr(self, "padding")
         except AttributeError:
             return nullcontext()
 
-        if (padding_save := padding_field.value) is AUTO:
-            padding_field.value = []
-        return _restore(padding_field, padding_save)
+        if padding_field.value is AUTO:
+            return padding_field.temporarily_set_to([])
+
+        return nullcontext()
 
     def has_valid_crc(self) -> bool:
         """Check the CRC field of the message.
@@ -81,8 +71,8 @@ class L2Frame(Message):
         Returns:
             bytes representation of the message
         """
-        with _restore(self.crc, self.crc.value):
-            data, self.crc.value = self._get_data_and_crc()
+        data, crc = self._get_data_and_crc()
+        with self.crc.temporarily_set_to(crc):
             return data + self.crc.to_bytes()
 
     @property
@@ -107,9 +97,9 @@ class L2Request(L2Frame):
 
     def set_id_if_auto(self) -> ContextManager[None]:
         """Update the ID field of the message if set to AUTO."""
-        if (id_save := self.id.value) is AUTO:
-            self.id.value = self.ID
-        return _restore(self.id, id_save)
+        if self.id.value is AUTO:
+            return self.id.temporarily_set_to(self.ID)
+        return nullcontext()
 
     def has_valid_id(self) -> bool:
         """Check if the ID field is valid.

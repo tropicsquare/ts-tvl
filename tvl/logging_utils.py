@@ -1,10 +1,7 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 import logging.config
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Sequence
 
 if TYPE_CHECKING:
     _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
@@ -102,3 +99,13 @@ def setup_logging(config: Optional[Dict[str, Any]] = None) -> None:
             },
         }
     return logging.config.dictConfig(config)
+
+
+class LogIter:
+    def __init__(self, it: Iterable[Any], fmt: str = "%s", sep: str = ",") -> None:
+        self.it = it
+        self.fmt = fmt
+        self.sep = sep
+
+    def __str__(self) -> str:
+        return self.sep.join(self.fmt % elt for elt in self.it)

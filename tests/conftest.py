@@ -1,7 +1,3 @@
-# Copyright 2023 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
-
-
 from tvl.constants import L2IdFieldEnum, L2StatusEnum, L3ResultFieldEnum
 from tvl.messages.message import BaseMessage
 
