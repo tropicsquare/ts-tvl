@@ -198,18 +198,18 @@ def load_configuration(
         logger.info("Loading target configuration from %s.", filepath)
         config = _open_yaml_file(filepath)
         config["filepath"] = filepath.absolute()
-        logger.debug("Configuration from file:%s", LogDict(_format(config)))
+        logger.debug("Configuration from file:%s", LogDict(config, fn=_format))
         # Checking file content
         config = ConfigurationModel.parse_obj(config).dict()
 
     # Merging file configuration with default configuration
     config = merge_dicts(DEFAULT_MODEL_CONFIG, config)
-    logger.debug("Configuration after merge:%s", LogDict(_format(config)))
+    logger.debug("Configuration after merge:%s", LogDict(config, fn=_format))
 
     # Checking configuration
     config = ModelConfigurationModel.parse_obj(config).dict(exclude_none=True)
     logger.info(
-        "Target Configuration loaded and validated:%s", LogDict(_format(config))
+        "Target Configuration loaded and validated:%s", LogDict(config, fn=_format)
     )
     logger.debug("STPUB[] = {%s};", LogIter(config["s_t_pub"], "%#04x"))
     return config

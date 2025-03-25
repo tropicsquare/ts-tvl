@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from pprint import pformat
 from shutil import get_terminal_size
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 import yaml
 
@@ -44,11 +44,20 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
 
 
 class LogDict:
-    def __init__(self, dct: Dict[Any, Any]) -> None:
+    def __init__(
+        self,
+        dct: Dict[Any, Any],
+        *,
+        fn: Optional[Callable[[Dict[Any, Any]], Any]] = None,
+    ) -> None:
         self.dct = dct
+        self.fn = fn
 
     def __str__(self) -> str:
-        return "\n" + pformat(self.dct, width=get_terminal_size()[0])
+        return "\n" + pformat(
+            self.fn(self.dct) if self.fn is not None else self.dct,
+            width=get_terminal_size()[0],
+        )
 
 
 class LogIter:
