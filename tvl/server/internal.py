@@ -153,10 +153,11 @@ def process(
     # Check tag is known
     try:
         tag = TagEnum(buffer.tag)
+        logger.info("Received tag: %r", tag)
     except ValueError as exc:
+        logger.info("Received tag: %r", buffer.tag)
         logger.error(exc)
         return ProcessingResult(Buffer(TagEnum.INVALID))
-    logger.debug("Tag: %r", tag)
 
     # choose command to execute depending on the tag's value.
     if tag is TagEnum.SPI_DRIVE_CSN_LOW:

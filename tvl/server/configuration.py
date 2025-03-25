@@ -2,7 +2,7 @@ import logging
 from binascii import hexlify
 from functools import lru_cache, singledispatch
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import yaml
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from cryptography.x509 import load_pem_x509_certificate
 from pydantic import root_validator  # type: ignore
-from pydantic import BaseModel, Extra, FilePath, StrictBytes
+from pydantic import BaseModel, Extra, Field, FilePath, StrictBytes
 
 from ..configuration_file_model import ModelConfigurationModel
 from .logging_utils import LogDict, LogIter
@@ -70,7 +70,7 @@ def _(__value: bytes) -> X25519PrivateKey:
 def _(__value: Path) -> X25519PrivateKey:
     if __value.suffix == ".pem":
         private_key = load_pem_private_key(__value.read_bytes(), None)
-    if __value.suffix == ".der":
+    elif __value.suffix == ".der":
         private_key = load_der_private_key(__value.read_bytes(), None)
     else:
         raise TypeError("Private key not in DER nor PEM format")
@@ -96,13 +96,13 @@ def _(__value: bytes) -> X25519PublicKey:
 def _(__value: Path) -> X25519PublicKey:
     if __value.suffix == ".pem":
         public_key = load_pem_public_key(__value.read_bytes(), None)
-    if __value.suffix == ".der":
+    elif __value.suffix == ".der":
         public_key = load_der_public_key(__value.read_bytes(), None)
     else:
-        raise TypeError("Private key not in DER nor PEM format")
+        raise TypeError("Public key not in DER nor PEM format")
 
     if not isinstance(public_key, (expected := X25519PublicKey)):
-        raise KeyTypeError("Private", type(public_key), expected)
+        raise KeyTypeError("Public", type(public_key), expected)
 
     return public_key
 
@@ -126,15 +126,27 @@ def _(__value: Path) -> bytes:
         )
     if __value.suffix == ".der":
         return __value.read_bytes()
-    raise TypeError("Private key not in DER nor PEM format")
+    raise TypeError("Certificate not in DER nor PEM format")
 
 
 class ConfigurationModel(BaseModel, extra=Extra.allow):
     """Pydantic model to validate the configuration file"""
 
+    filepath: FilePath = Field(exclude=True)
     s_t_priv: Union[StrictBytes, FilePath]
     s_t_pub: Optional[Union[StrictBytes, FilePath]]
     x509_certificate: Union[StrictBytes, FilePath]
+
+    @root_validator(pre=True)  # type: ignore
+    def set_paths_to_absolute(cls, values: Dict[str, Union[bytes, Path]]):
+        def _set(name: str) -> None:
+            if isinstance(value := values.get(name), str):
+                values[name] = cast(Path, values["filepath"]).parent / value
+
+        _set("s_t_priv")
+        _set("s_t_pub")
+        _set("x509_certificate")
+        return values
 
     @root_validator  # type: ignore
     def process_values(cls, values: Dict[str, Union[bytes, Path]]):
@@ -149,7 +161,7 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
             values["s_t_priv"] = private_key.private_bytes_raw()
 
             # define tropic public key if not defined
-            if values.get("s_t_pub") is None:
+            if "s_t_pub" not in values:
                 values["s_t_pub"] = private_key.public_key().public_bytes_raw()
 
         # process certificate
@@ -185,6 +197,7 @@ def load_configuration(
     else:
         logger.info("Loading target configuration from %s.", filepath)
         config = _open_yaml_file(filepath)
+        config["filepath"] = filepath.absolute()
         logger.debug("Configuration from file:%s", LogDict(_format(config)))
         # Checking file content
         config = ConfigurationModel.parse_obj(config).dict()

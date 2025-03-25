@@ -46,8 +46,7 @@ def get_input_arguments():
     parser = ArgumentParser(
         description="Expose the Tropic01 model API via a server.",
     )
-    # subparsers = parser.add_subparsers(title="Connection type")
-    subparsers = parser.add_subparsers(required=True)
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
     parser_tcp = subparsers.add_parser(
         "tcp", description="Serve the Tropic01 model via TCP/IP."
     )
