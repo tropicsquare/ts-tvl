@@ -55,11 +55,13 @@ def run_server_over_tcp(
     address: str,
     port: int,
     configuration: Optional[Path],
+    configuration_out: Path,
     logger: logging.Logger,
     **_: Any,
 ) -> None:
     run_server(
         TCPConnection(address, port, logger),
         configuration,
+        configuration_out,
         logger,
     )

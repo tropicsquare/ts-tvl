@@ -51,11 +51,13 @@ def run_server_over_serial(
     port: Union[Path, str],
     baudrate: int,
     configuration: Optional[Path],
+    configuration_out: Path,
     logger: logging.Logger,
     **_: Any,
 ) -> None:
     run_server(
         SerialConnection(port, baudrate, logger),
         configuration,
+        configuration_out,
         logger,
     )
