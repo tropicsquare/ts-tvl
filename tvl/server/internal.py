@@ -1,15 +1,16 @@
+import atexit
 import logging
 from contextlib import ExitStack
 from dataclasses import dataclass
 from enum import Enum, unique
 from pathlib import Path
-from typing import Any, ClassVar, NamedTuple, Optional, Protocol
+from typing import Any, Callable, ClassVar, NamedTuple, Optional, Protocol, Tuple
 
 from typing_extensions import Self
 
 from ..protocols import TropicProtocol
 from ..targets.model.tropic01_model import Tropic01Model
-from .configuration import load_configuration
+from .configuration import dump_configuration, load_configuration
 
 _BYTEORDER = "little"
 
@@ -43,16 +44,14 @@ class TagEnum(bytes, Enum):
 
 
 def instantiate_model(
-    filepath: Optional[Path], logger: logging.Logger
-) -> Tropic01Model:
-    configuration = load_configuration(filepath, logger)
-    return Tropic01Model.from_dict(configuration).set_logger(logging.getLogger("model"))
-
-
-def enter_context(stack: ExitStack, target: TropicProtocol) -> TropicProtocol:
-    stack.pop_all().close()
-    stack.enter_context(target)
-    return target
+    config_in: Optional[Path], config_out: Path, logger: logging.Logger
+) -> Tuple[Tropic01Model, Callable[[], None]]:
+    """Provide the model and a callback to dump its configuration"""
+    configuration = load_configuration(config_in, logger)
+    model = Tropic01Model.from_dict(configuration).set_logger(
+        logging.getLogger("model")
+    )
+    return model, lambda: dump_configuration(config_out, model.to_dict(), logger)
 
 
 @dataclass
@@ -203,12 +202,26 @@ def process(
 
 
 def run_server(
-    connection: Connection, configuration: Optional[Path], logger: logging.Logger
+    connection: Connection,
+    configuration: Optional[Path],
+    configuration_out: Path,
+    logger: logging.Logger,
+    get_target_fn: Callable[
+        [Optional[Path], Path, logging.Logger],
+        Tuple[TropicProtocol, Callable[[], None]],
+    ] = instantiate_model,
 ) -> None:
     """Serve the Tropic01Model through the selected connection."""
 
     with connection, ExitStack() as stack:
-        target = enter_context(stack, instantiate_model(configuration, logger))
+
+        def _instantiate_target() -> Tuple[TropicProtocol, Callable[[], None]]:
+            target, save_fn = get_target_fn(configuration, configuration_out, logger)
+            stack.pop_all().close()
+            return stack.enter_context(target), save_fn
+
+        target, save_fn = _instantiate_target()
+        atexit.register(save_fn)
         logger.info("Target instantiated.")
 
         while True:
@@ -223,7 +236,7 @@ def run_server(
                 send(connection, tx_buffer, logger)
 
                 if reset_target:
-                    target = enter_context(
-                        stack, instantiate_model(configuration, logger)
-                    )
+                    atexit.unregister(save_fn)
+                    target, save_fn = _instantiate_target()
+                    atexit.register(save_fn)
                     logger.info("Target re-instantiated.")

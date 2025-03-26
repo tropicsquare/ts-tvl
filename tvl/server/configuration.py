@@ -1,8 +1,8 @@
 import logging
 from binascii import hexlify
-from functools import lru_cache, singledispatch
+from functools import singledispatch
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Callable, Dict, Optional, Union, cast
 
 import yaml
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
@@ -171,9 +171,14 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
         return values
 
 
-@lru_cache
 def _open_yaml_file(filepath: Path) -> Dict[Any, Any]:
-    return yaml.safe_load(filepath.read_bytes())
+    with open(filepath, "r") as fd:
+        return yaml.safe_load(fd)
+
+
+def _write_to_yaml_file(filepath: Path, cfg: Dict[Any, Any]) -> None:
+    with open(filepath, "w") as fd:
+        yaml.dump(cfg, fd)
 
 
 def _format(config: Dict[Any, Any]) -> Dict[Any, Any]:
@@ -189,14 +194,17 @@ def _format(config: Dict[Any, Any]) -> Dict[Any, Any]:
 
 
 def load_configuration(
-    filepath: Optional[Path], logger: logging.Logger
+    filepath: Optional[Path],
+    logger: logging.Logger,
+    *,
+    load_fn: Callable[[Path], Dict[Any, Any]] = _open_yaml_file,
 ) -> Dict[Any, Any]:
     if filepath is None:
         config: Dict[Any, Any] = {}
 
     else:
         logger.info("Loading target configuration from %s.", filepath)
-        config = _open_yaml_file(filepath)
+        config = load_fn(filepath)
         config["filepath"] = filepath.absolute()
         logger.debug("Configuration from file:%s", LogDict(config, fn=_format))
         # Checking file content
@@ -213,3 +221,14 @@ def load_configuration(
     )
     logger.debug("STPUB[] = {%s};", LogIter(config["s_t_pub"], "%#04x"))
     return config
+
+
+def dump_configuration(
+    filepath: Path,
+    cfg: Dict[Any, Any],
+    logger: logging.Logger,
+    *,
+    dump_fn: Callable[[Path, Dict[Any, Any]], None] = _write_to_yaml_file,
+) -> None:
+    dump_fn(filepath, cfg)
+    logger.debug("Target configuration dumped to %s", filepath)

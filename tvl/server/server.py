@@ -43,8 +43,11 @@ def get_input_arguments():
 
         return _check
 
+    def _file(*fns: Callable[[Path], Path]) -> Callable[[str], Path]:
+        return lambda s: reduce(lambda p, fn: fn(p), fns, Path(s))
+
     parser = ArgumentParser(
-        description="Expose the Tropic01 model API via a server.",
+        description="Expose the Tropic01 model API via a server",
     )
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
     parser_tcp = subparsers.add_parser(
@@ -69,14 +72,22 @@ def get_input_arguments():
             "-c",
             "--configuration",
             type=_existing_file(_is_file, _with_ext(".yml", ".yaml")),
-            help="Yaml file with the model configuration.",
+            help="Yaml file from which load the model configuration",
+            metavar="FILE",
+        )
+        subparser.add_argument(
+            "-o",
+            "--configuration-out",
+            type=_file(_with_ext(".yml", ".yaml")),
+            default=Path.cwd() / (f := ".model_config_save.yaml"),
+            help=f"Yaml file to which save the model configuration. Defaults to ./{f}",
             metavar="FILE",
         )
         subparser.add_argument(
             "-l",
             "--logging-configuration",
             type=_existing_file(_is_file, _with_ext(".yml", ".yaml")),
-            help="Yaml file with the logging configuration.",
+            help="Yaml file with the logging configuration",
             metavar="FILE",
         )
 
@@ -86,7 +97,7 @@ def get_input_arguments():
         "--address",
         type=str,
         default=TCP_DEFAULT_ADDRESS,
-        help="TCP address. Defaults to %(default)s.",
+        help="TCP address. Defaults to %(default)s",
         metavar="STR",
     )
     parser_tcp.add_argument(
@@ -94,7 +105,7 @@ def get_input_arguments():
         "--port",
         type=int,
         default=TCP_DEFAULT_PORT,
-        help="TCP port number. Defaults to %(default)s.",
+        help="TCP port number. Defaults to %(default)s",
         metavar="INT",
     )
 
