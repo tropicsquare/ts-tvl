@@ -17,7 +17,7 @@ from typing import (
 )
 
 from ..api.l2_api import TsL2EncryptedCmdRequest, TsL2EncryptedCmdResponse
-from ..constants import L1ChipStatusFlag, L2IdFieldEnum, L2StatusEnum
+from ..constants import MIN_L2_FRAME_LEN, L1ChipStatusFlag, L2IdFieldEnum, L2StatusEnum
 from ..messages.l2_messages import L2Request, L2Response
 from ..messages.l3_messages import L3Command, L3Result
 from ..messages.message import Message
@@ -67,7 +67,6 @@ def ll_receive(
     max_polling: int = 10,
     wait: int = 0,
     retry_wait: int = 0,
-    padding_len: int = 4,
 ) -> bytes:
     if wait > 0:
         logger.info("Waiting before polling.")
@@ -92,7 +91,7 @@ def ll_receive(
 
         # send GET_RESP and a few padding bytes
         recvd = target.spi_send(
-            bytes([L2IdFieldEnum.GET_RESP]) + bytes(max(1, padding_len))
+            bytes([L2IdFieldEnum.GET_RESP]) + bytes(MIN_L2_FRAME_LEN)
         )
 
         # CHIP_STATUS field - one byte
@@ -332,5 +331,4 @@ class FnParam(TypedDict, total=False):
     max_polling: int  # receive
     wait: int  # receive
     retry_wait: int  # receive
-    padding_len: int  # receive
     max_recvd: int  # L3 command

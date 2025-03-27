@@ -90,8 +90,19 @@ SPECT_FW_VERSION_SIZE = 4
 CHUNK_SIZE = 128
 """Size of chunks sent by the model"""
 
+MIN_L2_FRAME_DATA_LEN = 0
+"""Minimum size of the DATA field of a L2 request or response"""
+
 MAX_L2_FRAME_DATA_LEN = 252
 """Maximum size of the DATA field of a L2 request or response"""
+
+_BASE_L2_FRAME_LEN = 4
+
+MIN_L2_FRAME_LEN = _BASE_L2_FRAME_LEN + MIN_L2_FRAME_DATA_LEN
+"""Minimum size of a L2 request or response"""
+
+MAX_L2_FRAME_LEN = _BASE_L2_FRAME_LEN + MAX_L2_FRAME_DATA_LEN
+"""Maximum size of a L2 request or response"""
 
 ENCRYPTED_PACKET_MAX_SIZE = 2 + 4096 + 16
 """Maximum size of a L3 packet after encryption"""
