@@ -236,6 +236,7 @@ def run_server(
                 send(connection, tx_buffer, logger)
 
                 if reset_target:
+                    save_fn()
                     atexit.unregister(save_fn)
                     target, save_fn = _instantiate_target()
                     atexit.register(save_fn)
