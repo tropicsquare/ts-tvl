@@ -1,10 +1,15 @@
 stages:
   - test
   - build
+  - deploy
+
 
 default:
   tags:
     - shell
+
+
+.setup-env: &setup-env
   cache:
     - key:
         files:
@@ -22,6 +27,7 @@ default:
 
 tests:
   stage: test
+  <<: *setup-env
   script:
     - pytest -v --color=no --junit-xml=results.xml --cov-report=html:htmlcov
   coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
@@ -37,9 +43,45 @@ tests:
 
 package:
   stage: build
-  needs: []
+  <<: *setup-env
   script:
     - poetry build --format=wheel
   artifacts:
     paths:
       - dist/
+
+
+install:
+    stage: deploy
+    when: manual
+    needs:
+        - job: package
+          artifacts: true
+    variables:
+        TS_TVL_LOCATION: /tools/tropic/ts-tvl
+    script:
+        - GIT_REVISION=$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)
+        - echo $GIT_REVISION
+
+        - TS_TVL_SCRIPTS_LOCATION=$TS_TVL_LOCATION/$GIT_REVISION
+        - echo $TS_TVL_SCRIPTS_LOCATION
+
+        - TS_TVL_SCRIPTS_VENV=$TS_TVL_SCRIPTS_LOCATION/venv
+        - echo $TS_TVL_SCRIPTS_VENV
+
+        - TS_TVL_SCRIPTS_LNS=$TS_TVL_SCRIPTS_LOCATION/lns
+        - echo $TS_TVL_SCRIPTS_LNS
+
+        - mkdir -p $TS_TVL_SCRIPTS_LOCATION
+        - python3.8 -m venv $TS_TVL_SCRIPTS_VENV
+        - source $TS_TVL_SCRIPTS_VENV/bin/activate
+        - pip install --upgrade pip
+        - pip install --force-reinstall dist/*.whl
+
+        - echo "$(git rev-parse --short HEAD)" > $TS_TVL_SCRIPTS_LOCATION/git_commit
+
+        - mkdir -p $TS_TVL_SCRIPTS_LNS
+        - ln -sf $TS_TVL_SCRIPTS_VENV/bin/api_generator $TS_TVL_SCRIPTS_LNS/api_generator
+        - ln -sf $TS_TVL_SCRIPTS_VENV/bin/co_generator $TS_TVL_SCRIPTS_LNS/co_generator
+        - ln -sf $TS_TVL_SCRIPTS_VENV/bin/model_server $TS_TVL_SCRIPTS_LNS/model_server
+        - ln -sf $TS_TVL_SCRIPTS_VENV/lib/python3.8/site-packages/tvl $TS_TVL_SCRIPTS_LNS/tvl

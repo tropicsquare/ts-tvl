@@ -16,6 +16,7 @@ from .constants import (
 from .targets.model.configuration_object_impl import ConfigurationObjectImplModel
 from .targets.model.internal.ecc_keys import EccModel
 from .targets.model.internal.mcounter import MCountersModel
+from .targets.model.internal.mac_and_destroy import MacAndDestroyDataModel
 from .targets.model.internal.pairing_keys import PairingKeysModel
 from .targets.model.internal.user_data_partition import UserDataPartitionModel
 from .typing_utils import FixedSizeBytes, RangedInt, SizedBytes, SizedList
@@ -44,6 +45,7 @@ class ModelConfigurationModel(_BaseModel):
     r_ecc_keys: Optional[EccModel]
     r_user_data: Optional[UserDataPartitionModel]
     r_mcounters: Optional[MCountersModel]
+    r_macandd_data: Optional[MacAndDestroyDataModel]
     # --- I-Memory Partitions ---
     i_config: Optional[ConfigurationObjectImplModel]
     i_pairing_keys: Optional[PairingKeysModel]
