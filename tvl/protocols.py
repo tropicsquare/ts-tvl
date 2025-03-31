@@ -33,3 +33,10 @@ class TropicProtocol(Protocol):
     def wait(self, usecs: int) -> None:
         """Wait `usecs` microseconds in the chip time reference."""
         ...
+
+    def irq_state(self) -> bool:
+        """
+        Get state of the IRQ pin.
+        Returns `True` if a new L2 response is ready, `False` otherwise.
+        """
+        ...

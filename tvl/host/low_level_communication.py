@@ -141,6 +141,80 @@ def ll_receive(
     return response
 
 
+def ll_receive_check_irq(
+    target: TropicProtocol,
+    logger: logging.Logger,
+    max_polling: int = 10,
+    wait: int = 0,
+    retry_wait: int = 0,
+) -> bytes:
+    if wait > 0:
+        logger.info("Waiting before polling.")
+        logger.debug(f"Wait time: {wait} us.")
+        target.wait(wait)
+
+    # poll for status
+    logger.info("Polling for STATUS byte.")
+
+    for i in range(start := 1, max_polling + start):
+        # wait a bit until next try except at the beginning of the loop
+        if i != start and retry_wait > 0:
+            logger.info("Waiting before next try.")
+            logger.debug(f"Retry wait time: {retry_wait} us.")
+            target.wait(retry_wait)
+
+        logger.debug(f"- attempt no. {i}.")
+
+        # check a new l2 response is ready
+        if target.irq_state():
+            break
+
+    else:
+        raise TargetTimeoutError(f"Target not ready after {max_polling} attempts.")
+
+    # start communication
+    logger.info("Driving Chip Select to LOW.")
+    target.spi_drive_csn_low()
+
+    # send GET_RESP and a few padding bytes
+    recvd = target.spi_send(bytes([L2IdFieldEnum.GET_RESP]) + bytes(MIN_L2_FRAME_LEN))
+
+    # CHIP_STATUS field - one byte
+    chip_status = recvd[0]
+    try:
+        chip_status = L1ChipStatusFlag(chip_status)
+        logger.debug(f"CHIP_STATUS: {chip_status!s}.")
+    except ValueError:
+        logger.debug(f"Unknown CHIP_STATUS: {chip_status:#04x}.")
+
+    # STATUS field - one byte
+    status = recvd[1]
+    try:
+        status = L2StatusEnum(status)
+        logger.debug(f"STATUS: {status!s}.")
+    except ValueError:
+        logger.debug(f"Unknown STATUS: {status:#04x}.")
+
+    # start accumulating bytes
+    response = recvd[1:]
+
+    # LEN field - one byte
+    rsp_len = response[1]
+    logger.debug(f"RSP_LEN: {rsp_len:#04x}.")
+
+    # fetching remaining bytes
+    if rsp_len > 0:
+        logger.debug(f"Fetching {rsp_len} remaining bytes.")
+        response += target.spi_send(bytes(rsp_len))
+
+    # end communication
+    logger.info("Driving Chip Select to HIGH.")
+    target.spi_drive_csn_high()
+
+    logger.debug(f"Received {response}.")
+    return response
+
+
 def ll_send_l2_request(
     data: bytes,
     target: TropicProtocol,
