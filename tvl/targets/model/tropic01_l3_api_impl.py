@@ -53,7 +53,6 @@ from ...constants import L3ResultFieldEnum
 from .exceptions import (
     L3ProcessingError,
     L3ProcessingErrorFail,
-    L3ProcessingErrorInvalidCmd,
     L3ProcessingErrorUnauthorized,
 )
 from .internal.configuration_object import (
@@ -71,6 +70,7 @@ from .internal.ecc_keys import (
     ECCKeySetupError,
     SignatureFailedError,
 )
+from .internal.mac_and_destroy import MacAndDestroyF1, MacAndDestroyF2
 from .internal.mcounter import (
     MCounterNotInitializedError,
     MCounterUpdateError,
@@ -701,4 +701,36 @@ class L3APIImplementation(L3API):
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand
     ) -> TsL3MacAndDestroyResult:
-        raise L3ProcessingErrorInvalidCmd("Mac-and-Destroy not yet available.")
+        config = self.config.cfg_uap_mac_and_destroy
+        self._check_ranged_access_privileges(
+            (slot := command.slot.value),
+            [
+                ("macandd_0_31", config.macandd_0_31),
+                ("macandd_32_63", config.macandd_32_63),
+                ("macandd_64_95", config.macandd_64_95),
+                ("macandd_96_127", config.macandd_96_127),
+            ],
+        )
+        self.logger.info("Executing Mac-and-Destroy sequence.")
+        slot_bytes = bytes([command.slot.value])
+        data_in = command.data_in.to_bytes()
+        self.logger.debug("Data_in: %s", data_in)
+
+        f2 = MacAndDestroyF2(self.r_macandd_data.read_key(2))
+
+        si = self.r_macandd_data.read_slot(slot, erase=True)
+        f2.load(si)
+
+        f1 = MacAndDestroyF1(self.r_macandd_data.read_key(1))
+
+        si_p = f1.load(data_in).load(slot_bytes).compute()
+        self.r_macandd_data.write_slot(slot, si_p)
+
+        si_p = self.r_macandd_data.read_slot(slot)
+        f2.load(si_p).load(slot_bytes)
+
+        data_out = f2.compute()
+        self.logger.debug("Data_out: %s", data_out)
+        return TsL3MacAndDestroyResult(
+            result=L3ResultFieldEnum.OK, data_out=data_out
+        )
