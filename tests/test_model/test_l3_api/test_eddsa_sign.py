@@ -44,4 +44,4 @@ def test_invalid_slot(host: Host, slot: int):
     command = randomize(TsL3EddsaSignCommand, slot=slot)
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED

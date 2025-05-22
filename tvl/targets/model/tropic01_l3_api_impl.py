@@ -102,7 +102,7 @@ class L3APIImplementation(L3API):
             if address == int(name.rsplit("_", maxsplit=1)[-1]):
                 self.check_access_privileges(name, value)
                 return
-        raise RuntimeError(f"Slot index {address=:#06x} out of range.")
+        raise L3ProcessingErrorUnauthorized(f"Slot index {address=:#06x} out of range.")
 
     def ts_l3_pairing_key_write(
         self, command: TsL3PairingKeyWriteCommand
@@ -352,6 +352,7 @@ class L3APIImplementation(L3API):
                 ("write_udata_slot_256_383", config.write_udata_slot_256_383),
                 ("write_udata_slot_384_511", config.write_udata_slot_384_511),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("User data slot address: %#06x.", address)
@@ -380,6 +381,7 @@ class L3APIImplementation(L3API):
                 ("read_udata_slot_256_383", config.read_udata_slot_256_383),
                 ("read_udata_slot_384_511", config.read_udata_slot_384_511),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("User data slot address: %#06x.", address)
@@ -400,6 +402,7 @@ class L3APIImplementation(L3API):
                 ("erase_udata_slot_256_383", config.erase_udata_slot_256_383),
                 ("erase_udata_slot_384_511", config.erase_udata_slot_384_511),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("User data slot address: %#06x.", address)
@@ -513,11 +516,6 @@ class L3APIImplementation(L3API):
     def ts_l3_ecc_key_generate(
         self, command: TsL3EccKeyGenerateCommand
     ) -> TsL3EccKeyGenerateResult:
-        try:
-            curve = TsL3EccKeyGenerateCommand.CurveEnum(command.curve.value)
-        except ValueError as exc:
-            raise L3ProcessingErrorFail(exc) from None
-
         config = self.config.cfg_uap_ecc_key_generate
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
@@ -527,9 +525,15 @@ class L3APIImplementation(L3API):
                 ("gen_ecckey_slot_16_23", config.gen_ecckey_slot_16_23),
                 ("gen_ecckey_slot_24_31", config.gen_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("ECC key slot: %d.", slot)
+        try:
+            curve = TsL3EccKeyGenerateCommand.CurveEnum(command.curve.value)
+        except ValueError as exc:
+            raise L3ProcessingErrorFail(exc) from None
+
         try:
             self.r_ecc_keys.generate(slot, curve, self.trng2)
         except ECCKeyExistsInSlotError as exc:
@@ -541,11 +545,6 @@ class L3APIImplementation(L3API):
     def ts_l3_ecc_key_store(
         self, command: TsL3EccKeyStoreCommand
     ) -> TsL3EccKeyStoreResult:
-        try:
-            curve = TsL3EccKeyStoreCommand.CurveEnum(command.curve.value)
-        except ValueError as exc:
-            raise L3ProcessingErrorFail(exc) from None
-
         config = self.config.cfg_uap_ecc_key_store
         self._check_ranged_access_privileges(
             (slot := command.slot.value),
@@ -555,9 +554,16 @@ class L3APIImplementation(L3API):
                 ("store_ecckey_slot_16_23", config.store_ecckey_slot_16_23),
                 ("store_ecckey_slot_24_31", config.store_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("ECC key slot: %d.", slot)
+        try:
+            curve = TsL3EccKeyStoreCommand.CurveEnum(command.curve.value)
+        except ValueError as exc:
+            raise L3ProcessingErrorFail(exc) from None
+
+
         try:
             self.r_ecc_keys.store(slot, curve, command.k.to_bytes())
         except (ECCKeyExistsInSlotError, ECCKeySetupError) as exc:
@@ -578,6 +584,7 @@ class L3APIImplementation(L3API):
                 ("read_ecckey_slot_16_23", config.read_ecckey_slot_16_23),
                 ("read_ecckey_slot_24_31", config.read_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("ECC key slot: %d.", slot)
@@ -614,6 +621,7 @@ class L3APIImplementation(L3API):
                 ("erase_ecckey_slot_16_23", config.erase_ecckey_slot_16_23),
                 ("erase_ecckey_slot_24_31", config.erase_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         self.logger.debug("ECC key slot: %d.", slot)
@@ -632,6 +640,7 @@ class L3APIImplementation(L3API):
                 ("ecdsa_ecckey_slot_16_23", config.ecdsa_ecckey_slot_16_23),
                 ("ecdsa_ecckey_slot_24_31", config.ecdsa_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         msg_hash = command.msg_hash.to_bytes()
@@ -671,6 +680,7 @@ class L3APIImplementation(L3API):
                 ("eddsa_ecckey_slot_16_23", config.eddsa_ecckey_slot_16_23),
                 ("eddsa_ecckey_slot_24_31", config.eddsa_ecckey_slot_24_31),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
 
         msg_bytes = command.msg.to_bytes()
@@ -710,6 +720,7 @@ class L3APIImplementation(L3API):
                 ("macandd_64_95", config.macandd_64_95),
                 ("macandd_96_127", config.macandd_96_127),
             ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
         )
         self.logger.info("Executing Mac-and-Destroy sequence.")
         slot_bytes = bytes([command.slot.value])

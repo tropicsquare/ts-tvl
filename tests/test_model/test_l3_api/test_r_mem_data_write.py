@@ -100,4 +100,4 @@ def test_invalid_udata_slot(host: Host, udata_slot: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED

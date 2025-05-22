@@ -54,5 +54,5 @@ def test_invalid_slot(host: Host, model: Tropic01Model, slot: int):
     )
     result = host.send_command(command)
 
-    assert result.result.value == L3ResultFieldEnum.FAIL
+    assert result.result.value == L3ResultFieldEnum.UNAUTHORIZED
     assert model.r_ecc_keys.slots[slot] is None
