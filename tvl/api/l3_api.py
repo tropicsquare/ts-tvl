@@ -57,6 +57,8 @@ class L3Enum(HexReprIntEnum):
     """ECDSA Sign"""
     EDDSA_SIGN = 0x71
     """EDDSA Sign"""
+    EDDSA_VERIFY = 0x72
+    """EDDSA Verify"""
     MCOUNTER_INIT = 0x80
     """Monotonic Counter init"""
     MCOUNTER_UPDATE = 0x81
@@ -382,6 +384,30 @@ class TsL3EddsaSignResult(APIL3Result, id=L3Enum.EDDSA_SIGN):
     """EdDSA signature - The S part"""
 
 
+class TsL3EddsaVerifyCommand(APIL3Command, id=L3Enum.EDDSA_VERIFY):
+    slot: U16Scalar  # ECC Key slot
+    """The slot (from the ECC Keys partition in R-Memory) to read the key for
+    EdDSA verification."""
+    padding: U8Array = datafield(size=13, default=AUTO)  # Padding
+    """The padding by dummy data."""
+    msg_hash: U8Array = datafield(size=32)  # Hash of the Message to verify.
+    """The hash of the message to verify (32 bytes)."""
+    r: U8Array = datafield(size=32)  # EDDSA Signature - R part
+    """EdDSA signature - The R part"""
+    s: U8Array = datafield(size=32)  # EDDSA Signature - S part
+    """EdDSA signature - The S part"""
+
+
+class TsL3EddsaVerifyResult(APIL3Result, id=L3Enum.EDDSA_VERIFY):
+    class ResultEnum(HexReprIntEnum):
+        OK = 0xC3
+        """The signature is valid."""
+        FAIL = 0x3C
+        """The signature is invalid."""
+        INVALID_KEY = 0x12
+        """The key in the requested slot does not exist, or is invalid."""
+
+
 class TsL3McounterInitCommand(APIL3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
@@ -623,7 +649,15 @@ class L3API(BaseModel):
         self,
         command: TsL3EddsaSignCommand
     ) -> L3Result:
-        """Command to sign a message with an EdDSA algorithm."""
+        """EdDSA Sign"""
+        raise NotImplementedError("TODO")
+
+    @api("l3_api")
+    def ts_l3_eddsa_verify(
+        self,
+        command: TsL3EddsaVerifyCommand
+    ) -> L3Result:
+        """EdDSA Verify"""
         raise NotImplementedError("TODO")
 
     @api("l3_api")

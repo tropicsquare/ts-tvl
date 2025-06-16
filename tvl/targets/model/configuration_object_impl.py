@@ -251,6 +251,21 @@ class CfgUapEddsaSign(ConfigObjectRegister):
     Key slots 24-31."""
 
 
+class CfgUapEddsaVerify(ConfigObjectRegister):
+    eddsa_ecckey_slot_0_7 = ConfigObjectField(0, 8)
+    """Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC
+    Key slots 0-7."""
+    eddsa_ecckey_slot_8_15 = ConfigObjectField(8, 8)
+    """Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC
+    Key slots 8-15."""
+    eddsa_ecckey_slot_16_23 = ConfigObjectField(16, 8)
+    """Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC
+    Key slots 16-23."""
+    eddsa_ecckey_slot_24_31 = ConfigObjectField(24, 8)
+    """Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC
+    Key slots 24-31."""
+
+
 class CfgUapMcounterInit(ConfigObjectRegister):
     mcounter_init_0_3 = ConfigObjectField(0, 8)
     """Access privileges of the MCounter_Init L3 Command packet to Monotonic
@@ -335,6 +350,7 @@ class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
     CFG_UAP_ECC_KEY_ERASE = 0x13C
     CFG_UAP_ECDSA_SIGN = 0x140
     CFG_UAP_EDDSA_SIGN = 0x144
+    CFG_UAP_EDDSA_VERIFY = 0x148
     CFG_UAP_MCOUNTER_INIT = 0x150
     CFG_UAP_MCOUNTER_GET = 0x154
     CFG_UAP_MCOUNTER_UPDATE = 0x158
@@ -362,6 +378,7 @@ class ConfigurationObjectImpl(ConfigurationObject):
         self.cfg_uap_ecc_key_erase = CfgUapEccKeyErase(self, ConfigObjectRegisterAddressEnum.CFG_UAP_ECC_KEY_ERASE)
         self.cfg_uap_ecdsa_sign = CfgUapEcdsaSign(self, ConfigObjectRegisterAddressEnum.CFG_UAP_ECDSA_SIGN)
         self.cfg_uap_eddsa_sign = CfgUapEddsaSign(self, ConfigObjectRegisterAddressEnum.CFG_UAP_EDDSA_SIGN)
+        self.cfg_uap_eddsa_verify = CfgUapEddsaVerify(self, ConfigObjectRegisterAddressEnum.CFG_UAP_EDDSA_VERIFY)
         self.cfg_uap_mcounter_init = CfgUapMcounterInit(self, ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_INIT)
         self.cfg_uap_mcounter_get = CfgUapMcounterGet(self, ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_GET)
         self.cfg_uap_mcounter_update = CfgUapMcounterUpdate(self, ConfigObjectRegisterAddressEnum.CFG_UAP_MCOUNTER_UPDATE)
@@ -389,6 +406,7 @@ class ConfigurationObjectImplModel(ConfigurationObjectModel):
     cfg_uap_ecc_key_erase: Optional[StrictInt]
     cfg_uap_ecdsa_sign: Optional[StrictInt]
     cfg_uap_eddsa_sign: Optional[StrictInt]
+    cfg_uap_eddsa_verify: Optional[StrictInt]
     cfg_uap_mcounter_init: Optional[StrictInt]
     cfg_uap_mcounter_get: Optional[StrictInt]
     cfg_uap_mcounter_update: Optional[StrictInt]

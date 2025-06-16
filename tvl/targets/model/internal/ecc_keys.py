@@ -356,6 +356,38 @@ class EccKeys:
             raise CurveMismatchError("Key has wrong curve type for EdDSA signing.")
         return eddsa_sign(key.s, key.prefix, key.a, message, handshake_hash, nonce)
 
+    def eddsa_verify(
+        self, slot: int, message_hash: bytes, r: bytes, s: bytes
+    ) -> bool:
+        """Verify a message hash with the EdDSA algorithm.
+
+        Args:
+            slot (int): slot where the EdDSA key is
+            message_hash (bytes): the hash of the message to verify, 32 bytes
+            r (bytes): the R component of the signature, 32 bytes
+            s (bytes): the S component of the signature, 32 bytes
+
+        Raises:
+            CurveMismatchError: the key is incompatible with EdDSA verification
+
+        Returns:
+            True if the signature is valid, False otherwise
+        """
+        if not isinstance(key := self._get_key(slot), EdDSAKeyMemLayout):
+            raise CurveMismatchError("Key has wrong curve type for EdDSA verification.")
+        
+        # Use the cryptography library's Ed25519PublicKey for verification
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        from cryptography.exceptions import InvalidSignature
+        
+        try:
+            public_key = Ed25519PublicKey.from_public_bytes(key.a)
+            signature = r + s  # Ed25519 signature is R || S
+            public_key.verify(signature, message_hash)
+            return True
+        except InvalidSignature:
+            return False
+
 
 class ECDSAKeyMemLayoutModel(BaseModel):
     d: FixedSizeBytes[KEY_SIZE]

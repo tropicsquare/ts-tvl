@@ -14,6 +14,8 @@ from ...api.l3_api import (
     TsL3EcdsaSignResult,
     TsL3EddsaSignCommand,
     TsL3EddsaSignResult,
+    TsL3EddsaVerifyCommand,
+    TsL3EddsaVerifyResult,
     TsL3IConfigReadCommand,
     TsL3IConfigReadResult,
     TsL3IConfigWriteCommand,
@@ -707,6 +709,40 @@ class L3APIImplementation(L3API):
 
         self.logger.debug("Signed message with EdDSA: r=%s; s=%s.", r, s)
         return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
+
+    def ts_l3_eddsa_verify(self, command: TsL3EddsaVerifyCommand) -> TsL3EddsaVerifyResult:
+        config = self.config.cfg_uap_eddsa_verify
+        self._check_ranged_access_privileges(
+            (slot := command.slot.value),
+            [
+                ("eddsa_ecckey_slot_0_7", config.eddsa_ecckey_slot_0_7),
+                ("eddsa_ecckey_slot_8_15", config.eddsa_ecckey_slot_8_15),
+                ("eddsa_ecckey_slot_16_23", config.eddsa_ecckey_slot_16_23),
+                ("eddsa_ecckey_slot_24_31", config.eddsa_ecckey_slot_24_31),
+            ],
+            raise_on_failure=L3ProcessingErrorUnauthorized,
+        )
+
+        msg_hash = command.msg_hash.to_bytes()
+        r = command.r.to_bytes()
+        s = command.s.to_bytes()
+        self.logger.debug("Message hash: %s.", msg_hash)
+        self.logger.debug("Signature R: %s, S: %s.", r, s)
+        
+        try:
+            is_valid = self.r_ecc_keys.eddsa_verify(slot, msg_hash, r, s)
+        except (ECCKeyDoesNotExistInSlotError, CurveMismatchError) as exc:
+            self.logger.info(exc)
+            raise L3ProcessingError(
+                result=TsL3EddsaVerifyResult.ResultEnum.INVALID_KEY
+            ) from None
+
+        if is_valid:
+            self.logger.debug("EdDSA signature verification successful.")
+            return TsL3EddsaVerifyResult(result=TsL3EddsaVerifyResult.ResultEnum.OK)
+        else:
+            self.logger.debug("EdDSA signature verification failed.")
+            return TsL3EddsaVerifyResult(result=TsL3EddsaVerifyResult.ResultEnum.FAIL)
 
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand
