@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from random import randint
 
-from tvl.api.l2_api import TsL2HandshakeReqRequest, TsL2HandshakeReqResponse
+from tvl.api.l2_api import TsL2HandshakeRequest, TsL2HandshakeResponse
 from tvl.api.l3_api import (
     TsL3MacAndDestroyCommand,
     TsL3MacAndDestroyResult,
@@ -37,14 +37,14 @@ host = Host.from_dict(configuration["host"]).set_target(model)
 
 # Establish a secure channel between the model and the host:
 # send a Handshake request
-handshake_request = TsL2HandshakeReqRequest(
+handshake_request = TsL2HandshakeRequest(
     e_hpub=host.session.create_handshake_request(),
     pkey_index=host.pairing_key_index,
 )
 
 handshake_response = host.send_request(handshake_request)
 
-assert isinstance(handshake_response, TsL2HandshakeReqResponse)
+assert isinstance(handshake_response, TsL2HandshakeResponse)
 assert handshake_response.status.value == L2StatusEnum.REQ_OK
 
 # Check the secure channel session is well established: send a Ping command
