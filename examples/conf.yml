@@ -20,6 +20,7 @@ host:
     n6raOfrxVb5MYeKOZtgWqw7csbRx50A3jYe9OEjcxi0=
   s_t_pub: !!binary |
     25AvIORLmif8T6uMyO6MB5GhukNCdlo+5UnTvlC+ZSA=
+
 model:
   i_pairing_keys:
     0:
