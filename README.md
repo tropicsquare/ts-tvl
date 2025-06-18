@@ -1,18 +1,24 @@
 # TROPIC Verification Library
 
 The TROPIC Verification Library (TVL) is a [Python](https://www.python.org/)
-package for evaluating [TROPIC01 chip](https://github.com/tropicsquare/TROPIC01).
+package used for evaluating [TROPIC01 chip](https://github.com/tropicsquare/TROPIC01) and offers a model with the chip behaviour.
 
-For more info about TROPIC01 chip check out developers resources in [TROPIC01](https://github.com/tropicsquare/tropic01) repository.
+For more information about TROPIC01 chip check out developers resources in [TROPIC01](https://github.com/tropicsquare/tropic01) repository.
+
 ## Installation
 
-### Download the TVL package
+### Download the TVL Package
 
-The TVL wheel file is automatically packaged by Github actions.
-It is available at
-[https://github.com/tropicsquare/ts-tvl/actions/workflows/test_and_build.yaml](https://github.com/tropicsquare/ts-tvl/actions/workflows/test_and_build.yaml).
-To download it, click on the latest workflow run then scroll down
-to the section `Artifacts` and download the `ts-tvl-package` artifact.
+There are [releases](https://github.com/tropicsquare/ts-tvl/releases) for every version of TVL,
+containing the Python wheel file. Download one of the releases (the latest one is recommended) and
+follow the steps below.
+
+> The TVL wheel file is also generated on every push to the master branch and uploaded as an artifact.
+> This wheel version is usually used by developers and does not always guarantee full functionality - for
+> guaranteed stability, use the [releases](https://github.com/tropicsquare/ts-tvl/releases) versions instead. 
+>
+> Unreleased versions are available [here](https://github.com/tropicsquare/ts-tvl/actions/workflows/test_and_build.yaml). To download it, click on the latest workflow run then scroll down to the section
+`Artifacts` and download the `ts-tvl-package` artifact.
 
 ### Install Python3.8
 
@@ -39,7 +45,7 @@ sudo apt install python3.8 python3.8-venv -y
 > If your OS is different, you may need to run other commands to install Python 3.8
 > on your machine. Follow your machine's OS recommendations for doing so.
 
-### Create a Python virtual environment
+### Create a Python Virtual Environment
 
 To use the TVL, install it in a Python virtual environment beforehand.
 
@@ -66,45 +72,48 @@ pip install <path to the TVL wheel file>
 Example:
 
 ```shell
-pip install tvl-0.10.1-py3-none-any.whl
+pip install tvl-1.0-py3-none-any.whl
 ```
 
-# Model server
+# Model Server
 
 Along with the TVL comes a command-line tool that exposes a `Tropic01Model`
 behind a TCP/IP server or a serial port.
 
-Once the TVL is installed and the virtual environemnt activated (see above)
-the model server is available in the terminal:
+Once the TVL is installed and the virtual environment activated (see above),
+the `model_server` is available in the terminal:
 
 ```shell
 model_server tcp
 ```
 
-For more information about the model server tool, type:
+For more information about the `model_server` tool, type:
 
 ```shell
 model_server tcp --help
 ```
+## Examples
+See [available examples](examples/) for the functionality demonstration. They can be executed as:
+```shell
+./example_01_get_info_request.py
+```
 
-## Configuration file
+## Host and Model Configuration
 
 It is possible (and recommended) to provide a [yaml](https://yaml.org/)
-configuration file to the model_server to configure the `Tropic01Model`.
-This file is parsed by model_server using
+configuration file to the `model_server` to configure the `Tropic01Model`.
+This file is parsed by `model_server` using
 [pydantic](https://pypi.org/project/pydantic/1.10.13/).
 
-For more information about the configuration file syntax, have a look
-[here](tvl/server/configuration.py) and [here](tvl/configuration_file_model.py).
+Configuration can be applied to both **Host** and **Model**. Available configuration variables for the Host can be seen [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L31C1-L37C46) and for the Model [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L40C1-L60C42). Keys and certificates can be passed as strings in base64 encoding or as files in PEM or DER format.
 
-This repository offers the user a basic configuration file available
-[here](tvl/server/model_config/).
-To use it, just copy the content of the directory to your working directory and
-specify the option `--configuration` when running the model server.
+Example configurations can be found either [here](model_configs/example_config/example_config.yml) or [here](examples/conf.yml). They are passed to the `model_server` as:
 
 ```shell
-model_server tcp --configuration=model_config.yml
+model_server tcp --configuration=config.yml
 ```
+where `config.yml` is the path to the configuration file.
+
 # License 
 
 See the [LICENSE.md](LICENSE.md) file in the root of this repository or consult license information at [Tropic Square website](http:/tropicsquare.com/license).
