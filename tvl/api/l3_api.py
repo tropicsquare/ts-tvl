@@ -1,17 +1,12 @@
-# GENERATED ON 2025-03-04 10:01:45.784073
+# GENERATED ON 2025-06-18 11:21:52.491129
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 06FED9D804F95313581FF81E85C42697553E02B73CFD4A5F877C73DF4303C45C
+# INPUT FILE: 4606A9EA5758DC3773E719F213A4414BF07200AC73BFF10208F89571849DD341
 #
+# Copyright 2024 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
 
 
-from tvl.messages.datafield import (
-    AUTO,
-    U8Array,
-    U8Scalar,
-    U16Scalar,
-    U32Scalar,
-    datafield,
-)
+from tvl.messages.datafield import AUTO, U8Array, U8Scalar, U16Scalar, U32Scalar, datafield
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -366,7 +361,7 @@ class TsL3EddsaSignCommand(APIL3Command, id=L3Enum.EDDSA_SIGN):
     EdDSA signing."""
     padding: U8Array = datafield(size=13, default=AUTO)  # Padding
     """The padding by dummy data."""
-    msg: U8Array = datafield(min_size=1, max_size=4096)  # Message to sign.
+    msg: U8Array = datafield(min_size=0, max_size=4096)  # Message to sign.
     """The message to sign (max size of 4096 bytes)."""
 
 
