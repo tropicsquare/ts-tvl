@@ -1,7 +1,9 @@
-# GENERATED ON 2025-03-04 10:01:45.159815
+# GENERATED ON 2025-06-18 11:21:50.550301
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 65EA2863A0F27797E60C6626ACE3FF2A25BB707E9C5CC943358D73F704FBFB4D
+# INPUT FILE: 561BB2C37494B1FD939517827E80B5BE89F64C85A2CE5B060AB2FE00424452C3
 #
+# Copyright 2024 TropicSquare
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
@@ -44,8 +46,8 @@ class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
     """The Identifier of the requested object."""
     class ObjectIdEnum(HexReprIntEnum):
         X509_CERTIFICATE = 0x00
-        """The X.509 chip certificate read from I-Memory and signed by Tropic
-        Square (max length of 512B)."""
+        """The X.509 Certificate Store read from I-Memory and signed by Tropic
+        Square."""
         CHIP_ID = 0x01
         """The chip ID - the chip silicon revision and unique device ID (max
         length of 128B)."""
@@ -55,8 +57,8 @@ class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
         """The SPECT FW version (4 Bytes)"""
     block_index: U8Scalar  # The index of the 128 Byte long block to request
     """In case the requested object is larger than 128B use chunk number.
-    First chunk has index 0 and maximum value is 29 for X.509 certificate
-    which size is 3840B."""
+    First chunk has index 0 and maximum value is 29 for 3840B Certificate
+    Store ."""
 
 
 class TsL2GetInfoResponse(APIL2Response, id=L2Enum.GET_INFO):
