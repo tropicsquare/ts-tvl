@@ -98,22 +98,25 @@ See [available examples](examples/) for the functionality demonstration. They ca
 ./example_01_get_info_request.py
 ```
 
-## Host and Model Configuration
+## Model Configuration
 
 It is possible (and recommended) to provide a [yaml](https://yaml.org/)
 configuration file to the `model_server` to configure the `Tropic01Model`.
 This file is parsed by `model_server` using
 [pydantic](https://pypi.org/project/pydantic/1.10.13/).
 
-Configuration can be applied to both **Host** and **Model**. Available configuration variables for the Host can be seen [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L31C1-L37C46) and for the Model [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L40C1-L60C42). Keys and certificates can be passed as strings in base64 encoding or as files in PEM or DER format.
+Available configuration variables for the Model can be seen [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L40C1-L60C42). Keys and certificates can be passed as strings in base64 encoding or as files in PEM or DER format.
 
-Example configurations can be found either [here](model_configs/example_config/example_config.yml) or [here](examples/conf.yml). They are passed to the `model_server` as:
+An example configuration can be found [here](model_configs/example_config/example_config.yml). Configurations are passed to the `model_server` as:
 
 ```shell
 model_server tcp --configuration=config.yml
 ```
 where `config.yml` is the path to the configuration file.
 
-# License 
+# TVL Documentation
+A detailed documentation about TVL can be found [here](tvl/README.md).
+
+# License
 
 See the [LICENSE.md](LICENSE.md) file in the root of this repository or consult license information at [Tropic Square website](http:/tropicsquare.com/license).
