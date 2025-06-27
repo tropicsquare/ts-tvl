@@ -2,7 +2,8 @@ from hashlib import sha512
 from typing import Literal, Protocol, Tuple
 
 from Crypto.PublicKey.ECC import EccPoint
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 from .tmac import tmac
 
@@ -111,3 +112,23 @@ def eddsa_sign(
 
     s_ = _to_bytes(s_int, size=32)
     return r_, s_
+
+def eddsa_verify(m: bytes, r: bytes, s: bytes, a: bytes) -> bool:
+    """Verify EdDSA signature (Ed25519).
+
+    Args:
+        m (bytes): message
+        r (bytes): signature part r (32 bytes)
+        s (bytes): signature part s (32 bytes)
+        a (bytes): public key (32 bytes)
+
+    Returns:
+        bool: True if message verified and valid, False otherwise
+    """
+    signature = r + s  # Ed25519 signature is r||s (64 bytes)
+    try:
+        public_key = Ed25519PublicKey.from_public_bytes(a)
+        public_key.verify(signature, m)
+        return True
+    except (ValueError, TypeError, InvalidSignature):
+        return False
