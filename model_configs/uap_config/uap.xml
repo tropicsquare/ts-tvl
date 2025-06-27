@@ -1,0 +1,566 @@
+<root>
+    <reg>
+        <shorttext>cfg_sleep_mode</shorttext>
+        <baseaddr>0x14</baseaddr>
+        <field>
+            <shorttext>sleep_mode_en</shorttext>
+            <lowidx>0</lowidx>
+            <width>1</width>
+            <longtext>When 1, TROPIC01 enters Sleep mode upon receiving a Sleep_Req L2 Request Frame with SLEEP_KIND=SLEEP_MODE</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_pairing_key_write</shorttext>
+        <baseaddr>0x20</baseaddr>
+        <field>
+            <shorttext>write_pkey_slot_0</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Write L3 Command packet to Pairing Key slot 0.</longtext>
+        </field>
+        <field>
+            <shorttext>write_pkey_slot_1</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Write L3 Command packet to Pairing Key slot 1.</longtext>
+        </field>
+        <field>
+            <shorttext>write_pkey_slot_2</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Write L3 Command packet to Pairing Key slot 2.</longtext>
+        </field>
+        <field>
+            <shorttext>write_pkey_slot_3</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Write L3 Command packet to Pairing Key slot 3.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_pairing_key_read</shorttext>
+        <baseaddr>0x24</baseaddr>
+        <field>
+            <shorttext>read_pkey_slot_0</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Read L3 Command packet to Pairing Key slot 0.</longtext>
+        </field>
+        <field>
+            <shorttext>read_pkey_slot_1</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Read L3 Command packet to Pairing Key slot 1.</longtext>
+        </field>
+        <field>
+            <shorttext>read_pkey_slot_2</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Read L3 Command packet to Pairing Key slot 2.</longtext>
+        </field>
+        <field>
+            <shorttext>read_pkey_slot_3</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Read L3 Command packet to Pairing Key slot 3.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_pairing_key_invalidate</shorttext>
+        <baseaddr>0x28</baseaddr>
+        <field>
+            <shorttext>invalidate_pkey_slot_0</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Invalidate L3 Command packet to Pairing Key slot 0.</longtext>
+        </field>
+        <field>
+            <shorttext>invalidate_pkey_slot_1</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Invalidate L3 Command packet to Pairing Key slot 1.</longtext>
+        </field>
+        <field>
+            <shorttext>invalidate_pkey_slot_2</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Invalidate L3 Command packet to Pairing Key slot 2.</longtext>
+        </field>
+        <field>
+            <shorttext>invalidate_pkey_slot_3</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Pairing_Key_Invalidate L3 Command packet to Pairing Key slot 3.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_r_config_write_erase</shorttext>
+        <baseaddr>0x30</baseaddr>
+        <field>
+            <shorttext>r_config_write_erase</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Config_Write and R_Config_Erase L3 Command packets to all COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_r_config_read</shorttext>
+        <baseaddr>0x34</baseaddr>
+        <field>
+            <shorttext>r_config_read_cfg</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Config_Read L3 Command packet to the Configuration COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+        <field>
+            <shorttext>r_config_read_func</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Config_Read L3 Command packet to the Functionality COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_i_config_write</shorttext>
+        <baseaddr>0x40</baseaddr>
+        <field>
+            <shorttext>i_config_write_cfg</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the I_Config_Write L3 Command packet to the Configuration COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+        <field>
+            <shorttext>i_config_write_func</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the I_Config_Write L3 Command packet to the Functionality COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_i_config_read</shorttext>
+        <baseaddr>0x44</baseaddr>
+        <field>
+            <shorttext>i_config_read_cfg</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the I_Config_Read L3 Command packet to the Configuration COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+        <field>
+            <shorttext>i_config_read_func</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the I_Config_Read L3 Command packet to the Functionality COs. Refer to the 'User Access Privileges' section in the TROPIC01 Datasheet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ping</shorttext>
+        <baseaddr>0x100</baseaddr>
+        <field>
+            <shorttext>ping</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Ping L3 Command packet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_r_mem_data_write</shorttext>
+        <baseaddr>0x110</baseaddr>
+        <field>
+            <shorttext>write_udata_slot_0_127</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Write L3 Command packet to slots 0 - 127 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>write_udata_slot_128_255</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Write L3 Command packet to slots 128 - 255 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>write_udata_slot_256_383</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Write L3 Command packet to slots 256 - 383 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>write_udata_slot_384_511</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Write L3 Command packet to slots 384 - 511 of the User Data partition in R-Memory.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_r_mem_data_read</shorttext>
+        <baseaddr>0x114</baseaddr>
+        <field>
+            <shorttext>read_udata_slot_0_127</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Read L3 Command packet to slots 0 - 127 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>read_udata_slot_128_255</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Read L3 Command packet to slots 128 - 255 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>read_udata_slot_256_383</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Read L3 Command packet to slots 256 - 383 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>read_udata_slot_384_511</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Read L3 Command packet to slots 385 - 512 of the User Data partition in R-Memory.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_r_mem_data_erase</shorttext>
+        <baseaddr>0x118</baseaddr>
+        <field>
+            <shorttext>erase_udata_slot_0_127</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 0 - 127 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_udata_slot_128_255</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 128 - 255 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_udata_slot_256_383</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 256 - 383 of the User Data partition in R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_udata_slot_384_511</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the R_Mem_Data_Erase L3 Command packet to slots 385 - 512 of the User Data partition in R-Memory.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_random_value_get</shorttext>
+        <baseaddr>0x120</baseaddr>
+        <field>
+            <shorttext>random_value_get</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the Random_Value_Get L3 Command packet.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ecc_key_generate</shorttext>
+        <baseaddr>0x130</baseaddr>
+        <field>
+            <shorttext>gen_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>gen_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>gen_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>gen_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Generate L3 Command packet to ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ecc_key_store</shorttext>
+        <baseaddr>0x134</baseaddr>
+        <field>
+            <shorttext>store_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Store L3 Command packet to ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>store_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Store L3 Command packet to ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>store_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Store L3 Command packet to ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>store_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Store L3 Command packet to ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ecc_key_read</shorttext>
+        <baseaddr>0x138</baseaddr>
+        <field>
+            <shorttext>read_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Read L3 Command packet to ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>read_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Read L3 Command packet to ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>read_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Read L3 Command packet to ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>read_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Read L3 Command packet to ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ecc_key_erase</shorttext>
+        <baseaddr>0x13C</baseaddr>
+        <field>
+            <shorttext>erase_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>erase_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECC_Key_Erase L3 Command packet to ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_ecdsa_sign</shorttext>
+        <baseaddr>0x140</baseaddr>
+        <field>
+            <shorttext>ecdsa_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>ecdsa_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>ecdsa_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>ecdsa_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the ECDSA_Sign L3 Command packet to keys from ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_eddsa_sign</shorttext>
+        <baseaddr>0x144</baseaddr>
+        <field>
+            <shorttext>eddsa_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Sign L3 Command packet to keys from ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_eddsa_verify</shorttext>
+        <baseaddr>0x14C</baseaddr>
+        <field>
+            <shorttext>eddsa_verify_ecckey_slot_0_7</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC Key slots 0-7.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_verify_ecckey_slot_8_15</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC Key slots 8-15.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_verify_ecckey_slot_16_23</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC Key slots 16-23.</longtext>
+        </field>
+        <field>
+            <shorttext>eddsa_verify_ecckey_slot_24_31</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the EDDSA_Verify L3 Command packet to keys from ECC Key slots 24-31.</longtext>
+        </field>
+    </reg>    
+    <reg>
+        <shorttext>cfg_uap_mcounter_init</shorttext>
+        <baseaddr>0x150</baseaddr>
+        <field>
+            <shorttext>mcounter_init_0_3</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Init L3 Command packet to Monotonic counters 0-3.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_init_4_7</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Init L3 Command packet to Monotonic counters 4-7.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_init_8_11</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Init L3 Command packet to Monotonic counters 8-11.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_init_12_15</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Init L3 Command packet to Monotonic counters 12-15.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_mcounter_get</shorttext>
+        <baseaddr>0x154</baseaddr>
+        <field>
+            <shorttext>mcounter_get_0_3</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Get L3 Command packet to Monotonic counters 0-3.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_get_4_7</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Get L3 Command packet to Monotonic counters 4-7.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_get_8_11</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Get L3 Command packet to Monotonic counters 8-11.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_get_12_15</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Get L3 Command packet to Monotonic counters 12-15.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_mcounter_update</shorttext>
+        <baseaddr>0x158</baseaddr>
+        <field>
+            <shorttext>mcounter_update_0_3</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Update L3 Command packet to Monotonic counters 0-3.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_update_4_7</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Update L3 Command packet to Monotonic counters 4-7.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_update_8_11</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Update L3 Command packet to Monotonic counters 8-11.</longtext>
+        </field>
+        <field>
+            <shorttext>mcounter_update_12_15</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MCounter_Update L3 Command packet to Monotonic counters 12-15.</longtext>
+        </field>
+    </reg>
+    <reg>
+        <shorttext>cfg_uap_mac_and_destroy</shorttext>
+        <baseaddr>0x160</baseaddr>
+        <field>
+            <shorttext>macandd_0_31</shorttext>
+            <lowidx>0</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MAC_And_Destroy L3 Command packet (when executing a MAC-and-Destroy sequence) to slots 0-31 of the MAC-and-Destroy Partition of R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>macandd_32_63</shorttext>
+            <lowidx>8</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MAC_And_Destroy L3 Command packet (when executing a MAC-and-Destroy sequence) to slots 32-63 of the MAC-and-Destroy Partition of R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>macandd_64_95</shorttext>
+            <lowidx>16</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MAC_And_Destroy L3 Command packet (when executing a MAC-and-Destroy sequence) to slots 64-95 of the MAC-and-Destroy Partition of R-Memory.</longtext>
+        </field>
+        <field>
+            <shorttext>macandd_96_127</shorttext>
+            <lowidx>24</lowidx>
+            <width>8</width>
+            <longtext>Access privileges of the MAC_And_Destroy L3 Command packet (when executing a MAC-and-Destroy sequence) to slots 96-127 of the MAC-and-Destroy Partition of R-Memory.</longtext>
+        </field>
+    </reg>
+</root>
