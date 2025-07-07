@@ -1,0 +1,665 @@
+version: "1.0"
+defines: []
+commands:
+  - name: PING
+    message_id: 0x01
+    description: "Ping"
+    description_long: "A dummy command to check the Secure Channel Session communication."
+    function:
+      input:
+        - name: data_in
+          type: u8
+          min_size: 0
+          max_size: 4096
+          description: "Data in"
+          description_long: "The input data"
+      output:
+        - name: data_out
+          type: u8
+          min_size: 0
+          max_size: 4096
+          description: "Data out"
+          description_long: "The output data (loopback of the DATA_IN L3 Field)."
+
+  - name: PAIRING_KEY_WRITE
+    message_id: 0x10
+    description: "Write Pairing key slot"
+    description_long: "Command to write the X25519 public key to a Pairing Key slot."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "Slot to write in"
+          description_long: "The Pairing Key slot. Valid values are 0 - 3."
+          choices:
+            - name: PAIRING_KEY_SLOT_0
+              value: 0x00
+              description: "Corresponds to $S_{H0Pub}$."
+            - name: PAIRING_KEY_SLOT_1
+              value: 0x01
+              description: "Corresponds to $S_{H1Pub}$."
+            - name: PAIRING_KEY_SLOT_2
+              value: 0x02
+              description: "Corresponds to $S_{H2Pub}$."
+            - name: PAIRING_KEY_SLOT_3
+              value: 0x03
+              description: "Corresponds to $S_{H3Pub}$."
+        - name: padding
+          type: u8
+          size: 1
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: s_hipub
+          type: u8
+          size: 32
+          description: "Public Key"
+          description_long: "The X25519 public key to be written in the Pairing Key slot specified in the SLOT field."
+      output: []
+
+  - name: PAIRING_KEY_READ
+    message_id: 0x11
+    description: "Read Pairing key slot"
+    description_long: "Command to read the X25519 public key from a Pairing Key slot."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "Slot to Read"
+          description_long: "The Pairing Key slot. Valid values are 0 - 3."
+          choices:
+            - name: PAIRING_KEY_SLOT_0
+              value: 0x00
+              description: "Corresponds to $S_{H0Pub}$."
+            - name: PAIRING_KEY_SLOT_1
+              value: 0x01
+              description: "Corresponds to $S_{H1Pub}$."
+            - name: PAIRING_KEY_SLOT_2
+              value: 0x02
+              description: "Corresponds to $S_{H2Pub}$."
+            - name: PAIRING_KEY_SLOT_3
+              value: 0x03
+              description: "Corresponds to $S_{H3Pub}$."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: s_hipub
+          type: u8
+          size: 32
+          description: "Public Key"
+          description_long: "The X25519 public key to be written in the Pairing Key slot specified in the SLOT field."
+    result:
+      choices:
+        - name: PAIRING_KEY_EMPTY
+          value: 0x15
+          description: "The Pairing key slot is in \"Blank\" state. A Pairing Key has not been written to it yet."
+        - name: PAIRING_KEY_INVALID
+          value: 0x16
+          description: "The Pairing key slot is in \"Invalidated\" state. The Pairing key has been invalidated."
+
+  - name: PAIRING_KEY_INVALIDATE
+    message_id: 0x12
+    description: "Invalidate Pairing Key in a slot"
+    description_long: "Command to invalidate the X25519 public key in a Pairing Key slot."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "Slot to Invalidate"
+          description_long: "The Pairing Key slot. Valid values are 0 - 3."
+          choices:
+            - name: PAIRING_KEY_SLOT_0
+              value: 0x00
+              description: "Corresponds to $S_{H0Pub}$."
+            - name: PAIRING_KEY_SLOT_1
+              value: 0x01
+              description: "Corresponds to $S_{H1Pub}$."
+            - name: PAIRING_KEY_SLOT_2
+              value: 0x02
+              description: "Corresponds to $S_{H2Pub}$."
+            - name: PAIRING_KEY_SLOT_3
+              value: 0x03
+              description: "Corresponds to $S_{H3Pub}$."
+      output: []
+
+  - name: R_CONFIG_WRITE
+    message_id: 0x20
+    description: "Write R-Config"
+    description_long: "Command to write a single CO to R-Config."
+    function:
+      input:
+        - name: address
+          type: u16
+          size: 1
+          description: "Configuration object address"
+          description_long: "The CO address offset for TROPIC01 to compute the actual CO address."
+        - name: padding
+          type: u8
+          size: 1
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: value
+          type: u32
+          size: 1
+          description: "Configuration object value"
+          description_long: "The CO value to write in the computed address."
+      output: []
+
+  - name: R_CONFIG_READ
+    message_id: 0x21
+    description: "Read R-Config"
+    description_long: "Command to read a single CO from R-Config."
+    function:
+      input:
+        - name: address
+          type: u16
+          size: 1
+          description: "Configuration object address"
+          description_long: "The CO address offset for TROPIC01 to compute the actual CO address."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: value
+          type: u32
+          size: 1
+          description: "Configuration object value"
+          description_long: "The CO value TROPIC01 read from the computed address."
+
+  - name: R_CONFIG_ERASE
+    message_id: 0x22
+    description: "Erase R-Config"
+    description_long: "Command to erase the whole R-Config (convert the bits of all CO to 1)."
+    function:
+      input: []
+      output: []
+
+  - name: I_CONFIG_WRITE
+    message_id: 0x30
+    description: "Write I-Config"
+    description_long: "Command to write a single bit of CO (from I-Config) from 1 to 0."
+    function:
+      input:
+        - name: address
+          type: u16
+          size: 1
+          description: "Configuration object address"
+          description_long: "The CO address offset for TROPIC01 to compute the actual CO address."
+        - name: bit_index
+          type: u8
+          size: 1
+          description: "Bit to write."
+          description_long: "The bit to write from 1 to 0. Valid values are 0-31."
+      output: []
+
+  - name: I_CONFIG_READ
+    message_id: 0x31
+    description: "Read I-Config"
+    description_long: "Command to read a single CO from I-Config."
+    function:
+      input:
+        - name: address
+          type: u16
+          size: 1
+          description: "Configuration object address"
+          description_long: "The CO address offset for TROPIC01 to compute the actual CO address."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: value
+          type: u32
+          size: 1
+          description: "Configuration object value"
+          description_long: "The CO value TROPIC01 read from the computed address."
+
+  - name: R_MEM_DATA_WRITE
+    message_id: 0x40
+    description: "Write User data"
+    description_long: "Command to write general purpose data in a slot from the User Data partition in R-Memory."
+    function:
+      input:
+        - name: udata_slot
+          type: u16
+          size: 1
+          description: "Slot to write"
+          description_long: "The slot of the User Data partition. Valid values are 0 - 511."
+        - name: padding
+          type: u8
+          size: 1
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: data
+          type: u8
+          min_size: 1
+          max_size: 444
+          description: "Data to write"
+          description_long: "The data stream to be written in the slot specified in the UDATA_SLOT L3 field."
+      output: []
+    result:
+      choices:
+        - name: WRITE_FAIL
+          value: 0x10
+          description: "The slot is already written in."
+
+  - name: R_MEM_DATA_READ
+    message_id: 0x41
+    description: "Read User data"
+    description_long: "Command to read the general purpose data from a slot of the User Data partition in R-Memory."
+    function:
+      input:
+        - name: udata_slot
+          type: u16
+          size: 1
+          "description": "Slot to read"
+          description_long: "The slot of the User Data partition. Valid values are 0 - 511."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: data
+          type: u8
+          min_size: 0
+          max_size: 444
+          description: "Data to read"
+          description_long: "The data stream read from the slot specified in the UDATA_SLOT L3 field."
+
+  - name: R_MEM_DATA_ERASE
+    message_id: 0x42
+    description: "Erase User data"
+    description_long: "Command to erase a slot from the User Data partition in R-Memory."
+    function:
+      input:
+        - name: udata_slot
+          type: u16
+          size: 1
+          description: "Slot to erase"
+          description_long: "The slot of the User Data partition. Valid values are 0 - 511."
+      output: []
+
+  - name: RANDOM_VALUE_GET
+    message_id: 0x50
+    description: "Get random numbers"
+    description_long: "Command to get random numbers generated by TRNG2."
+    function:
+      input:
+        - name: n_bytes
+          type: u8
+          size: 1
+          description: "Number of bytes to get."
+          description_long: "The number of random bytes to get."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: random_data
+          type: u8
+          min_size: 0
+          max_size: 255
+          description: "Random data"
+          description_long: "The random data from TRNG2 in the number of bytes specified in the N_BYTES L3 Field."
+
+  - name: ECC_KEY_GENERATE
+    message_id: 0x60
+    description: "Generate ECC Key"
+    description_long: "Command to generate an ECC Key and store the key in a slot from the ECC Keys partition in R-Memory."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot to write the generated key. Valid values are 0 - 31."
+        - name: curve
+          type: u8
+          size: 1
+          description: "Elliptic Curve"
+          description_long: "The Elliptic Curve the key is generated from."
+          choices:
+            - name: P256
+              value: 0x01
+              description: "P256 Curve - 64-byte long public key."
+            - name: ED25519
+              value: 0x02
+              description: "Ed25519 Curve - 32-byte long public key."
+      output: []
+
+  - name: ECC_KEY_STORE
+    message_id: 0x61
+    description: "Store ECC Key"
+    description_long: "Command to store an ECC Key in a slot from the ECC Keys partition in R-Memory."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot to write the K L3 Field. Valid values are 0 - 31."
+        - name: curve
+          type: u8
+          size: 1
+          description: "The type of Elliptic Curve the K L3 Field belongs to."
+          description_long: "The Elliptic Curve the key is generated from."
+          choices:
+            - name: P256
+              value: 0x01
+              description: "P256 Curve - 64-byte long public key."
+            - name: ED25519
+              value: 0x02
+              description: "Ed25519 Curve - 32-byte long public key."
+        - name: padding
+          type: u8
+          size: 12
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: k
+          type: u8
+          size: 32
+          description: "Key to store"
+          description_long: "The ECC Key to store. The key must be a member of the field given by the curve specified in the CURVE L3 Field."
+      output: []
+
+  - name: ECC_KEY_READ
+    message_id: 0x62
+    description: "Read Public part of ECC Key"
+    description_long: "Command to read the public ECC Key from a slot of the ECC Keys partition in R-Memory."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot to read the public ECC Key from. Valid values are 0 - 31."
+      output:
+        - name: curve
+          type: u8
+          size: 1
+          description: "Elliptic Curve"
+          description_long: "The type of Elliptic Curve public key returned."
+          choices:
+            - name: P256
+              value: 0x01
+              description: "P256 Curve - 64-byte long public key."
+            - name: ED25519
+              value: 0x02
+              description: "Ed25519 Curve - 32-byte long public key."
+        - name: origin
+          type: u8
+          size: 1
+          description: "Origin of the key."
+          description_long: "The origin of the key."
+          choices:
+            - name: ECC_KEY_GENERATE
+              value: 0x01
+              description: "The key is from key generation on the device."
+            - name: ECC_KEY_STORE
+              value: 0x02
+              description: "The key is from key storage in the device."
+        - name: padding
+          type: u8
+          size: 13
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: pub_key
+          type: u8
+          min_size: 32
+          max_size: 64
+          description: "Public Key"
+          description_long: "The public key from the ECC Key slot as specified in the SLOT L3 Field."
+    result:
+      choices:
+        - name: INVALID_KEY
+          value: 0x12
+          description: "The key in the requested slot does not exist."
+
+  - name: ECC_KEY_ERASE
+    message_id: 0x63
+    description: "Erase ECC Key slot"
+    description_long: "Command to erase an ECC Key from a slot in the ECC Keys partition in R-Memory."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot to erase. Valid values are 0 - 31."
+      output: []
+
+  - name: ECDSA_SIGN
+    message_id: 0x70
+    description: "ECDSA Sign"
+    description_long: "Command to sign a message hash with an ECDSA algorithm."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot (from the ECC Keys partition in R-Memory) to read the key for ECDSA signing."
+        - name: padding
+          type: u8
+          size: 13
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: msg_hash
+          type: u8
+          size: 32
+          description: "Hash of the Message to sign."
+          description_long: "The hash of the message to sign (max size of 32 bytes)."
+      output:
+        - name: padding
+          type: u8
+          size: 15
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: r
+          type: u8
+          size: 32
+          description: "ECDSA Signature - R part"
+          description_long: "ECDSA signature - The R part"
+        - name: s
+          type: u8
+          size: 32
+          description: "ECDSA Signature - S part"
+          description_long: "ECDSA signature - The S part"
+    result:
+      choices:
+        - name: INVALID_KEY
+          value: 0x12
+          description: "The key in the requested slot does not exist, or is invalid."
+
+  - name: EDDSA_SIGN
+    message_id: 0x71
+    description: "EDDSA Sign"
+    description_long: "Command to sign a message with an EdDSA algorithm."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot (from the ECC Keys partition in R-Memory) to read the key for EdDSA signing."
+        - name: padding
+          type: u8
+          size: 13
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: msg
+          type: u8
+          min_size: 0
+          max_size: 4096
+          description: "Message to sign."
+          description_long: "The message to sign (max size of 4096 bytes)."
+      output:
+        - name: padding
+          type: u8
+          size: 15
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: r
+          type: u8
+          size: 32
+          description: "EDDSA Signature - R part"
+          description_long: "EdDSA signature - The R part"
+        - name: s
+          type: u8
+          size: 32
+          description: "EDDSA Signature - S part"
+          description_long: "EdDSA signature - The S part"
+    result:
+      choices:
+        - name: INVALID_KEY
+          value: 0x12
+          description: "The key in the requested slot does not exist, or is invalid."
+
+  - name: EDDSA_Verify
+    message_id: 0x73
+    description: "EDDSA Verify"
+    description_long: "Verifies a message signed with EdDSA algorithm."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "ECC Key slot"
+          description_long: "The slot to read the public ECC Key from. Valid values are 0 - 31."
+        - name: msg
+          type: u8
+          min_size: 0
+          max_size: 4096
+          description: "Message to sign."
+          description_long: "The message to sign (max size of 4096 bytes)."
+        - name: r
+          type: u8
+          size: 32
+          description: "EDDSA Signature - R part"
+          description_long: "EdDSA signature - The R part"
+        - name: s
+          type: u8
+          size: 32
+          description: "EDDSA Signature - S part"
+          description_long: "EdDSA signature - The S part"
+      output: []
+    result:
+      choices:
+        - name: INVALID_KEY
+          value: 0x12
+          description: "The key in the requested slot does not exist, or is invalid."
+
+  - name: MCOUNTER_INIT
+    message_id: 0x80
+    description: "Monotonic Counter init"
+    description_long: "Command to initialize the Monotonic Counter."
+    function:
+      input:
+        - name: mcounter_index
+          type: u16
+          size: 1
+          description: "Index of Monotonic Counter"
+          description_long: "The index of the Monotonic Counter to initialize. Valid values are 0 - 15."
+        - name: padding
+          type: u8
+          size: 1
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: mcounter_val
+          type: u32
+          size: 1
+          description: "Initialization value."
+          description_long: "The initialization value of the Monotonic Counter."
+      output: []
+
+  - name: MCOUNTER_UPDATE
+    message_id: 0x81
+    description: "Monotonic Counter update"
+    description_long: "Command to update the Monotonic Counter (decrement by 1)."
+    function:
+      input:
+        - name: mcounter_index
+          type: u16
+          size: 1
+          description: "Index of Monotonic Counter"
+          description_long: "The index of the Monotonic Counter to update. Valid values are 0 - 15."
+      output: []
+    result:
+      choices:
+        - name: UPDATE_ERR
+          value: 0x13
+          description: "Failure to update the specified Monotonic Counter. The Monotonic Counter is already at 0."
+        - name: COUNTER_INVALID
+          value: 0x14
+          description: "The Monotonic Counter detects an attack and is locked. The counter must be reinitialized."
+
+  - name: MCOUNTER_GET
+    message_id: 0x82
+    description: "Read Monotonic Counter"
+    description_long: "Command to get the value of the Monotonic Counter."
+    function:
+      input:
+        - name: mcounter_index
+          type: u16
+          size: 1
+          description: "Index of Monotonic Counter"
+          description_long: "The index of the Monotonic Counter to get the value of. Valid index values are 0 - 15."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: mcounter_val
+          type: u32
+          size: 1
+          description: "Initialization value."
+          description_long: "The value of the Monotonic Counter specified by the MCOUNTER_INDEX L3 Field."
+    result:
+      choices:
+        - name: COUNTER_INVALID
+          value: 0x14
+          description: "The Monotonic Counter detects an attack and is locked. The counter must be reinitialized."
+
+  - name: MAC_AND_DESTROY
+    message_id: 0x90
+    description: "MAC-and-Destroy"
+    description_long: "Command to execute the MAC-and-Destroy sequence."
+    function:
+      input:
+        - name: slot
+          type: u16
+          size: 1
+          description: "Mac-and-Destroy slot"
+          description_long: "The slot (from the MAC-and-Destroy data partition in R-Memory) to execute the MAC_And_Destroy sequence. Valid values are 0 - 127."
+        - name: padding
+          type: u8
+          size: 1
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: data_in
+          type: u8
+          size: 32
+          description: "Input data"
+          description_long: "The data input for the MAC-and-Destroy sequence."
+      output:
+        - name: padding
+          type: u8
+          size: 3
+          description: "Padding"
+          description_long: "The padding by dummy data."
+        - name: data_out
+          type: u8
+          size: 32
+          description: "Output data"
+          description_long: "The data output from the MAC-and-Destroy sequence."

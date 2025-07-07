@@ -1,12 +1,17 @@
-# GENERATED ON 2025-06-18 11:21:52.491129
+# GENERATED ON 2025-06-27 14:12:59.713435
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 4606A9EA5758DC3773E719F213A4414BF07200AC73BFF10208F89571849DD341
+# INPUT FILE: 31D15925D5690110418A2280BABD9D28CF7C74E16F14A574E855373076F49F02
 #
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
 
 
-from tvl.messages.datafield import AUTO, U8Array, U8Scalar, U16Scalar, U32Scalar, datafield
+from tvl.messages.datafield import (
+    AUTO,
+    U8Array,
+    U8Scalar,
+    U16Scalar,
+    U32Scalar,
+    datafield,
+)
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
@@ -52,6 +57,8 @@ class L3Enum(HexReprIntEnum):
     """ECDSA Sign"""
     EDDSA_SIGN = 0x71
     """EDDSA Sign"""
+    EDDSA_VERIFY = 0x73
+    """EDDSA Verify"""
     MCOUNTER_INIT = 0x80
     """Monotonic Counter init"""
     MCOUNTER_UPDATE = 0x81
@@ -377,6 +384,23 @@ class TsL3EddsaSignResult(APIL3Result, id=L3Enum.EDDSA_SIGN):
     """EdDSA signature - The S part"""
 
 
+class TsL3EddsaVerifyCommand(APIL3Command, id=L3Enum.EDDSA_VERIFY):
+    slot: U16Scalar  # ECC Key slot
+    """The slot to read the public ECC Key from. Valid values are 0 - 31."""
+    msg: U8Array = datafield(min_size=0, max_size=4096)  # Message to sign.
+    """The message to sign (max size of 4096 bytes)."""
+    r: U8Array = datafield(size=32)  # EDDSA Signature - R part
+    """EdDSA signature - The R part"""
+    s: U8Array = datafield(size=32)  # EDDSA Signature - S part
+    """EdDSA signature - The S part"""
+
+
+class TsL3EddsaVerifyResult(APIL3Result, id=L3Enum.EDDSA_VERIFY):
+    class ResultEnum(HexReprIntEnum):
+        INVALID_KEY = 0x12
+        """The key in the requested slot does not exist, or is invalid."""
+
+
 class TsL3McounterInitCommand(APIL3Command, id=L3Enum.MCOUNTER_INIT):
     mcounter_index: U16Scalar  # Index of Monotonic Counter
     """The index of the Monotonic Counter to initialize. Valid values are 0 -
@@ -619,6 +643,14 @@ class L3API(BaseModel):
         command: TsL3EddsaSignCommand
     ) -> L3Result:
         """Command to sign a message with an EdDSA algorithm."""
+        raise NotImplementedError("TODO")
+
+    @api("l3_api")
+    def ts_l3_eddsa_verify(
+        self,
+        command: TsL3EddsaVerifyCommand
+    ) -> L3Result:
+        """Verifies a message signed with EdDSA algorithm."""
         raise NotImplementedError("TODO")
 
     @api("l3_api")

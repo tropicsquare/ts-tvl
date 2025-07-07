@@ -6,7 +6,7 @@ from typing import List, NamedTuple
 
 import pytest
 
-from tvl.crypto.eddsa import eddsa_key_setup, eddsa_sign, ts_compute_r
+from tvl.crypto.eddsa import eddsa_key_setup, eddsa_sign, eddsa_verify, ts_compute_r
 
 # http://ed25519.cr.yp.to/python/sign.input
 _TEST_VECTOR_FILE = Path(__file__).parent / "sign.input"
@@ -141,3 +141,11 @@ def test_tropic_eddsa(vector: _TropicVector):
         vector.s, vector.prefix, vector.a, vector.msg, vector.sch, vector.scn
     )
     assert r + s == vector.signature
+
+
+@pytest.mark.parametrize("vector", _VECTORS_TROPIC)
+def test_tropic_eddsa_verify(vector: _TropicVector):
+    r, s = eddsa_sign(
+        vector.s, vector.prefix, vector.a, vector.msg, vector.sch, vector.scn
+    )
+    assert eddsa_verify(vector.msg, r, s, vector.a) is True

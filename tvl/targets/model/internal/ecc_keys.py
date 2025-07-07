@@ -26,7 +26,7 @@ from ....crypto.ecdsa import (
     ecdsa_sign,
     is_private_key_valid,
 )
-from ....crypto.eddsa import EDDSA_KEY_SIZE, eddsa_key_setup, eddsa_sign
+from ....crypto.eddsa import EDDSA_KEY_SIZE, eddsa_key_setup, eddsa_sign, eddsa_verify
 from ....typing_utils import FixedSizeBytes
 from ....utils import iter_subclasses
 from .generic_partition import GenericModel
@@ -355,6 +355,25 @@ class EccKeys:
         if not isinstance(key := self._get_key(slot), EdDSAKeyMemLayout):
             raise CurveMismatchError("Key has wrong curve type for EdDSA signing.")
         return eddsa_sign(key.s, key.prefix, key.a, message, handshake_hash, nonce)
+
+    def eddsa_verify(self, slot: int, message: bytes, r: bytes, s: bytes) -> bool:
+        """Verify a message with an EdDSA signature.
+
+        Args:
+            slot (int): slot from which to read the key
+            message (bytes): data to verify
+            r (bytes): signature part r
+            s (bytes): signature part s
+
+        Raises:
+            CurveMismatchError: the key is incompatible with EdDSA verification
+            ECCKeyDoesNotExistInSlotError: no key exists in the slot
+        Returns:
+            True if the signature is valid, False otherwise
+        """
+        if not isinstance(key := self._get_key(slot), EdDSAKeyMemLayout):
+            raise CurveMismatchError("Key has wrong curve type for EdDSA signing.")
+        return eddsa_verify(message, r, s, key.a)
 
 
 class ECDSAKeyMemLayoutModel(BaseModel):
