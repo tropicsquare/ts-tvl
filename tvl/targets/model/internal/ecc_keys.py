@@ -356,9 +356,7 @@ class EccKeys:
             raise CurveMismatchError("Key has wrong curve type for EdDSA signing.")
         return eddsa_sign(key.s, key.prefix, key.a, message, handshake_hash, nonce)
 
-    def eddsa_verify(
-        self, slot: int, message: bytes, r: bytes, s: bytes
-    ) -> bool:
+    def eddsa_verify(self, slot: int, message: bytes, r: bytes, s: bytes) -> bool:
         """Verify a message with an EdDSA signature.
 
         Args:
@@ -376,6 +374,7 @@ class EccKeys:
         if not isinstance(key := self._get_key(slot), EdDSAKeyMemLayout):
             raise CurveMismatchError("Key has wrong curve type for EdDSA signing.")
         return eddsa_verify(message, r, s, key.a)
+
 
 class ECDSAKeyMemLayoutModel(BaseModel):
     d: FixedSizeBytes[KEY_SIZE]

@@ -58,6 +58,7 @@ classDiagram
         erase()
         ecdsa_sign()
         eddsa_sign()
+        eddsa_verify()
     }
     class MCounter{
         init()

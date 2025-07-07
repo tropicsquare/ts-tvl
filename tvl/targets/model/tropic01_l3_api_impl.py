@@ -15,7 +15,7 @@ from ...api.l3_api import (
     TsL3EddsaSignCommand,
     TsL3EddsaSignResult,
     TsL3EddsaVerifyCommand,
-    TsL3EddsaVerifyResult,    
+    TsL3EddsaVerifyResult,
     TsL3IConfigReadCommand,
     TsL3IConfigReadResult,
     TsL3IConfigWriteCommand,
@@ -565,7 +565,6 @@ class L3APIImplementation(L3API):
         except ValueError as exc:
             raise L3ProcessingErrorFail(exc) from None
 
-
         try:
             self.r_ecc_keys.store(slot, curve, command.k.to_bytes())
         except (ECCKeyExistsInSlotError, ECCKeySetupError) as exc:
@@ -711,8 +710,7 @@ class L3APIImplementation(L3API):
         return TsL3EddsaSignResult(result=L3ResultFieldEnum.OK, r=r, s=s)
 
     def ts_l3_eddsa_verify(
-        self,
-        command: TsL3EddsaVerifyCommand
+        self, command: TsL3EddsaVerifyCommand
     ) -> TsL3EddsaVerifyResult:
         """Verifies a message signed with EdDSA algorithm."""
         config = self.config.cfg_uap_eddsa_verify
@@ -721,12 +719,22 @@ class L3APIImplementation(L3API):
             [
                 ("eddsa_verify_ecckey_slot_0_7", config.eddsa_verify_ecckey_slot_0_7),
                 ("eddsa_verify_ecckey_slot_8_15", config.eddsa_verify_ecckey_slot_8_15),
-                ("eddsa_verify_ecckey_slot_16_23", config.eddsa_verify_ecckey_slot_16_23),
-                ("eddsa_verify_ecckey_slot_24_31", config.eddsa_verify_ecckey_slot_24_31),
+                (
+                    "eddsa_verify_ecckey_slot_16_23",
+                    config.eddsa_verify_ecckey_slot_16_23,
+                ),
+                (
+                    "eddsa_verify_ecckey_slot_24_31",
+                    config.eddsa_verify_ecckey_slot_24_31,
+                ),
             ],
             raise_on_failure=L3ProcessingErrorUnauthorized,
         )
-        msg_bytes, r, s = command.msg.to_bytes(), command.r.to_bytes(), command.s.to_bytes()
+        msg_bytes, r, s = (
+            command.msg.to_bytes(),
+            command.r.to_bytes(),
+            command.s.to_bytes(),
+        )
         self.logger.debug("Message: %s; r: %s; s: %s.", msg_bytes, r, s)
         try:
             verified = self.r_ecc_keys.eddsa_verify(
@@ -741,9 +749,10 @@ class L3APIImplementation(L3API):
                 result=TsL3EddsaVerifyResult.ResultEnum.INVALID_KEY
             ) from None
 
-        self.logger.debug("EdDSA signature verification result: %s.", verified)        
-        return TsL3EddsaVerifyResult(result=L3ResultFieldEnum.OK if verified else L3ResultFieldEnum.FAIL)
-
+        self.logger.debug("EdDSA signature verification result: %s.", verified)
+        return TsL3EddsaVerifyResult(
+            result=L3ResultFieldEnum.OK if verified else L3ResultFieldEnum.FAIL
+        )
 
     def ts_l3_mac_and_destroy(
         self, command: TsL3MacAndDestroyCommand
@@ -779,6 +788,4 @@ class L3APIImplementation(L3API):
 
         data_out = f2.compute()
         self.logger.debug("Data_out: %s", data_out)
-        return TsL3MacAndDestroyResult(
-            result=L3ResultFieldEnum.OK, data_out=data_out
-        )
+        return TsL3MacAndDestroyResult(result=L3ResultFieldEnum.OK, data_out=data_out)

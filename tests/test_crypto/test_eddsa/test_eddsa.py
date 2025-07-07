@@ -142,6 +142,7 @@ def test_tropic_eddsa(vector: _TropicVector):
     )
     assert r + s == vector.signature
 
+
 @pytest.mark.parametrize("vector", _VECTORS_TROPIC)
 def test_tropic_eddsa_verify(vector: _TropicVector):
     r, s = eddsa_sign(

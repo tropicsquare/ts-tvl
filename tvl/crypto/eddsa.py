@@ -3,7 +3,10 @@ from typing import Literal, Protocol, Tuple
 
 from Crypto.PublicKey.ECC import EccPoint
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
+)
 
 from .tmac import tmac
 
@@ -112,6 +115,7 @@ def eddsa_sign(
 
     s_ = _to_bytes(s_int, size=32)
     return r_, s_
+
 
 def eddsa_verify(m: bytes, r: bytes, s: bytes, a: bytes) -> bool:
     """Verify EdDSA signature (Ed25519).
