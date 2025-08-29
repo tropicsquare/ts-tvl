@@ -1,16 +1,26 @@
-# GENERATED ON 2025-06-18 11:21:52.491129
+# GENERATED ON 2025-08-29 15:05:07.339298
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 4606A9EA5758DC3773E719F213A4414BF07200AC73BFF10208F89571849DD341
+# INPUT FILE: 5A5A2723C56255C347A178D6351518C56AF10B70E9C4569BA8EFB3175B3898BB
 #
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
 
 
-from tvl.messages.datafield import AUTO, U8Array, U8Scalar, U16Scalar, U32Scalar, datafield
+from tvl.messages.datafield import (
+    AUTO,
+    U8Array,
+    U8Scalar,
+    U16Array,
+    U16Scalar,
+    U32Array,
+    U32Scalar,
+    U64Array,
+    U64Scalar,
+    datafield,
+)
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
 from tvl.typing_utils import HexReprIntEnum
+
 
 
 class L3Enum(HexReprIntEnum):
@@ -211,7 +221,7 @@ class TsL3RMemDataWriteCommand(APIL3Command, id=L3Enum.R_MEM_DATA_WRITE):
     """The slot of the User Data partition. Valid values are 0 - 511."""
     padding: U8Scalar = datafield(default=AUTO)  # Padding
     """The padding by dummy data."""
-    data: U8Array = datafield(min_size=1, max_size=444)  # Data to write
+    data: U8Array = datafield(min_size=1, max_size=475)  # Data to write
     """The data stream to be written in the slot specified in the UDATA_SLOT
     L3 field."""
 
@@ -230,7 +240,7 @@ class TsL3RMemDataReadCommand(APIL3Command, id=L3Enum.R_MEM_DATA_READ):
 class TsL3RMemDataReadResult(APIL3Result, id=L3Enum.R_MEM_DATA_READ):
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
-    data: U8Array = datafield(min_size=0, max_size=444)  # Data to read
+    data: U8Array = datafield(min_size=0, max_size=475)  # Data to read
     """The data stream read from the slot specified in the UDATA_SLOT L3
     field."""
 
