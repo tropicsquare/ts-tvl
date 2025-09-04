@@ -71,8 +71,10 @@ def set_configuration_objects(
 @pytest.mark.parametrize(
     "address, value",
     (
-        pytest.param(a, v, id=f"{a:#x}-{v:#x}")
-        for a, v in zip(UtilsCo.valid_addresses(), UtilsCo.get_value_iter())
+        pytest.param(a, v, id=f"valid_reset_{i}")
+        for i, (a, v) in enumerate(
+            zip(UtilsCo.valid_addresses(), UtilsCo.get_value_iter())
+        )
     ),
 )
 def test_valid_address_slot_set_to_reset_value(
@@ -97,8 +99,10 @@ def test_valid_address_slot_set_to_reset_value(
 @pytest.mark.parametrize(
     "address, value",
     (
-        pytest.param(a, v, id=f"{a!s}-{v:#x}")
-        for a, v in zip(ConfigObjectRegisterAddressEnum, UtilsCo.get_value_iter())
+        pytest.param(a, v, id=f"valid_{i}")
+        for i, (a, v) in enumerate(
+            zip(ConfigObjectRegisterAddressEnum, UtilsCo.get_value_iter())
+        )
     ),
 )
 def test_valid_address(address: int, value: int, host: Host, model: Tropic01Model):
@@ -119,23 +123,31 @@ def test_valid_address(address: int, value: int, host: Host, model: Tropic01Mode
     "address, value, expected_result",
     (
         *(
-            pytest.param(a, v, L3ResultFieldEnum.FAIL, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_not_aligned(10), UtilsCo.get_value_iter()
+            pytest.param(a, v, L3ResultFieldEnum.FAIL, id=f"not_aligned_{i}")
+            for i, (a, v) in enumerate(
+                zip(UtilsCo.invalid_addresses_not_aligned(10), UtilsCo.get_value_iter())
             )
         ),
         *(
-            pytest.param(a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_out_of_range_aligned(10),
-                UtilsCo.get_value_iter(),
+            pytest.param(
+                a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_aligned_{i}"
+            )
+            for i, (a, v) in enumerate(
+                zip(
+                    UtilsCo.invalid_addresses_out_of_range_aligned(10),
+                    UtilsCo.get_value_iter(),
+                )
             )
         ),
         *(
-            pytest.param(a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_out_of_range_and_not_aligned(10),
-                UtilsCo.get_value_iter(),
+            pytest.param(
+                a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_not_aligned_{i}"
+            )
+            for i, (a, v) in enumerate(
+                zip(
+                    UtilsCo.invalid_addresses_out_of_range_and_not_aligned(10),
+                    UtilsCo.get_value_iter(),
+                )
             )
         ),
     ),
@@ -166,23 +178,31 @@ def test_invalid_address_slot_set_to_reset_value(
     "address, value, expected_result",
     chain(
         (
-            pytest.param(a, v, L3ResultFieldEnum.FAIL, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_not_aligned(50), UtilsCo.get_value_iter()
+            pytest.param(a, v, L3ResultFieldEnum.FAIL, id=f"not_aligned_{i}")
+            for i, (a, v) in enumerate(
+                zip(UtilsCo.invalid_addresses_not_aligned(50), UtilsCo.get_value_iter())
             )
         ),
         (
-            pytest.param(a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_out_of_range_aligned(50),
-                UtilsCo.get_value_iter(),
+            pytest.param(
+                a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_aligned_{i}"
+            )
+            for i, (a, v) in enumerate(
+                zip(
+                    UtilsCo.invalid_addresses_out_of_range_aligned(50),
+                    UtilsCo.get_value_iter(),
+                )
             )
         ),
         (
-            pytest.param(a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}-{v:#x}")
-            for a, v in zip(
-                UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50),
-                UtilsCo.get_value_iter(),
+            pytest.param(
+                a, v, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_not_aligned_{i}"
+            )
+            for i, (a, v) in enumerate(
+                zip(
+                    UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50),
+                    UtilsCo.get_value_iter(),
+                )
             )
         ),
     ),

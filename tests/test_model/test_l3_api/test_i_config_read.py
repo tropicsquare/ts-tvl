@@ -36,7 +36,10 @@ def model_configuration(model_configuration: Dict[str, Any]):
 
 @pytest.mark.parametrize(
     "address, value",
-    (pytest.param(a, v, id=f"{a!s}-{v:#x}") for a, v in I_CONFIG_CFG.items()),
+    (
+        pytest.param(a, v, id=f"valid_{i}")
+        for i, (a, v) in enumerate(I_CONFIG_CFG.items())
+    ),
 )
 def test_valid_address(host: Host, model: Tropic01Model, address: int, value: int):
     assert model.i_config.read(address) == value
@@ -52,16 +55,20 @@ def test_valid_address(host: Host, model: Tropic01Model, address: int, value: in
     "address, expected_result",
     chain(
         (
-            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_not_aligned(50)
+            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"not_aligned_{i}")
+            for i, a in enumerate(UtilsCo.invalid_addresses_not_aligned(50))
         ),
         (
-            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_out_of_range_aligned(50)
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_aligned_{i}")
+            for i, a in enumerate(UtilsCo.invalid_addresses_out_of_range_aligned(50))
         ),
         (
-            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50)
+            pytest.param(
+                a, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_not_aligned_{i}"
+            )
+            for i, a in enumerate(
+                UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50)
+            )
         ),
     ),
 )

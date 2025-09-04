@@ -72,7 +72,13 @@ def test_read_key_error(host: Host, slot: int, expected_result: int):
 
 
 @pytest.mark.parametrize(
-    "slot", sample_outside(TsL3PairingKeyReadCommand.SlotEnum, 1, k=10)
+    "slot",
+    (
+        pytest.param(val, id=f"out_of_range_slot_{i}")
+        for i, val in enumerate(
+            sample_outside(TsL3PairingKeyReadCommand.SlotEnum, 1, k=10)
+        )
+    ),
 )
 def test_read_out_of_range_key_slot(host: Host, slot: int):
     command = TsL3PairingKeyReadCommand(
