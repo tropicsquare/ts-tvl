@@ -12,6 +12,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+## [2.3]
+
+### Changed
+- Updated L3 API to support UDATA slot size of 475 bytes
+
+### Added
+
+### Fixed
+- Fixed UDATA slot size configuration in L3 model
+
 ## [2.2]
 
 ### Changed

@@ -6,7 +6,7 @@ from pydantic import BaseModel, StrictBool
 from ....typing_utils import SizedBytes
 from .generic_partition import BaseSlot, GenericModel, GenericPartition
 
-SLOT_SIZE_BYTES = 444
+SLOT_SIZE_BYTES = 475
 INIT_VALUE = b"\xFF" * SLOT_SIZE_BYTES
 
 
