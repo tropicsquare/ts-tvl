@@ -38,7 +38,13 @@ def test_sleep_mode(host: Host, model: Tropic01Model):
 
 
 @pytest.mark.parametrize(
-    "sleep_kind", sample_outside(TsL2SleepRequest.SleepKindEnum, nb_bytes=1, k=10)
+    "sleep_kind",
+    (
+        pytest.param(val, id=f"invalid_sleep_{i}")
+        for i, val in enumerate(
+            sample_outside(TsL2SleepRequest.SleepKindEnum, nb_bytes=1, k=10)
+        )
+    ),
 )
 def test_invalid_sleep_kind(host: Host, sleep_kind: int):
     response = host.send_request(TsL2SleepRequest(sleep_kind=sleep_kind))

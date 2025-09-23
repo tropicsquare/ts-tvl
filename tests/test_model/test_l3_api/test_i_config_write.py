@@ -49,8 +49,8 @@ def model_configuration(model_configuration: Dict[str, Any]):
 @pytest.mark.parametrize(
     "register, value, bit_index",
     (
-        pytest.param(r, v, bi, id=f"{r!s}-{v:#x}-{bi}")
-        for (r, v), bi in zip(I_CONFIG_CFG.items(), _valid_bit_index())
+        pytest.param(r, v, bi, id=f"valid_bit_{i}")
+        for i, ((r, v), bi) in enumerate(zip(I_CONFIG_CFG.items(), _valid_bit_index()))
     ),
 )
 def test_valid_bit_index(
@@ -76,8 +76,8 @@ def test_valid_bit_index(
 @pytest.mark.parametrize(
     "register, bit_index",
     (
-        pytest.param(r, bi, id=f"{r!s}-{bi}")
-        for r, bi in zip(I_CONFIG_CFG, _invalid_bit_index())
+        pytest.param(r, bi, id=f"invalid_bit_{i}")
+        for i, (r, bi) in enumerate(zip(I_CONFIG_CFG, _invalid_bit_index()))
     ),
 )
 def test_invalid_bit_index(
@@ -98,16 +98,20 @@ def test_invalid_bit_index(
     "address, expected_result",
     chain(
         (
-            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_not_aligned(50)
+            pytest.param(a, L3ResultFieldEnum.FAIL, id=f"not_aligned_{i}")
+            for i, a in enumerate(UtilsCo.invalid_addresses_not_aligned(50))
         ),
         (
-            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_out_of_range_aligned(50)
+            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_aligned_{i}")
+            for i, a in enumerate(UtilsCo.invalid_addresses_out_of_range_aligned(50))
         ),
         (
-            pytest.param(a, L3ResultFieldEnum.UNAUTHORIZED, id=f"{a:#x}")
-            for a in UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50)
+            pytest.param(
+                a, L3ResultFieldEnum.UNAUTHORIZED, id=f"out_range_not_aligned_{i}"
+            )
+            for i, a in enumerate(
+                UtilsCo.invalid_addresses_out_of_range_and_not_aligned(50)
+            )
         ),
     ),
 )

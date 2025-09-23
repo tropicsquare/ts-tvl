@@ -78,7 +78,13 @@ def test_write_key(
 
 
 @pytest.mark.parametrize(
-    "slot", sample_outside(TsL3PairingKeyWriteCommand.SlotEnum, 1, k=10)
+    "slot",
+    (
+        pytest.param(val, id=f"out_of_range_slot_{i}")
+        for i, val in enumerate(
+            sample_outside(TsL3PairingKeyWriteCommand.SlotEnum, 1, k=10)
+        )
+    ),
 )
 def test_write_out_of_range_key_slot(host: Host, slot: int):
     command = randomize(TsL3PairingKeyWriteCommand, slot=slot)
