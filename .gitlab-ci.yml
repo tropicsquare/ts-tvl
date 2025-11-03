@@ -2,6 +2,7 @@ stages:
   - test
   - build
   - deploy
+  - publish
 
 
 default:
@@ -85,3 +86,31 @@ install:
         - ln -sf $TS_TVL_SCRIPTS_VENV/bin/co_generator $TS_TVL_SCRIPTS_LNS/co_generator
         - ln -sf $TS_TVL_SCRIPTS_VENV/bin/model_server $TS_TVL_SCRIPTS_LNS/model_server
         - ln -sf $TS_TVL_SCRIPTS_VENV/lib/python3.8/site-packages/tvl $TS_TVL_SCRIPTS_LNS/tvl
+
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_STRATEGY: clone
+
+github_mirror:
+    tags:
+        - shell
+    stage: publish
+    when: always
+    only:
+      - public
+    script:
+      # Ensure we are on branch, not detached head
+      - git checkout public
+
+      # Use Proxy Github account "tropic-gitlab" to push to the github
+      - git config --global user.email "tropic-gitlab@tropicsquare.com"
+      - git config --global user.name "tropic-gitlab"
+
+      # Add remote origin
+      - git remote remove github || true
+      - git remote add github git@github.com:tropicsquare/ts-tvl.git
+
+      # Push - Use SSH key created for this purpose
+      - GIT_SSH_COMMAND="ssh -i ~/.ssh/gitlab_mirror.id_rsa" git push github
+      - GIT_SSH_COMMAND="ssh -i ~/.ssh/gitlab_mirror.id_rsa" git push github --follow-tags
