@@ -199,11 +199,11 @@ class EdDSAKeyMemLayout(EccKey, curve=CurveTypes.ED25519):
 
     @classmethod
     def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
-        r1 = int.from_bytes(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False))
-        r2 = int.from_bytes(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False))
-        key = int.to_bytes(((r2 << 256) | r1) % (2**256 - 1), 32)
+        r1 = int.from_bytes(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False), byteorder='little')
+        r2 = int.from_bytes(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False), byteorder='little')
+        key_int = ((r2 << 256) | r1) % (2**256 - 1)
 
-        return cls.from_key(key, origin)
+        return cls.from_key(key_int.to_bytes(32, byteorder='little'), origin)
 
 class EccKeys:
     def __init__(self) -> None:
