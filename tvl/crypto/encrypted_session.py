@@ -101,9 +101,11 @@ class EncryptedSessionBase:
             raise AssertionError("Nonces out of sync.")
 
     def _generate_private_key(self) -> X25519PrivateKey:
-        return X25519PrivateKey.from_private_bytes(
-            self.random_source.urandom(X25519_KEY_LEN)
-        )
+        r1 = int.from_bytes(self.random_source.urandom(X25519_KEY_LEN))
+        r2 = int.from_bytes(self.random_source.urandom(X25519_KEY_LEN))
+        key = int.to_bytes(((r2 << 256) | r1) % (2**256 - 1), 32)
+
+        return X25519PrivateKey.from_private_bytes(key)
 
 
 class HostEncryptedSession(EncryptedSessionBase):
