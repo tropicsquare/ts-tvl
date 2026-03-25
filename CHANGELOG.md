@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Changed method of deriving seed from TRNG for ephemeral X25519 keys for secure channel and EdDSA keys.
+
 ### Added
 
 ### Fixed

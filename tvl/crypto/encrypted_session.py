@@ -1,4 +1,4 @@
-from hashlib import sha256
+from hashlib import sha256, sha512
 from hmac import HMAC
 from typing import Optional, Protocol, Tuple
 
@@ -101,9 +101,13 @@ class EncryptedSessionBase:
             raise AssertionError("Nonces out of sync.")
 
     def _generate_private_key(self) -> X25519PrivateKey:
-        return X25519PrivateKey.from_private_bytes(
-            self.random_source.urandom(X25519_KEY_LEN)
-        )
+        r0 = self.random_source.urandom(X25519_KEY_LEN)[::-1]
+        r1 = self.random_source.urandom(X25519_KEY_LEN)[::-1]
+
+        k_wide = sha512(r0 + r1).digest()
+        k = bytes([a ^ b for a, b in zip(k_wide[:32], k_wide[32:])])[::-1]
+
+        return X25519PrivateKey.from_private_bytes(k)
 
 
 class HostEncryptedSession(EncryptedSessionBase):

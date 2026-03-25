@@ -1,3 +1,4 @@
+from hashlib import sha512
 import contextlib
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -199,8 +200,13 @@ class EdDSAKeyMemLayout(EccKey, curve=CurveTypes.ED25519):
 
     @classmethod
     def from_random_source(cls, rng: _RandomSource, origin: Origins) -> Self:
-        return cls.from_key(rng.urandom(EDDSA_KEY_SIZE, swap_endianness=False), origin)
+        r0 = rng.urandom(EDDSA_KEY_SIZE, swap_endianness=True)
+        r1 = rng.urandom(EDDSA_KEY_SIZE, swap_endianness=True)
 
+        k_wide = sha512(r0 + r1).digest()
+        k = bytes([a ^ b for a, b in zip(k_wide[:32], k_wide[32:])])[::-1]
+
+        return cls.from_key(k, origin)
 
 class EccKeys:
     def __init__(self) -> None:
