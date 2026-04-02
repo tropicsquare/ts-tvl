@@ -120,3 +120,32 @@ A detailed documentation about TVL can be found [here](tvl/README.md).
 # License
 
 See the [LICENSE.md](LICENSE.md) file in the root of this repository or consult license information at [Tropic Square website](http:/tropicsquare.com/license).
+
+## Development
+
+### Generating Code for New APP FW Versions
+
+If you are working with a new version of the TROPIC01 Application Firmware, you need to regenerate the Configuration Object and the API layers using the provided generators.
+
+#### 1. Generate Configuration Object
+Navigate to the generator directory and run the `co_generator` script pointing to the updated XML definition:
+
+```shell
+cd tvl/configuration_object_generator/
+co_generator -i /path/to/tropic01_application_co.xml -o ../targets/model/configuration_object_impl.py
+```
+
+#### 2. Generate API Layers (L2 and L3)
+Navigate to the API generator directory and run the `api_generator` for both Layer 2 and Layer 3 YAML definitions:
+
+```shell
+cd tvl/api_generator/
+
+# Generate L3 API
+api_generator -i /path/to/tropic01_L3_api.yml -t templates/l3_api.py.j2 -o ../api/l3_api.py
+
+# Generate L2 API
+api_generator -i /path/to/tropic01_L2_api.yml -o ../api/l2_api.py
+```
+
+Note: Replace /path/to/ with the actual path to your local tassic-system-verification repository or the specific directory containing the updated firmware documentation.

@@ -1,9 +1,7 @@
-# GENERATED ON 2025-06-18 11:21:50.550301
+# GENERATED ON 2026-03-31 16:44:13.028224
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 561BB2C37494B1FD939517827E80B5BE89F64C85A2CE5B060AB2FE00424452C3
+# INPUT FILE: 9CF2A59F9B6E0743DC728418568F484547B5FF3523B77846793EAD107CEE1B39
 #
-# Copyright 2024 TropicSquare
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import List, Union
 
@@ -30,7 +28,7 @@ class L2Enum(HexReprIntEnum):
     STARTUP = 0xB3
     """Reset the chip."""
     GET_LOG = 0xA2
-    """Get FW log"""
+    """Get debug log message"""
 
 
 class APIL2Request(L2Request):
@@ -46,19 +44,17 @@ class TsL2GetInfoRequest(APIL2Request, id=L2Enum.GET_INFO):
     """The Identifier of the requested object."""
     class ObjectIdEnum(HexReprIntEnum):
         X509_CERTIFICATE = 0x00
-        """The X.509 Certificate Store read from I-Memory and signed by Tropic
-        Square."""
+        """The X.509 Certificate Store (object size 3840B)."""
         CHIP_ID = 0x01
-        """The chip ID - the chip silicon revision and unique device ID (max
-        length of 128B)."""
+        """The chip ID - the chip silicon revision and unique device ID
+        (object size 128B)."""
         RISCV_FW_VERSION = 0x02
-        """The RISCV current running FW version (4 Bytes)"""
+        """Current version of RISC-V FW (object size 4B)"""
         SPECT_FW_VERSION = 0x04
-        """The SPECT FW version (4 Bytes)"""
-    block_index: U8Scalar  # The index of the 128 Byte long block to request
-    """In case the requested object is larger than 128B use chunk number.
-    First chunk has index 0 and maximum value is 29 for 3840B Certificate
-    Store ."""
+        """Current version of SPECT FW (object size 4B)"""
+    block_index: U8Scalar  # The index of the 128B long block to request.
+    """X509_CERTIFICATE: index of the 128B certificate block 0 - 29 CHIP_ID,
+    *_FW_VERSION: do not care"""
 
 
 class TsL2GetInfoResponse(APIL2Response, id=L2Enum.GET_INFO):
@@ -149,8 +145,8 @@ class TsL2GetLogRequest(APIL2Request, id=L2Enum.GET_LOG):
 
 
 class TsL2GetLogResponse(APIL2Response, id=L2Enum.GET_LOG):
-    log_msg: U8Array = datafield(min_size=0, max_size=255)  # Log message
-    """Log message of RISCV FW."""
+    log_msg: U8Array = datafield(min_size=0, max_size=252)  # Debug log message
+    """Debug log message"""
 
 
 class L2API(BaseModel):
@@ -175,12 +171,7 @@ class L2API(BaseModel):
         self,
         request: TsL2GetInfoRequest
     ) -> Union[L2Response, List[L2Response]]:
-        """Request to obtain information about TROPIC01. The type of
-		information obtained is distinguished by OBJECT_ID.  NOTE: If Start-up
-		mode is active, TROPIC01 executes the immutable FW. Any version
-		identification then has the highest bit set to 1. SPECT_FW_VERSION
-		then returns a dummy value of 0x80000000 because the SPECT FW is part
-		of the immutable FW."""
+        """Request to obtain information about TROPIC01."""
         raise NotImplementedError("TODO")
 
     @api("l2_api")
@@ -238,5 +229,7 @@ class L2API(BaseModel):
         self,
         request: TsL2GetLogRequest
     ) -> Union[L2Response, List[L2Response]]:
-        """Get log from FW running on RISCV CPU."""
+        """Get debug log message (for internal development purpose only).
+		Note: Logging is irreversibly disabled in CFG_DEBUG[FW_LOG_EN] during
+		provisioning."""
         raise NotImplementedError("TODO")

@@ -1,6 +1,6 @@
-# GENERATED ON 2025-08-29 15:05:07.339298
+# GENERATED ON 2026-03-31 16:43:40.479764
 # BY API_GENERATOR VERSION 1.7
-# INPUT FILE: 5A5A2723C56255C347A178D6351518C56AF10B70E9C4569BA8EFB3175B3898BB
+# INPUT FILE: 6F0E812E895FBC4B56CF4781CEFCA0DC85A37A3F082AEAE65F9E8F4F45033A07
 #
 
 
@@ -8,19 +8,14 @@ from tvl.messages.datafield import (
     AUTO,
     U8Array,
     U8Scalar,
-    U16Array,
     U16Scalar,
-    U32Array,
     U32Scalar,
-    U64Array,
-    U64Scalar,
     datafield,
 )
 from tvl.messages.l3_messages import L3Command, L3Result
 from tvl.targets.model.base_model import BaseModel
 from tvl.targets.model.meta_model import api
 from tvl.typing_utils import HexReprIntEnum
-
 
 
 class L3Enum(HexReprIntEnum):
@@ -110,7 +105,10 @@ class TsL3PairingKeyWriteCommand(APIL3Command, id=L3Enum.PAIRING_KEY_WRITE):
 
 
 class TsL3PairingKeyWriteResult(APIL3Result, id=L3Enum.PAIRING_KEY_WRITE):
-    pass
+    class ResultEnum(HexReprIntEnum):
+        HARDWARE_FAIL = 0x17
+        """In case an HW error occurred during writing to OTP and the slot
+            was invalidated and permanently lost."""
 
 
 class TsL3PairingKeyReadCommand(APIL3Command, id=L3Enum.PAIRING_KEY_READ):
@@ -129,10 +127,9 @@ class TsL3PairingKeyReadCommand(APIL3Command, id=L3Enum.PAIRING_KEY_READ):
 
 class TsL3PairingKeyReadResult(APIL3Result, id=L3Enum.PAIRING_KEY_READ):
     class ResultEnum(HexReprIntEnum):
-        PAIRING_KEY_EMPTY = 0x15
-        """The Pairing key slot is in "Blank" state. A Pairing Key has not
-            been written to it yet."""
-        PAIRING_KEY_INVALID = 0x16
+        SLOT_EMPTY = 0x15
+        """The requested slot is empty and contains no valid data."""
+        SLOT_INVALID = 0x16
         """The Pairing key slot is in "Invalidated" state. The Pairing key
             has been invalidated."""
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
@@ -157,7 +154,9 @@ class TsL3PairingKeyInvalidateCommand(APIL3Command, id=L3Enum.PAIRING_KEY_INVALI
 
 
 class TsL3PairingKeyInvalidateResult(APIL3Result, id=L3Enum.PAIRING_KEY_INVALIDATE):
-    pass
+    class ResultEnum(HexReprIntEnum):
+        HARDWARE_FAIL = 0x17
+        """In case of some HW error."""
 
 
 class TsL3RConfigWriteCommand(APIL3Command, id=L3Enum.R_CONFIG_WRITE):
@@ -170,7 +169,9 @@ class TsL3RConfigWriteCommand(APIL3Command, id=L3Enum.R_CONFIG_WRITE):
 
 
 class TsL3RConfigWriteResult(APIL3Result, id=L3Enum.R_CONFIG_WRITE):
-    pass
+    class ResultEnum(HexReprIntEnum):
+        HARDWARE_FAIL = 0x17
+        """In case of some HW error."""
 
 
 class TsL3RConfigReadCommand(APIL3Command, id=L3Enum.R_CONFIG_READ):
@@ -201,7 +202,12 @@ class TsL3IConfigWriteCommand(APIL3Command, id=L3Enum.I_CONFIG_WRITE):
 
 
 class TsL3IConfigWriteResult(APIL3Result, id=L3Enum.I_CONFIG_WRITE):
-    pass
+    class ResultEnum(HexReprIntEnum):
+        HARDWARE_FAIL = 0x17
+        """In case an HW error occurred during writing to OTP.
+            This is fatal error and the chip will be switched permanently to
+            ALARM.
+            """
 
 
 class TsL3IConfigReadCommand(APIL3Command, id=L3Enum.I_CONFIG_READ):
@@ -228,8 +234,10 @@ class TsL3RMemDataWriteCommand(APIL3Command, id=L3Enum.R_MEM_DATA_WRITE):
 
 class TsL3RMemDataWriteResult(APIL3Result, id=L3Enum.R_MEM_DATA_WRITE):
     class ResultEnum(HexReprIntEnum):
-        WRITE_FAIL = 0x10
-        """The slot is already written in."""
+        SLOT_NOT_EMPTY = 0x10
+        """The word is already written."""
+        HARDWARE_FAIL = 0x17
+        """In case of some HW error."""
 
 
 class TsL3RMemDataReadCommand(APIL3Command, id=L3Enum.R_MEM_DATA_READ):
@@ -312,7 +320,7 @@ class TsL3EccKeyReadCommand(APIL3Command, id=L3Enum.ECC_KEY_READ):
 class TsL3EccKeyReadResult(APIL3Result, id=L3Enum.ECC_KEY_READ):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
-        """The key in the requested slot does not exist."""
+        """The key in selected slot is invalid or does not exist."""
     curve: U8Scalar  # Elliptic Curve
     """The type of Elliptic Curve public key returned."""
     class CurveEnum(HexReprIntEnum):
@@ -356,7 +364,7 @@ class TsL3EcdsaSignCommand(APIL3Command, id=L3Enum.ECDSA_SIGN):
 class TsL3EcdsaSignResult(APIL3Result, id=L3Enum.ECDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
-        """The key in the requested slot does not exist, or is invalid."""
+        """The key in selected slot is invalid or does not exist."""
     padding: U8Array = datafield(size=15, default=AUTO)  # Padding
     """The padding by dummy data."""
     r: U8Array = datafield(size=32)  # ECDSA Signature - R part
@@ -378,7 +386,7 @@ class TsL3EddsaSignCommand(APIL3Command, id=L3Enum.EDDSA_SIGN):
 class TsL3EddsaSignResult(APIL3Result, id=L3Enum.EDDSA_SIGN):
     class ResultEnum(HexReprIntEnum):
         INVALID_KEY = 0x12
-        """The key in the requested slot does not exist, or is invalid."""
+        """The key in selected slot is invalid or does not exist."""
     padding: U8Array = datafield(size=15, default=AUTO)  # Padding
     """The padding by dummy data."""
     r: U8Array = datafield(size=32)  # EDDSA Signature - R part
@@ -410,11 +418,9 @@ class TsL3McounterUpdateCommand(APIL3Command, id=L3Enum.MCOUNTER_UPDATE):
 class TsL3McounterUpdateResult(APIL3Result, id=L3Enum.MCOUNTER_UPDATE):
     class ResultEnum(HexReprIntEnum):
         UPDATE_ERR = 0x13
-        """Failure to update the specified Monotonic Counter. The
-            Monotonic Counter is already at 0."""
+        """Update operation failed (i.e. mcounter done at 0)."""
         COUNTER_INVALID = 0x14
-        """The Monotonic Counter detects an attack and is locked. The
-            counter must be reinitialized."""
+        """The counter disabled or locked."""
 
 
 class TsL3McounterGetCommand(APIL3Command, id=L3Enum.MCOUNTER_GET):
@@ -426,8 +432,7 @@ class TsL3McounterGetCommand(APIL3Command, id=L3Enum.MCOUNTER_GET):
 class TsL3McounterGetResult(APIL3Result, id=L3Enum.MCOUNTER_GET):
     class ResultEnum(HexReprIntEnum):
         COUNTER_INVALID = 0x14
-        """The Monotonic Counter detects an attack and is locked. The
-            counter must be reinitialized."""
+        """The counter disabled or locked."""
     padding: U8Array = datafield(size=3, default=AUTO)  # Padding
     """The padding by dummy data."""
     mcounter_val: U32Scalar  # Initialization value.

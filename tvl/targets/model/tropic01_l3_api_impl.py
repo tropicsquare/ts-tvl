@@ -163,12 +163,12 @@ class L3APIImplementation(L3API):
         except BlankSlotError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
-                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_EMPTY
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.SLOT_EMPTY
             ) from None
         except InvalidatedSlotError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
-                exc, result=TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_INVALID
+                exc, result=TsL3PairingKeyReadResult.ResultEnum.SLOT_INVALID
             ) from None
 
         self.logger.debug("Read pairing key: %s", s_hipub_bytes)
@@ -363,7 +363,7 @@ class L3APIImplementation(L3API):
         except SlotAlreadyWrittenError as exc:
             self.logger.info(exc)
             raise L3ProcessingError(
-                result=TsL3RMemDataWriteResult.ResultEnum.WRITE_FAIL
+                result=TsL3RMemDataWriteResult.ResultEnum.SLOT_NOT_EMPTY
             ) from None
 
         self.logger.debug("User data slot written.")
