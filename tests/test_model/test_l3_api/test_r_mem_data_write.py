@@ -85,7 +85,7 @@ def test_written_udata_slot(
     )
     result = host.send_command(command)
 
-    assert result.result.value == TsL3RMemDataWriteResult.ResultEnum.WRITE_FAIL
+    assert result.result.value == TsL3RMemDataWriteResult.ResultEnum.SLOT_NOT_EMPTY
     assert model.r_user_data[udata_slot].free is False
     assert model.r_user_data[udata_slot].value == previous_value
 

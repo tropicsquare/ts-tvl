@@ -53,12 +53,12 @@ def test_read_key(host: Host, slot: int, expected_value: bytes):
     [
         pytest.param(
             BLANK_KEY_IDX,
-            TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_EMPTY,
+            TsL3PairingKeyReadResult.ResultEnum.SLOT_EMPTY,
             id="blank_slot",
         ),
         pytest.param(
             INVALID_KEY_IDX,
-            TsL3PairingKeyReadResult.ResultEnum.PAIRING_KEY_INVALID,
+            TsL3PairingKeyReadResult.ResultEnum.SLOT_INVALID,
             id="invalid_slot",
         ),
     ],

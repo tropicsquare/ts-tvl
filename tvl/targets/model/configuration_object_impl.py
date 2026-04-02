@@ -1,6 +1,6 @@
-# GENERATED ON 2025-02-20 15:25:12.100946
-# BY internal.py VERSION 0.4
-# INPUT FILE: 8e0b7d81d7ac0252fdbff9726bbb6ae084d7d9bab49f27cdbda22da3832091d8
+# GENERATED ON 2026-03-31 16:28:04.231542
+# BY CO_GENERATOR VERSION 0.4
+# INPUT FILE: a07cff77f5e2ec3f3a5fbc86a25faec4fec9673af838ee9e27b4f6930db93add
 #
 from typing import Optional
 
@@ -13,6 +13,11 @@ from tvl.targets.model.internal.configuration_object import (
     ConfigurationObjectModel,
 )
 from tvl.typing_utils import HexReprIntEnum
+
+
+class CfgGpo(ConfigObjectRegister):
+    gpo_func = ConfigObjectField(0, 3)
+    """GPO pin functinality"""
 
 
 class CfgSleepMode(ConfigObjectRegister):
@@ -316,7 +321,8 @@ class CfgUapMacAndDestroy(ConfigObjectRegister):
 
 
 class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
-    CFG_SLEEP_MODE = 0x14
+    CFG_GPO = 0x14
+    CFG_SLEEP_MODE = 0x18
     CFG_UAP_PAIRING_KEY_WRITE = 0x20
     CFG_UAP_PAIRING_KEY_READ = 0x24
     CFG_UAP_PAIRING_KEY_INVALIDATE = 0x28
@@ -343,6 +349,7 @@ class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
 
 class ConfigurationObjectImpl(ConfigurationObject):
     def __init__(self, **kwargs: int) -> None:
+        self.cfg_gpo = CfgGpo(self, ConfigObjectRegisterAddressEnum.CFG_GPO)
         self.cfg_sleep_mode = CfgSleepMode(self, ConfigObjectRegisterAddressEnum.CFG_SLEEP_MODE)
         self.cfg_uap_pairing_key_write = CfgUapPairingKeyWrite(self, ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE)
         self.cfg_uap_pairing_key_read = CfgUapPairingKeyRead(self, ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_READ)
@@ -370,6 +377,7 @@ class ConfigurationObjectImpl(ConfigurationObject):
 
 
 class ConfigurationObjectImplModel(ConfigurationObjectModel):
+    cfg_gpo: Optional[StrictInt]
     cfg_sleep_mode: Optional[StrictInt]
     cfg_uap_pairing_key_write: Optional[StrictInt]
     cfg_uap_pairing_key_read: Optional[StrictInt]
