@@ -68,11 +68,19 @@ def get_input_arguments():
         help="Increase script verbosity",
     )
     parser.add_argument(
-        "-i",
-        "--input-file",
+        "-b",
+        "--bootloader-input",
         required=True,
         type=_input_file(_with_ext([".xml"])),
-        help="XML input file",
+        help="Bootloader CO XML input file",
+        metavar="FILE",
+    )
+    parser.add_argument(
+        "-a",
+        "--application-input",
+        required=True,
+        type=_input_file(_with_ext([".xml"])),
+        help="Application CO XML input file",
         metavar="FILE",
     )
     parser.add_argument(

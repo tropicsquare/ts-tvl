@@ -128,12 +128,19 @@ See the [LICENSE.md](LICENSE.md) file in the root of this repository or consult 
 If you are working with a new version of the TROPIC01 Application Firmware, you need to regenerate the Configuration Object and the API layers using the provided generators.
 
 #### 1. Generate Configuration Object
-Navigate to the generator directory and run the `co_generator` script pointing to the updated XML definition:
+Navigate to the generator directory and run the `co_generator` script pointing to both the Bootloader and Application CO XML definitions:
 
 ```shell
 cd tvl/configuration_object_generator/
-co_generator -i /path/to/tropic01_application_co.xml -o ../targets/model/configuration_object_impl.py
+co_generator \
+  -b /path/to/tropic01_bootloader_co.xml \
+  -a /path/to/tropic01_application_co.xml \
+  -o ../targets/model/configuration_object_impl.py
 ```
+
+Replace `/path/to/` with the actual path to your local tassic-system-verification repository. The XML files are located at:
+- `modules/ts-tr01-boot/docs/user_api/tropic01_bootloader_co.xml`
+- `modules/ts-tr01-app/docs/user_api/tropic01_application_co.xml`
 
 #### 2. Generate API Layers (L2 and L3)
 Navigate to the API generator directory and run the `api_generator` for both Layer 2 and Layer 3 YAML definitions:

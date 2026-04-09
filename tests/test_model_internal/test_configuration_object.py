@@ -137,3 +137,50 @@ def test_configuration_object_bytes():
     c2 = ConfigurationObjectImpl.from_bytes(c1b2)
     assert c2 == c1
     assert c2.to_bytes() == c1b2
+
+
+def test_bootloader_registers_roundtrip_dict():
+    """Verify bootloader CO registers (CFG_START_UP, CFG_SENSORS, CFG_DEBUG) survive from_dict/to_dict."""
+    values = {
+        "cfg_start_up": 0x0000000A,
+        "cfg_sensors": 0x0003FFFF,
+        "cfg_debug": 0x00000001,
+    }
+    co = ConfigurationObjectImpl.from_dict(values)
+    result = co.to_dict()
+
+    for name, expected in values.items():
+        assert result[name] == expected, f"{name}: expected {expected:#x}, got {result[name]:#x}"
+
+
+def test_bootloader_registers_roundtrip_bytes():
+    """Verify bootloader CO registers survive from_bytes/to_dict roundtrip."""
+    co = ConfigurationObjectImpl()
+    co.write(ConfigObjectRegisterAddressEnum.CFG_START_UP, 0x0000000A)
+    co.write(ConfigObjectRegisterAddressEnum.CFG_SENSORS, 0x0003FFFF)
+    co.write(ConfigObjectRegisterAddressEnum.CFG_DEBUG, 0x00000001)
+
+    raw = co.to_bytes()
+    co2 = ConfigurationObjectImpl.from_bytes(raw)
+    result = co2.to_dict()
+
+    assert result["cfg_start_up"] == 0x0000000A
+    assert result["cfg_sensors"] == 0x0003FFFF
+    assert result["cfg_debug"] == 0x00000001
+
+
+def test_bootloader_register_fields():
+    """Verify individual fields of bootloader registers are accessible."""
+    co = ConfigurationObjectImpl.from_dict({"cfg_sensors": 0x00000000})
+    assert co.cfg_sensors.ptrng0_test_dis == 0
+    assert co.cfg_sensors.platform_bit_flip_dis == 0
+
+    co2 = ConfigurationObjectImpl.from_dict({"cfg_sensors": 0x0003FFFF})
+    assert co2.cfg_sensors.ptrng0_test_dis == 1
+    assert co2.cfg_sensors.platform_bit_flip_dis == 1
+
+    co3 = ConfigurationObjectImpl.from_dict({"cfg_start_up": 0x0000000E})
+    assert co3.cfg_start_up.rfu_1 == 0
+    assert co3.cfg_start_up.mbist_dis == 1
+    assert co3.cfg_start_up.rngtest_dis == 1
+    assert co3.cfg_start_up.maintenance_ena == 1
