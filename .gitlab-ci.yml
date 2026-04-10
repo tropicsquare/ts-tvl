@@ -28,18 +28,34 @@ default:
 
 tests:
   stage: test
-  <<: *setup-env
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.8", "3.12", "3.14"]
+  cache:
+    - key: "venv-python${PYTHON_VERSION}-${CI_COMMIT_REF_SLUG}"
+      paths:
+        - .venv-${PYTHON_VERSION}
+  before_script:
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv venv --python ${PYTHON_VERSION} --clear .venv-${PYTHON_VERSION}
+    - uv pip install --python .venv-${PYTHON_VERSION}/bin/python poetry
+    - export VIRTUAL_ENV="$(pwd)/.venv-${PYTHON_VERSION}"
+    - export PATH="$VIRTUAL_ENV/bin:$PATH"
+    - poetry install --no-interaction --with=dev
   script:
-    - pytest -v --color=no --junit-xml=results.xml --cov-report=html:htmlcov
+    - poetry run pytest -v --color=no
+        --junit-xml=results-${PYTHON_VERSION}.xml
+        --cov-report=html:htmlcov-${PYTHON_VERSION}
   coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
   artifacts:
     when: always
-    name: tvl_coverage
+    name: "tvl_coverage_python${PYTHON_VERSION}"
     paths:
-      - htmlcov
-    expose_as: tests coverage report
+      - htmlcov-${PYTHON_VERSION}
+    expose_as: "tests coverage report"
     reports:
-      junit: results.xml
+      junit: results-${PYTHON_VERSION}.xml
 
 
 package:
