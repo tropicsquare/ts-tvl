@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import struct
+import sys
 from collections import ChainMap
 from itertools import islice
 from typing import Any, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, Type
@@ -11,7 +12,6 @@ from typing_extensions import (
     dataclass_transform,
     get_args,
     get_origin,
-    get_type_hints,
 )
 
 from ..utils import iter_subclasses
@@ -30,13 +30,32 @@ from .exceptions import (
 
 _RESERVED_FIELD_NAMES = {"data_field_bytes"}
 
+# Python 3.14+ (PEP 649) replaces the eager __annotations__ dict in the class
+# body namespace with a lazy __annotate_func__ callable (CPython implementation
+# detail for the annotationlib.Format.VALUE evaluation path). We must call it
+# before super().__new__() so that namespace.pop() can still remove raw
+# datafield() dicts before they become class attributes.
+if sys.version_info >= (3, 14):
+    from annotationlib import Format as _AnnotationFormat
+
+    def _get_namespace_annotations(namespace: Dict[str, Any]) -> Dict[str, Any]:
+        if "__annotate_func__" in namespace:
+            return namespace["__annotate_func__"](_AnnotationFormat.VALUE)
+        return namespace.get("__annotations__", {})
+
+else:
+    def _get_namespace_annotations(namespace: Dict[str, Any]) -> Dict[str, Any]:  # type: ignore[misc]
+        return namespace.get("__annotations__", {})
+
 
 def _get_specs(__cls: type, /) -> Iterator[Tuple[str, Type[DataField[Any]], Params]]:
-    return (
-        (name, *get_args(anns))
-        for name, anns in get_type_hints(__cls, include_extras=True).items()
-        if get_origin(anns) is Annotated
-    )
+    # Collect processed specs stored by _MetaMessage, walking MRO base→derived
+    # so derived fields shadow base fields with the same name (prevented by the
+    # metaclass, but handled here for safety).
+    seen: Dict[str, Tuple[str, Type[DataField[Any]], Params]] = {}
+    for klass in reversed(__cls.__mro__):
+        seen.update(getattr(klass, "__message_fields__", {}))
+    yield from seen.values()
 
 
 @dataclass_transform(kw_only_default=True, field_specifiers=(datafield,))
@@ -57,7 +76,8 @@ class _MetaMessage(type):
     ) -> "_MetaMessage":
         existing_fields = {n for base in bases for n, *_ in _get_specs(base)}
 
-        annotations: Dict[str, Any] = namespace.get("__annotations__", {})
+        annotations: Dict[str, Any] = _get_namespace_annotations(namespace)
+        local_fields: Dict[str, Tuple[str, Type[DataField[Any]], Params]] = {}
 
         for field_name, field_annot in annotations.items():
             if field_name in _RESERVED_FIELD_NAMES:
@@ -83,8 +103,9 @@ class _MetaMessage(type):
 
             params = Params(**ChainMap(*params_args, namespace.pop(field_name, {})))
 
-            annotations[field_name] = Annotated[tp, params]  # type: ignore
+            local_fields[field_name] = (field_name, tp, params)
 
+        namespace["__message_fields__"] = local_fields
         return super().__new__(mcs, name, bases, namespace, **kwargs)
 
 
