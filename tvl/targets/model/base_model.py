@@ -18,7 +18,15 @@ from typing import (
 
 from typing_extensions import Self
 
-from ...constants import CHUNK_SIZE, ENCRYPTION_TAG_LEN, S_HI_PUB_NB_SLOTS, L2StatusEnum
+from ...constants import (
+    CHUNK_SIZE,
+    ENCRYPTION_TAG_LEN,
+    RISCV_FW_VERSION_DEFAULT,
+    S_HI_PUB_NB_SLOTS,
+    SPECT_FW_VERSION_DEFAULT,
+    L2StatusEnum,
+    encode_fw_version,
+)
 from ...crypto.encrypted_session import TropicEncryptedSession
 from ...logging_utils import Labeller, LogIter
 from ...messages.exceptions import NoValidSubclassError, SubclassNotFoundError
@@ -71,8 +79,8 @@ class BaseModel(MetaModel):
         s_t_pub: Optional[bytes] = None,
         x509_certificate: bytes = b"x509_certificate",
         chip_id: bytes = b"chip_id",
-        riscv_fw_version: bytes = b"riscv_fw_version",
-        spect_fw_version: bytes = b"spect_fw_version",
+        riscv_fw_version: Union[bytes, str] = RISCV_FW_VERSION_DEFAULT,
+        spect_fw_version: Union[bytes, str] = SPECT_FW_VERSION_DEFAULT,
         activate_encryption: bool = True,
         debug_random_value: Optional[bytes] = None,
         init_byte: bytes = b"\x00",
@@ -105,10 +113,10 @@ class BaseModel(MetaModel):
             x509_certificate (bytes, optional): TropicSquare x509 certificate.
                 Defaults to b"x509_certificate".
             chip_id (bytes, optional): ID of the chip. Defaults to b"chip_id".
-            riscv_fw_version (bytes, optional): version of the FW.
-                Defaults to b"riscv_fw_version".
-            spect_fw_version (bytes, optional): version of the SPECT.
-                Defaults to b"spect_fw_version".
+            riscv_fw_version (bytes or str, optional): version of the FW.
+                Defaults to RISCV_FW_VERSION_DEFAULT.
+            spect_fw_version (bytes or str, optional): version of the SPECT.
+                Defaults to SPECT_FW_VERSION_DEFAULT.
             activate_encryption (bool, optional): enable encrypted L3 layer.
                 Defaults to True.
             debug_random_value (bytes, optional): TRNG2 initial random value.
@@ -152,8 +160,8 @@ class BaseModel(MetaModel):
         self.x509_certificate = x509_certificate
         """The X.509 certificate signed by Tropic Square"""
         self.chip_id = chip_id
-        self.riscv_fw_version = riscv_fw_version
-        self.spect_fw_version = spect_fw_version
+        self.riscv_fw_version = encode_fw_version(riscv_fw_version) if isinstance(riscv_fw_version, str) else riscv_fw_version
+        self.spect_fw_version = encode_fw_version(spect_fw_version) if isinstance(spect_fw_version, str) else spect_fw_version
 
         # --- Others ---
         self.activate_encryption = activate_encryption

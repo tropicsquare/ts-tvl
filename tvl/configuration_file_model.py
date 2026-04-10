@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Extra, StrictBool, StrictBytes
+from pydantic import BaseModel, Extra, StrictBool, StrictBytes, validator
 from typing_extensions import TypedDict
 
 from .constants import (
@@ -12,6 +12,7 @@ from .constants import (
     RISCV_FW_VERSION_SIZE,
     S_HI_PUB_NB_SLOTS,
     SPECT_FW_VERSION_SIZE,
+    encode_fw_version,
 )
 from .targets.model.configuration_object_impl import ConfigurationObjectImplModel
 from .targets.model.internal.ecc_keys import EccModel
@@ -54,6 +55,13 @@ class ModelConfigurationModel(_BaseModel):
     chip_id: Optional[SizedBytes[1, CHIP_ID_SIZE]]
     riscv_fw_version: Optional[FixedSizeBytes[RISCV_FW_VERSION_SIZE]]
     spect_fw_version: Optional[FixedSizeBytes[SPECT_FW_VERSION_SIZE]]
+
+    @validator("riscv_fw_version", "spect_fw_version", pre=True)
+    def _parse_fw_version(cls, v):  # noqa: N805
+        if isinstance(v, str):
+            return encode_fw_version(v)
+        return v
+
     debug_random_value: Optional[StrictBytes]
     activate_encryption: Optional[StrictBool]
     init_byte: Optional[FixedSizeBytes[1]]
