@@ -1,3 +1,4 @@
+import re
 from enum import IntFlag
 
 from .typing_utils import HexReprIntEnum
@@ -86,6 +87,59 @@ RISCV_FW_VERSION_SIZE = 4
 
 SPECT_FW_VERSION_SIZE = 4
 """Length of the SPECT ROM ID"""
+
+
+def encode_fw_version(version: str) -> bytes:
+    """Encode a firmware version string into 4 bytes.
+
+    Accepts git-describe-style version strings:
+      "2.0.0"              — clean release
+      "2.0.0-5"            — 5 commits after tag
+      "2.0.0-5-gabcdef"    — with git hash (ignored)
+      "2.0.0-dirty"        — uncommitted changes
+      "2.0.0-5-gabcdef-dirty"
+
+    Format: little-endian encoding of
+    (major << 24) | (minor << 16) | (patch << 8) | (commits << 1) | dirty.
+    """
+    match = re.match(
+        r"v?(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
+        r"(?:-(?P<commits>\d+))?"
+        r"(?:-g[0-9a-f]+)?"
+        r"(?P<dirty>-dirty)?$",
+        version,
+    )
+    if match is None:
+        raise ValueError(f"Invalid firmware version string: {version!r}")
+    major = int(match.group("major"))
+    minor = int(match.group("minor"))
+    patch = int(match.group("patch"))
+    commits = int(match.group("commits") or 0)
+    dirty = 1 if match.group("dirty") else 0
+    if not (0 <= major <= 255 and 0 <= minor <= 255 and 0 <= patch <= 255):
+        raise ValueError(f"Version components must be 0-255, got: {major}.{minor}.{patch}")
+    if commits > 127:
+        raise ValueError(f"Commits since tag must be 0-127, got: {commits}")
+    return (
+        (major << 24) | (minor << 16) | (patch << 8) | (commits << 1) | dirty
+    ).to_bytes(4, "little")
+
+
+RISCV_FW_VERSION_STR = "2.0.0"
+"""RISCV FW version the model's behavior corresponds to (ts-tr01-app).
+This is the FW version that was latest available when the model was released.
+Update this value when releasing a new version targeting a newer FW."""
+
+RISCV_FW_VERSION_DEFAULT = encode_fw_version(RISCV_FW_VERSION_STR)
+"""RISCV_FW_VERSION_STR encoded as 4 bytes."""
+
+SPECT_FW_VERSION_STR = "1.1.0"
+"""SPECT FW version the model's behavior corresponds to.
+This is the SPECT version that was latest available when the model was released.
+Update this value when releasing a new version targeting a newer SPECT."""
+
+SPECT_FW_VERSION_DEFAULT = encode_fw_version(SPECT_FW_VERSION_STR)
+"""SPECT_FW_VERSION_STR encoded as 4 bytes."""
 
 CHUNK_SIZE = 128
 """Size of chunks sent by the model"""

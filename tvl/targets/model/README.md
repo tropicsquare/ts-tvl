@@ -253,7 +253,8 @@ configuration = {
         "i_config": {
             "cfg_uap_ping": 0xDB,
         },
-        "riscv_fw_version": b"0.9.2",
+        "riscv_fw_version": "2.0.0",
+        "spect_fw_version": "1.1.0",
     },
 }
 # Check the configuration with the dedicated pydantic model
@@ -267,3 +268,32 @@ with open("config.yaml", "w") as fd:
 
 A concrete example of how to create a valid configuration file is in the file
 [`examples/generate_configuration.py`](../../../examples/generate_configuration.py).
+
+### Firmware version defaults
+
+The model's behavior corresponds to a specific version of the TROPIC01 firmware
+(ts-tr01-app) and SPECT firmware. The default version strings reflect the
+firmware versions that were latest available when the model was released.
+These versions are reported via the `GetInfo` L2 command and are defined in
+[`constants.py`](../../constants.py):
+
+- `RISCV_FW_VERSION_STR` — ts-tr01-app FW version the model represents (e.g. `"2.0.0"`)
+- `SPECT_FW_VERSION_STR` — SPECT FW version the model represents (e.g. `"1.1.0"`)
+
+When releasing a new version of ts-tvl that targets a newer FW or SPECT release,
+update these version strings in `constants.py`. To override the default in a
+config file, use a version string: `riscv_fw_version: 2.0.0`.
+
+#### Version encoding
+
+Versions are encoded as a 4-byte little-endian `u32`, matching the format used
+by the firmware build system (`version.cmake`, `fw_package`). The encoding is
+designed so that simple integer comparison gives correct version ordering.
+
+```
+byte[3]    byte[2]    byte[1]    byte[0]
+major      minor      patch      (commits_since_tag << 1) | dirty
+(8 bit)    (8 bit)    (8 bit)    (7 bit)                   (1 bit)
+```
+
+Accepts git-describe format: `"2.0.0"`, `"2.0.0-5"`, `"2.0.0-5-gabcdef"`, `"2.0.0-dirty"`.
