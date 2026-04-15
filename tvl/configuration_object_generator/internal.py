@@ -107,16 +107,28 @@ def compute_sha256(filepath: Path) -> str:
         return sha256_hash.hexdigest()
 
 
-def create_header(input_file: Path) -> HeaderDict:
+def create_header(bootloader_input: Path, application_input: Path) -> HeaderDict:
     return {
         "date": datetime.now(),
         "version": __version__,
-        "hash": compute_sha256(input_file),
+        "hash": compute_sha256(bootloader_input) + "," + compute_sha256(application_input),
     }
 
 
-def create_context(input_file: Path) -> ContextDict:
-    return Converter.convert(Parser.parse(et.parse(input_file).getroot()))
+def create_context(bootloader_input: Path, application_input: Path) -> ContextDict:
+    bootloader = Parser.parse(et.parse(bootloader_input).getroot())
+    application = Parser.parse(et.parse(application_input).getroot())
+
+    overlaps = set(bootloader) & set(application)
+    for name in overlaps:
+        if bootloader[name] != application[name]:
+            raise ValueError(
+                f"Register '{name}' is defined in both bootloader and application "
+                f"inputs with different content."
+            )
+
+    merged: InputDict = {**bootloader, **application}
+    return Converter.convert(merged)
 
 
 def render(template: Path, *, header: HeaderDict, context: ContextDict) -> str:
@@ -131,16 +143,17 @@ def render(template: Path, *, header: HeaderDict, context: ContextDict) -> str:
 
 
 def generate_configuration_object(
-    input_file: Path, output_file: Path, template: Path, **_: Any
+    bootloader_input: Path, application_input: Path, output_file: Path, template: Path, **_: Any
 ) -> None:
-    __logger.debug("input_file = %s", input_file)
+    __logger.debug("bootloader_input = %s", bootloader_input)
+    __logger.debug("application_input = %s", application_input)
     __logger.debug("output_file = %s", output_file)
     __logger.debug("template_file = %s", template)
 
-    __logger.info("Processing input file.")
-    header = create_header(input_file)
-    context = create_context(input_file)
-    __logger.info("Input file processed.")
+    __logger.info("Processing input files.")
+    header = create_header(bootloader_input, application_input)
+    context = create_context(bootloader_input, application_input)
+    __logger.info("Input files processed.")
 
     __logger.info("Rendering template.")
     content = render(template, header=header, context=context)

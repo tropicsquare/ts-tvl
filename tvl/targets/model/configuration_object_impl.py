@@ -1,6 +1,6 @@
-# GENERATED ON 2026-03-31 16:28:04.231542
+# GENERATED ON 2026-04-09 19:05:53.267826
 # BY CO_GENERATOR VERSION 0.4
-# INPUT FILE: a07cff77f5e2ec3f3a5fbc86a25faec4fec9673af838ee9e27b4f6930db93add
+# INPUT FILE: 69e467b757dd8c9b7783a15ac2a1fa11387e2d6051d24bc66cc08bcb960a664d,995a56a689b91e1d5ab3f416f8f9e3f546da29fd6668865764de5e3eb891dc33
 #
 from typing import Optional
 
@@ -13,6 +13,85 @@ from tvl.targets.model.internal.configuration_object import (
     ConfigurationObjectModel,
 )
 from tvl.typing_utils import HexReprIntEnum
+
+
+class CfgStartUp(ConfigObjectRegister):
+    rfu_1 = ConfigObjectField(0, 1)
+    """Reserved for future use 1"""
+    mbist_dis = ConfigObjectField(1, 1)
+    """Configuration of the mutable FW test during start-up. If the test
+    fails, TROPIC01 enters Alarm Mode."""
+    rngtest_dis = ConfigObjectField(2, 1)
+    """PTRNG test configuration in Start-up mode."""
+    maintenance_ena = ConfigObjectField(3, 1)
+    """Configuration of Maintenance restart."""
+
+
+class CfgSensors(ConfigObjectRegister):
+    ptrng0_test_dis = ConfigObjectField(0, 1)
+    """TROPIC01 behavior when TRNG0 detects low entropy or error on internal
+    redundancy encodings. It triggers an alarm during application execution
+    and requires the startup PTRNG test to be enabled
+    (CFG_START_UP.RNGTEST_DIS = TEST_ON)."""
+    ptrng1_test_dis = ConfigObjectField(1, 1)
+    """TROPIC01 behavior when TRNG1 detects low entropy or error on internal
+    redundancy encodings. It triggers an alarm during application execution
+    and requires the startup PTRNG test to be enabled
+    (CFG_START_UP.RNGTEST_DIS = TEST_ON)."""
+    oscillator_mon_dis = ConfigObjectField(2, 1)
+    """TROPIC01 behavior when its internal oscillator detects too low
+    frequency."""
+    shield_dis = ConfigObjectField(3, 1)
+    """TROPIC01 behavior when its top metal layer active shield detects
+    tampering or an error on internal redundancy encodings."""
+    voltage_mon_dis = ConfigObjectField(4, 1)
+    """TROPIC01 behavior when its voltage monitor detects overvoltage or
+    undervoltage on VCC."""
+    glitch_det_dis = ConfigObjectField(5, 1)
+    """TROPIC01 behavior when its glitch detector detects a glitch on VCC."""
+    temp_sens_dis = ConfigObjectField(6, 1)
+    """TROPIC01 behavior when its temperature sensor detects overtemperature
+    or undertemperature."""
+    laser_det_dis = ConfigObjectField(7, 1)
+    """TROPIC01 behavior when its laser detector detects an laser attack."""
+    em_pulse_det_dis = ConfigObjectField(8, 1)
+    """TROPIC01 behavior when its Electromagnetic Pulse detects an laser
+    attack."""
+    cpu_alert_dis = ConfigObjectField(9, 1)
+    """TROPIC01 behavior when its RISCV CPU detects an attack on its memories,
+    register file or instruction pipeline."""
+    pin_verif_bit_flip_dis = ConfigObjectField(10, 1)
+    """TROPIC01 behavior when its Pin Verification engine detects bit flip on
+    its redundancy encoding mechanisms."""
+    scb_bit_flip_dis = ConfigObjectField(11, 1)
+    """TROPIC01 behavior when its Secure Channel Block detects bit flip on its
+    redundancy encoding mechanisms."""
+    cpb_bit_flip_dis = ConfigObjectField(12, 1)
+    """TROPIC01 behavior when its Command Processing Block detects bit flip on
+    its redundancy encoding mechanisms."""
+    ecc_bit_flip_dis = ConfigObjectField(13, 1)
+    """TROPIC01 behavior when its ECC engine detects bit flip on its
+    redundancy encoding mechanisms."""
+    r_mem_bit_flip_dis = ConfigObjectField(14, 1)
+    """TROPIC01 behavior when its R Memory controller detects bit flip on its
+    redundancy encoding mechanisms."""
+    ekdb_bit_flip_dis = ConfigObjectField(15, 1)
+    """TROPIC01 behavior when its Entropy and Key distribution engine detects
+    bit flip on its redundancy encoding mechanisms."""
+    i_mem_bit_flip_dis = ConfigObjectField(16, 1)
+    """TROPIC01 behavior when its I Memory controller detects bit flip on its
+    redundancy encoding mechanisms."""
+    platform_bit_flip_dis = ConfigObjectField(17, 1)
+    """TROPIC01 behavior when its platform management logic (silicon life-
+    cycle and SoC control) detects bit flip on its redundancy encoding
+    mechanisms."""
+
+
+class CfgDebug(ConfigObjectRegister):
+    fw_log_en = ConfigObjectField(0, 1)
+    """Enable internal debug logging for internal development purpose only.
+    Logging message is available with Get_Log_Req L2. Note: Irreversibly
+    disabled during device provisioning."""
 
 
 class CfgGpo(ConfigObjectRegister):
@@ -321,6 +400,9 @@ class CfgUapMacAndDestroy(ConfigObjectRegister):
 
 
 class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
+    CFG_START_UP = 0x00
+    CFG_SENSORS = 0x08
+    CFG_DEBUG = 0x10
     CFG_GPO = 0x14
     CFG_SLEEP_MODE = 0x18
     CFG_UAP_PAIRING_KEY_WRITE = 0x20
@@ -349,6 +431,9 @@ class ConfigObjectRegisterAddressEnum(HexReprIntEnum):
 
 class ConfigurationObjectImpl(ConfigurationObject):
     def __init__(self, **kwargs: int) -> None:
+        self.cfg_start_up = CfgStartUp(self, ConfigObjectRegisterAddressEnum.CFG_START_UP)
+        self.cfg_sensors = CfgSensors(self, ConfigObjectRegisterAddressEnum.CFG_SENSORS)
+        self.cfg_debug = CfgDebug(self, ConfigObjectRegisterAddressEnum.CFG_DEBUG)
         self.cfg_gpo = CfgGpo(self, ConfigObjectRegisterAddressEnum.CFG_GPO)
         self.cfg_sleep_mode = CfgSleepMode(self, ConfigObjectRegisterAddressEnum.CFG_SLEEP_MODE)
         self.cfg_uap_pairing_key_write = CfgUapPairingKeyWrite(self, ConfigObjectRegisterAddressEnum.CFG_UAP_PAIRING_KEY_WRITE)
@@ -377,6 +462,9 @@ class ConfigurationObjectImpl(ConfigurationObject):
 
 
 class ConfigurationObjectImplModel(ConfigurationObjectModel):
+    cfg_start_up: Optional[StrictInt]
+    cfg_sensors: Optional[StrictInt]
+    cfg_debug: Optional[StrictInt]
     cfg_gpo: Optional[StrictInt]
     cfg_sleep_mode: Optional[StrictInt]
     cfg_uap_pairing_key_write: Optional[StrictInt]
