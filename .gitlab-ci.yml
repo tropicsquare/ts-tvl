@@ -38,8 +38,8 @@ tests:
   before_script:
     - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
+    - uv tool install poetry --upgrade
     - uv venv --python ${PYTHON_VERSION} --clear .venv-${PYTHON_VERSION}
-    - uv pip install --python .venv-${PYTHON_VERSION}/bin/python poetry
     - export VIRTUAL_ENV="$(pwd)/.venv-${PYTHON_VERSION}"
     - export PATH="$VIRTUAL_ENV/bin:$PATH"
     - poetry install --no-interaction --with=dev
