@@ -1,8 +1,11 @@
 import random
 import string
+import textwrap
+from pathlib import Path
 
 import pytest
 
+from tvl.configuration_object_generator.internal import create_context
 from tvl.targets.model.configuration_object_impl import (
     ConfigObjectRegisterAddressEnum,
     ConfigurationObjectImpl,
@@ -184,3 +187,42 @@ def test_bootloader_register_fields():
     assert co3.cfg_start_up.mbist_dis == 1
     assert co3.cfg_start_up.rngtest_dis == 1
     assert co3.cfg_start_up.maintenance_ena == 1
+
+
+_SHARED_REG_XML = textwrap.dedent("""\
+    <?xml version="1.0" encoding="UTF-8"?>
+    <map>
+      <reg>
+        <shorttext>CFG_SHARED</shorttext>
+        <baseaddr>0x14</baseaddr>
+        <field>
+          <shorttext>FIELD_A</shorttext>
+          <lowidx>0</lowidx>
+          <width>3</width>
+          <longtext>Shared field</longtext>
+        </field>
+      </reg>
+    </map>
+""")
+
+
+def test_create_context_rejects_divergent_overlap(tmp_path: Path):
+    boot_xml = tmp_path / "boot.xml"
+    boot_xml.write_text(_SHARED_REG_XML)
+
+    app_xml = tmp_path / "app.xml"
+    app_xml.write_text(_SHARED_REG_XML.replace("Shared field", "Different description"))
+
+    with pytest.raises(ValueError, match="CFG_SHARED"):
+        create_context(boot_xml, app_xml)
+
+
+def test_create_context_allows_identical_overlap(tmp_path: Path):
+    boot_xml = tmp_path / "boot.xml"
+    boot_xml.write_text(_SHARED_REG_XML)
+
+    app_xml = tmp_path / "app.xml"
+    app_xml.write_text(_SHARED_REG_XML)
+
+    ctx = create_context(boot_xml, app_xml)
+    assert "CFG_SHARED" in ctx

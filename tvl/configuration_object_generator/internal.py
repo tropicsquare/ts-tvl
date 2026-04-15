@@ -118,6 +118,15 @@ def create_header(bootloader_input: Path, application_input: Path) -> HeaderDict
 def create_context(bootloader_input: Path, application_input: Path) -> ContextDict:
     bootloader = Parser.parse(et.parse(bootloader_input).getroot())
     application = Parser.parse(et.parse(application_input).getroot())
+
+    overlaps = set(bootloader) & set(application)
+    for name in overlaps:
+        if bootloader[name] != application[name]:
+            raise ValueError(
+                f"Register '{name}' is defined in both bootloader and application "
+                f"inputs with different content."
+            )
+
     merged: InputDict = {**bootloader, **application}
     return Converter.convert(merged)
 
