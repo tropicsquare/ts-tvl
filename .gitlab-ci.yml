@@ -38,13 +38,12 @@ tests:
   before_script:
     - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
-    - uv tool install poetry --upgrade
     - uv venv --python ${PYTHON_VERSION} --clear .venv-${PYTHON_VERSION}
     - export VIRTUAL_ENV="$(pwd)/.venv-${PYTHON_VERSION}"
     - export PATH="$VIRTUAL_ENV/bin:$PATH"
-    - poetry install --no-interaction --with=dev
+    - uvx poetry install --no-interaction --with=dev
   script:
-    - poetry run pytest -v --color=no
+    - uvx poetry run pytest -v --color=no
         --junit-xml=results-${PYTHON_VERSION}.xml
         --cov-report=html:htmlcov-${PYTHON_VERSION}
   coverage: '/TOTAL\s+(?:\d+\s+){4}(\d+\.?\d+)%/'
