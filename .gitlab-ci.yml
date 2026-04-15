@@ -18,12 +18,12 @@ default:
       paths:
         - .venv
   before_script:
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
     - python3.8 -m venv .venv
     - source .venv/bin/activate
-    - pip install --upgrade pip
-    - pip install poetry
-    - poetry config virtualenvs.in-project true
-    - poetry install --no-root --no-interaction --with=dev
+    - uvx poetry config virtualenvs.in-project true
+    - uvx poetry install --no-root --no-interaction --with=dev
 
 
 tests:
@@ -61,7 +61,7 @@ package:
   stage: build
   <<: *setup-env
   script:
-    - poetry build --format=wheel
+    - uvx poetry build --format=wheel
   artifacts:
     paths:
       - dist/

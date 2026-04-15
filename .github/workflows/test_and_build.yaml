@@ -25,10 +25,9 @@ jobs:
 
       - name: install dependencies
         run: |
+            pipx install poetry
             python3.8 -m venv .venv
             source .venv/bin/activate
-            pip install --upgrade pip
-            pip install poetry
             poetry config virtualenvs.in-project true
             poetry install --no-root --no-interaction --with=dev
             echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
