@@ -103,15 +103,6 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
 
     # The first byte is GET_RESP, the chip should return a response
     if data[0] == L2IdFieldEnum.GET_RESP:
-        # Sporadically set READY bit to 0 to emulate a busy chip
-        if next(fsm.busy_iter_cyc):
-            fsm.set_next_state(send_no_resp_state)
-            return pad(
-                bytes([not L1ChipStatusFlag.READY]),
-                bytes([L2StatusEnum.NO_RESP]),
-                len(data),
-            )
-
         # Send data left in the output buffer
         if fsm.odata:
             fsm.set_next_state(send_response_state)
@@ -129,6 +120,16 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
                 bytes([L1ChipStatusFlag.READY]) + fsm.fetch((_l := len(data)) - 1),
                 PADDING_BYTE,
                 _l,
+            )
+
+        # Sporadically set READY bit to 0 to emulate a busy chip only while a
+        # response is still pending, not once the response buffer is drained.
+        if next(fsm.busy_iter_cyc):
+            fsm.set_next_state(send_no_resp_state)
+            return pad(
+                bytes([0x00]),
+                bytes([L2StatusEnum.NO_RESP]),
+                len(data),
             )
 
         # Otherwise send NO_RESP
@@ -157,7 +158,7 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
         fsm.odata = fsm.response_buffer.next()
 
     fsm.set_next_state(send_init_byte_state)
-    return pad(bytes([not L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
+    return pad(bytes([L1ChipStatusFlag.READY]), fsm.init_byte, len(data))
 
 
 def send_response_state(fsm: SpiFsm, data: bytes) -> bytes:
