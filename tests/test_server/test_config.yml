@@ -1,0 +1,26 @@
+chip_id: !!binary |
+  sABvPCW5+laqdZ68q7zg5ATBhveVXQM11snD3jXZxEBZoTn2VOEXYztftEOGfx3JhJg0h3Z98Yk3
+  s5IV3ACKt6d/Z3R1fPIL6pYolxqezCgm/noAJoyZ7L3Yt2OsOQb27QadY/OQDbNWwXphQcrDE+NP
+  rINRnTHdThJGIPG+0js=
+i_pairing_keys:
+  1:
+    value: !!binary |
+      CNs/p/Mt6CNcX81rOqz93Hk50P5oCx2vnc0InbuCVUQ=
+riscv_fw_version: !!binary |
+  SkxrBw==
+s_t_priv: !!binary |
+  SHTtZwHy0xCaLqg90i/YdwiPgyefwXdcQqvphNzocGk=
+s_t_pub: !!binary |
+  JP1jRCtIpmTxqCr6Z9akN5V6i7Ar0SrjIdSO6QFK4Es=
+spect_fw_version: !!binary |
+  d3UrwQ==
+x509_certificate: !!binary |
+  LhfAaxFkeUFi0ENF3QXLUJUXiHqc988ZohYzG4eOe1sD63o3tZQzWAqsHidrIlHlWkL14qrxgucg
+  kpAXKwtZnwEsrTUV5yswkr+63zuBXHZ2P1DHqXLqFgoDqLw7gHlmgl5CPdSuisVngnYECri3RkTj
+  hZnEuTsrywccuFjjdsALM77xAx20kOjwDQ7PqRMNz5e7VU1gh6X1alSJZaWpx/VZ0vkAgbkkBx9p
+  rVKWj2phLRMsXyuEEqaThgY2gIMSdKWps4UNZiV4TyGXJMFC47zmwcnixq7hAw4CbxGXnkhUpa9H
+  IFRwodVUnqzLVRMDQaMlzf3GAQSNbO6vJ8nVqT53j+Ydg6BjTZ0wG6jBwAbUAAzaxwY2WpuG5AnA
+  4QgdC2U0iBmdb7NIEQrrNEmhWVNSJHLKb1euT2Wu2AyW9/xzCSzYwyabeDW2JXCQjXHLuw8I1Txe
+  5+ct8+fdwyRChQ8STx2ja3Y3Qzvw9GrhpgNwc7vUseVoTTnwGzrV63Pt2eWQJODfraS4OjjxbCZa
+  4bk676kexUeY8L6B0d5DLaweLU5EMXexrhQO4CBa+4sgEzdfdI3PYfDmRcysUyL6tu5XCrBcb6+z
+  iYDw4mZzX3Wh5+ZX4a0o67MveuRA07Lc4lgKW7tl/RCb/PTNv9gLCvD+b9Pkw4219EW/dUBOSaE=
