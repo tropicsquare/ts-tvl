@@ -14,20 +14,31 @@ TCP_BUFFER_SIZE = 1024
 
 class TCPConnection:
     def __init__(self, address: str, port: int, logger: logging.Logger) -> None:
-        self.server = create_server((address, port), backlog=1, reuse_port=True)
+        # Defer create_server() until the first connect() call so that the
+        # listen socket is not opened before the server is ready to process
+        # requests. Opening it in __init__ would let clients complete the TCP
+        # handshake before the model is instantiated, and then hang on recv
+        # until the server finally reaches accept().
+        self.address = address
+        self.port = port
+        self.server: Optional[socket] = None
         self.client: socket
         self.logger = logger
-        self.logger.info("Server socket created.")
         self.logger.debug("Server address: %s", (address, port))
 
     def __enter__(self) -> Self:
-        self.server.__enter__()
         return self
 
     def __exit__(self, *args: Any) -> None:
-        self.server.__exit__(*args)
+        if self.server is not None:
+            self.server.close()
 
     def connect(self) -> None:
+        if self.server is None:
+            self.server = create_server(
+                (self.address, self.port), backlog=1, reuse_port=True
+            )
+            self.logger.info("Server socket created.")
         self.logger.info("Listening for new connection.")
         self.client, client_address = self.server.accept()
         self.logger.info("New client connected.")
