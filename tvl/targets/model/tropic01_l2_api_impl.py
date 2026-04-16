@@ -148,8 +148,21 @@ class L2APIImplementation(L2API):
             self.logger.debug(exc)
             result = L3Result(result=L3ResultFieldEnum.INVALID_CMD)
         except NoValidSubclassError as exc:
+            # L3 command payload size does not match any valid subclass of
+            # the command ID (oversized / undersized). Per firmware v2.0.0
+            # behavior, the offending last L3 chunk is still acknowledged at
+            # L2 with REQ_OK by ts_l2_encrypted_cmd_req (cmd_l3_rx succeeded,
+            # cmd_l3_rx_done is true). The actual GEN_ERR is then emitted by
+            # cmd_l3_task → _send_l2_response(GEN_ERR) and the session is
+            # closed. The host fetches the GEN_ERR on the subsequent
+            # GET_RESP, before any L3 result chunks.
             self.logger.debug(exc)
-            result = L3Result(result=L3ResultFieldEnum.FAIL)
+            self.invalidate_session()
+            self.command_buffer.reset()
+            return [
+                L2Response(status=L2StatusEnum.REQ_OK),
+                L2Response(status=L2StatusEnum.GEN_ERR),
+            ]
         else:
             self.logger.info("Processing L3 command %s.", command)
             try:
