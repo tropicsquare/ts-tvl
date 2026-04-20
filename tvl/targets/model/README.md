@@ -254,7 +254,7 @@ configuration = {
             "cfg_uap_ping": 0xDB,
         },
         "riscv_fw_version": "2.0.0",
-        "spect_fw_version": "1.1.0",
+        "spect_fw_version": "1.2.0",
     },
 }
 # Check the configuration with the dedicated pydantic model
@@ -278,7 +278,7 @@ These versions are reported via the `GetInfo` L2 command and are defined in
 [`constants.py`](../../constants.py):
 
 - `RISCV_FW_VERSION_STR` — ts-tr01-app FW version the model represents (e.g. `"2.0.0"`)
-- `SPECT_FW_VERSION_STR` — SPECT FW version the model represents (e.g. `"1.1.0"`)
+- `SPECT_FW_VERSION_STR` — SPECT FW version the model represents (e.g. `"1.2.0"`)
 
 When releasing a new version of ts-tvl that targets a newer FW or SPECT release,
 update these version strings in `constants.py`. To override the default in a

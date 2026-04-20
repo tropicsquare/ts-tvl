@@ -133,7 +133,7 @@ Update this value when releasing a new version targeting a newer FW."""
 RISCV_FW_VERSION_DEFAULT = encode_fw_version(RISCV_FW_VERSION_STR)
 """RISCV_FW_VERSION_STR encoded as 4 bytes."""
 
-SPECT_FW_VERSION_STR = "1.1.0"
+SPECT_FW_VERSION_STR = "1.2.0"
 """SPECT FW version the model's behavior corresponds to.
 This is the SPECT version that was latest available when the model was released.
 Update this value when releasing a new version targeting a newer SPECT."""
