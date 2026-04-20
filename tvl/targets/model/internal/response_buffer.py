@@ -23,6 +23,17 @@ class ResponseBuffer:
         else:
             self.responses.append(x)
 
+    def requeue(self, data: bytes) -> None:
+        """Re-insert data at the front of the buffer.
+
+        Used when a SPI transaction is aborted (CSN high) before the
+        response was fully transferred.
+
+        Args:
+            data (bytes): the incomplete response data to re-queue
+        """
+        self.responses.insert(0, data)
+
     def next(self) -> bytes:
         """Read the next response to send.
 

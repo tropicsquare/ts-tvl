@@ -65,6 +65,10 @@ class SpiFsm:
 
     def spi_drive_csn_high(self) -> None:
         self.logger.info("Chip Select driven to HIGH.")
+        if self.odata:
+            self.logger.debug("Incomplete transfer — re-queuing leftover odata.")
+            self.response_buffer.requeue(self.odata)
+            self.odata = b""
         self.current_state = idle_state
         self.csn_is_low = False
 
