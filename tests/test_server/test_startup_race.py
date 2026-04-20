@@ -28,25 +28,45 @@ import pytest
 CONFIG_FILE = Path(__file__).parent / "test_config.yml"
 HELPER = Path(__file__).parent / "slow_server_main.py"
 
-# Use a dedicated port so this test can never collide with the smoke-test
-# module (which uses TCP_DEFAULT_PORT == 28992).
-RACE_TEST_PORT = 28993
 RACE_TEST_ADDRESS = "127.0.0.1"
 
 MODEL_INIT_DELAY_S = 2.0
 
 
+def _pick_free_port(address: str) -> int:
+    """Ask the kernel for a free ephemeral port and release it.
+
+    The CI matrix runs three Python versions in parallel on a shared
+    `tags: [shell]` runner. With a hard-coded port and `reuse_port=True`
+    in `tcp_connection.create_server`, all three subprocesses bind to
+    the same port simultaneously and the kernel load-balances incoming
+    connects across them — meaning one job's `connect()` may land on a
+    peer job's already-listening socket and trip the assertion.
+
+    Drawing a kernel-assigned ephemeral port per test instance avoids
+    that. There is a tiny TOCTOU window between releasing the port
+    here and the subprocess binding it, but the ephemeral-port range
+    is large enough (~28k ports on Linux) that two parallel jobs
+    effectively never collide.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((address, 0))
+        return s.getsockname()[1]
+
+
 @pytest.fixture
-def slow_server() -> Iterator[Tuple["subprocess.Popen[str]", float]]:
+def slow_server() -> Iterator[Tuple["subprocess.Popen[str]", float, int]]:
     """Spawn the server subprocess with a 2 s model-instantiation delay.
 
-    Yields (process, spawn_time) so the test can measure elapsed time from
-    the moment the subprocess was launched.
+    Yields (process, spawn_time, port) so the test can measure elapsed
+    time from the moment the subprocess was launched and connect to
+    the per-test-run port.
     """
+    port = _pick_free_port(RACE_TEST_ADDRESS)
     cmd = [
         sys.executable, str(HELPER), "tcp",
         "--address", RACE_TEST_ADDRESS,
-        "--port", str(RACE_TEST_PORT),
+        "--port", str(port),
         "--configuration", str(CONFIG_FILE),
     ]
     env = {**__import__("os").environ, "MODEL_INIT_DELAY": str(MODEL_INIT_DELAY_S)}
@@ -55,7 +75,7 @@ def slow_server() -> Iterator[Tuple["subprocess.Popen[str]", float]]:
         cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     try:
-        yield process, spawn_time
+        yield process, spawn_time, port
     finally:
         if process.poll() is None:
             process.terminate()
@@ -101,11 +121,11 @@ def test_tcp_server_does_not_accept_before_model_ready(slow_server) -> None:
     connect succeeds almost immediately after subprocess startup, well
     before `MODEL_INIT_DELAY_S` has elapsed. This assertion catches that.
     """
-    process, spawn_time = slow_server
+    process, spawn_time, port = slow_server
 
     first_connect = _time_until_connect_succeeds(
         RACE_TEST_ADDRESS,
-        RACE_TEST_PORT,
+        port,
         deadline=spawn_time + MODEL_INIT_DELAY_S * 5,
     )
     elapsed = first_connect - spawn_time
