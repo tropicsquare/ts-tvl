@@ -11,7 +11,10 @@ class L1ChipStatusFlag(IntFlag):
     """TROPIC01 is in Alarm mode"""
     START = 4
     """TROPIC01 is in Start-up mode"""
+    BOOT_HOLD = 8
+    """TROPIC01 is in boot hold mode"""
 
+ALL_FLAGS_MASK = sum(flag.value for flag in L1ChipStatusFlag)
 
 class L2IdFieldEnum(HexReprIntEnum):
     GET_RESP = 0xAA
