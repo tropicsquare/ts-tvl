@@ -170,7 +170,7 @@ def test_default_fw_version(configuration, object_id, expected_version):
         ),
         pytest.param(
             TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION,
-            "1.1.0-dirty",
+            "1.2.0-dirty",
             id="spect_fw_version_dirty",
         ),
         pytest.param(
