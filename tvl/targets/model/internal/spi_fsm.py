@@ -52,6 +52,7 @@ class SpiFsm:
     def reset(self) -> None:
         self.response_buffer.reset()
         self.odata = b""
+        self._saved_latest_response = b""
         self.current_state = idle_state
 
     def set_logger(self, logger: Union[logging.Logger, _LoggerAdapter]) -> None:
@@ -60,11 +61,16 @@ class SpiFsm:
     def spi_drive_csn_low(self) -> None:
         self.logger.info("Chip Select driven to LOW.")
         if not self.csn_is_low:
+            self._saved_latest_response = self.response_buffer.latest_response
             self.current_state = csn_falling_edge_state
         self.csn_is_low = True
 
     def spi_drive_csn_high(self) -> None:
         self.logger.info("Chip Select driven to HIGH.")
+        if self.odata:
+            self.logger.debug("Incomplete transfer — re-queuing leftover odata.")
+            self.response_buffer.requeue(self.odata, self._saved_latest_response)
+            self.odata = b""
         self.current_state = idle_state
         self.csn_is_low = False
 

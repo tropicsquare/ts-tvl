@@ -23,6 +23,22 @@ class ResponseBuffer:
         else:
             self.responses.append(x)
 
+    def requeue(self, data: bytes, previous_latest: bytes) -> None:
+        """Re-insert data at the front of the buffer and restore latest.
+
+        Used when a SPI transaction is aborted (CSN high) before the
+        response was fully transferred.  The ``next()`` call that loaded
+        *data* also overwrote ``latest_response``, so we must roll that
+        back to *previous_latest* — the value it had before the aborted
+        transaction started.
+
+        Args:
+            data (bytes): the response data to re-queue
+            previous_latest (bytes): the latest_response value to restore
+        """
+        self.responses.insert(0, data)
+        self.latest_response = previous_latest
+
     def next(self) -> bytes:
         """Read the next response to send.
 
