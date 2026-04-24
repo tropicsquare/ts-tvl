@@ -1,9 +1,10 @@
 import hashlib
 import logging
+import subprocess
 import xml.etree.cElementTree as et
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, TypedDict
+from typing import Any, Dict, Optional, TypedDict
 
 import jinja2
 
@@ -96,7 +97,12 @@ class Converter:
 class HeaderDict(TypedDict):
     date: datetime
     version: str
-    hash: str
+    bootloader_name: str
+    bootloader_hash: str
+    bootloader_commit: str
+    application_name: str
+    application_hash: str
+    application_commit: str
 
 
 def compute_sha256(filepath: Path) -> str:
@@ -107,11 +113,32 @@ def compute_sha256(filepath: Path) -> str:
         return sha256_hash.hexdigest()
 
 
+def _git_commit(filepath: Path) -> Optional[str]:
+    """Return the short git commit hash that last touched *filepath*."""
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%h", "--", filepath.name],
+            cwd=filepath.parent,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except FileNotFoundError:
+        pass
+    return None
+
+
 def create_header(bootloader_input: Path, application_input: Path) -> HeaderDict:
     return {
         "date": datetime.now(),
         "version": __version__,
-        "hash": compute_sha256(bootloader_input) + "," + compute_sha256(application_input),
+        "bootloader_name": bootloader_input.name,
+        "bootloader_hash": compute_sha256(bootloader_input),
+        "bootloader_commit": _git_commit(bootloader_input) or "unknown",
+        "application_name": application_input.name,
+        "application_hash": compute_sha256(application_input),
+        "application_commit": _git_commit(application_input) or "unknown",
     }
 
 
