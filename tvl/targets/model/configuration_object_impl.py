@@ -1,6 +1,7 @@
-# GENERATED ON 2026-04-09 19:05:53.267826
+# GENERATED ON 2026-04-24 19:04:28.510516
 # BY CO_GENERATOR VERSION 0.4
-# INPUT FILE: 69e467b757dd8c9b7783a15ac2a1fa11387e2d6051d24bc66cc08bcb960a664d,995a56a689b91e1d5ab3f416f8f9e3f546da29fd6668865764de5e3eb891dc33
+# BOOTLOADER INPUT: tropic01_bootloader_co.xml (SHA256: 69e467b757dd8c9b7783a15ac2a1fa11387e2d6051d24bc66cc08bcb960a664d) commit: 95957e9
+# APPLICATION INPUT: tropic01_application_co.xml (SHA256: 212c4773cd8356d5a30b85819786bfa0e31564e7aff82a701fbd5b801b488394) commit: dd3ca4b
 #
 from typing import Optional
 
@@ -96,7 +97,7 @@ class CfgDebug(ConfigObjectRegister):
 
 class CfgGpo(ConfigObjectRegister):
     gpo_func = ConfigObjectField(0, 3)
-    """GPO pin functinality"""
+    """GPO pin functionality. Common for immutable and mutable FW."""
 
 
 class CfgSleepMode(ConfigObjectRegister):

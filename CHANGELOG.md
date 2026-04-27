@@ -8,11 +8,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Changed method of deriving seed from TRNG for ephemeral X25519 keys for secure channel and EdDSA keys.
-
 ### Added
 
 ### Fixed
+
+## [2.4]
+
+### Changed
+
+- Changed method of deriving seed from TRNG for ephemeral X25519 keys for secure channel and EdDSA keys
+- Regenerated L2 and L3 API from updated datasheet XML — renamed result enums (`PAIRING_KEY_EMPTY` → `SLOT_EMPTY`, `PAIRING_KEY_INVALID` → `SLOT_INVALID`, `WRITE_FAIL` → `SLOT_NOT_EMPTY`), added `HARDWARE_FAIL` result to PairingKeyWrite, PairingKeyInvalidate, RConfigWrite, IConfigWrite, and RMemDataWrite commands, updated docstrings
+- Updated chip status constant — added `BOOT_HOLD` flag to `L1ChipStatusFlag`
+- Target SPECT FW version 1.2.0
+- Updated model Configuration Object registers and addresses
+- CO generator now accepts separate bootloader and application XML inputs; overlapping registers between the two are validated for consistency
+- Firmware version is now configurable via config file (`riscv_fw_version`, `spect_fw_version`). Default values always represent the concrete firmware versions available at the time of the model release (see [Firmware version defaults](tvl/targets/model/README.md#firmware-version-defaults))
+- SPI FSM: busy emulation now only fires while a response is still pending, not after the buffer is drained
+
+### Added
+
+- Firmware version encoding matching the format used by the firmware build system
+- Bootloader CO registers to model configuration object (`CfgStartUp`, `CfgSensors`, `CfgDebug`, `CfgGpo`)
+- `TCPTropicProtocol` client class for communicating with a model TCP server
+- Python 3.14 compatibility (annotation processing rewrite)
+- TCP transport smoke tests
+- GitLab publish CI
+
+### Fixed
+
+- Model responds with L2 GEN_ERR on L3 size mismatch and invalidates session (ETR01SV-79)
+- Defer TCP listen until model is ready — fix startup race (TR01SV-98)
+- SPI FSM: chip status byte on command acceptance (`READY` flag now set correctly) (ETR01SV-126)
+- Restore `latest_response` on aborted SPI transaction
+- Re-queue odata on CSN high to prevent stale buffer crash
+- Endianity in ECC key and ETPriv generation
+- Pin cffi >=2.0 for Python 3.9+ to support Python 3.14
+- Widen cryptography version constraint to >43
 
 ## [2.3]
 

@@ -1,6 +1,7 @@
 # GENERATED ON {{header.date}}
 # BY CO_GENERATOR VERSION {{header.version}}
-# INPUT FILE: {{header.hash}}
+# BOOTLOADER INPUT: {{header.bootloader_name}} (SHA256: {{header.bootloader_hash}}) commit: {{header.bootloader_commit}}
+# APPLICATION INPUT: {{header.application_name}} (SHA256: {{header.application_hash}}) commit: {{header.application_commit}}
 #
 {% macro to_camelcase(string) -%}
     {%- set words = [] -%}
