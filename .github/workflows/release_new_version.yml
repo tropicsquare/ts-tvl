@@ -20,7 +20,7 @@ jobs:
         id: check_tag_is_on_master
         run: |
             TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
-            if git branch -r --contains "$TAG_COMMIT" | grep -q "origin/master"; then
+            if git branch -r --contains "$TAG_COMMIT" | grep -q "origin/public"; then
               echo "DO_RELEASE=true" >> $GITHUB_OUTPUT
             else
               echo "DO_RELEASE=false" >> $GITHUB_OUTPUT
