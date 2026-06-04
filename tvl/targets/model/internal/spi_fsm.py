@@ -118,8 +118,16 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
                 _l,
             )
 
-        # Send next chunk
+        # Sporadically set READY bit to 0 to emulate a busy chip, but only
+        # while a response is still pending — not once the buffer is drained.
         if not fsm.response_buffer.is_empty():
+            if next(fsm.busy_iter_cyc):
+                fsm.set_next_state(send_no_resp_state)
+                return pad(
+                    bytes([0x00]),
+                    bytes([L2StatusEnum.NO_RESP]),
+                    len(data),
+                )
             fsm.odata = fsm.response_buffer.next()
             fsm.set_next_state(send_response_state)
             return pad(
@@ -128,17 +136,7 @@ def csn_falling_edge_state(fsm: SpiFsm, data: bytes) -> bytes:
                 _l,
             )
 
-        # Sporadically set READY bit to 0 to emulate a busy chip only while a
-        # response is still pending, not once the response buffer is drained.
-        if next(fsm.busy_iter_cyc):
-            fsm.set_next_state(send_no_resp_state)
-            return pad(
-                bytes([0x00]),
-                bytes([L2StatusEnum.NO_RESP]),
-                len(data),
-            )
-
-        # Otherwise send NO_RESP
+        # Buffer is drained — always return READY + NO_RESP
         fsm.set_next_state(send_no_resp_state)
         return pad(
             bytes([L1ChipStatusFlag.READY]),
