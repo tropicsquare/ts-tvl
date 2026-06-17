@@ -107,6 +107,23 @@ This file is parsed by `model_server` using
 
 Available configuration variables for the Model can be seen [here](https://github.com/tropicsquare/ts-tvl/blob/e3ed3c93100e8fe316efc1582071a9da793fa77a/tvl/configuration_file_model.py#L40C1-L60C42). Keys and certificates can be passed as strings in base64 encoding or as files in PEM or DER format.
 
+The `s_t_priv`, `s_t_pub` and `x509_certificate` entries accept a path to a PEM/DER file
+(resolved relative to the configuration file). The ECC signing keys in `r_ecc_keys` work the
+same way: instead of supplying the derived `s`/`prefix`/`a` (Ed25519) or `d`/`w`/`a` (P-256)
+components by hand, point the slot at a private key file with `private_key`, and the
+`model_server` derives the components for you (clamping and `prefix` handled correctly — see
+the [pitfall note](tvl/targets/model/README.md#ecc-signing-keys-r_ecc_keys)):
+
+```yaml
+r_ecc_keys:
+  0:
+    private_key: signing_key.pem   # Ed25519 or P-256 key in PEM/DER, path relative to this file
+    origin: 2
+```
+
+Supplying both `private_key` and explicit components for the same slot is not supported — the
+file takes precedence. Use one or the other.
+
 An example configuration can be found [here](model_configs/example_config/example_config.yml). Configurations are passed to the `model_server` as:
 
 ```shell
