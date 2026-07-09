@@ -47,7 +47,7 @@ class GenericPartition(DefaultDict[int, T]):
         Returns:
             the content of the partition
         """
-        return {k: v.to_dict() for k, v in self.items()}
+        return {int(k): v.to_dict() for k, v in self.items()}
 
     @classmethod
     def from_dict(cls, __mapping: Mapping[int, Any], /) -> Self:
