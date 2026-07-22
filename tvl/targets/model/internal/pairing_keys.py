@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Mapping
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from typing_extensions import Self
 
 from ....typing_utils import FixedSizeBytes

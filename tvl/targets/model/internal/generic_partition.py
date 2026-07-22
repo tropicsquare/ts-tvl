@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import Any, DefaultDict, Dict, Mapping, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from typing_extensions import Self
 
 

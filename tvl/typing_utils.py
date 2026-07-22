@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Tuple, Type, TypeVar
 
-from pydantic import conbytes, conint, conlist
+from pydantic.v1 import conbytes, conint, conlist
 
 T = TypeVar("T")
 
