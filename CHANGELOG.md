@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `r_ecc_keys` slots can now load a signing key directly from a PEM/DER file via `private_key`; the `s`/`prefix`/`a` (Ed25519) or `d`/`w`/`a` (P-256) components are derived automatically, removing the need to compute and clamp them by hand
+
 ### Fixed
 
 ## [2.4]

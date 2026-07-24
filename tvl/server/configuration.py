@@ -2,15 +2,22 @@ import logging
 from binascii import hexlify
 from functools import singledispatch
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union, cast
+from typing import Any, Callable, Dict, Optional, Union
 
 import yaml
+from cryptography.hazmat.primitives.asymmetric.ec import (
+    EllipticCurvePrivateKey,
+    SECP256R1,
+)
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
+    NoEncryption,
+    PrivateFormat,
     load_der_private_key,
     load_der_public_key,
     load_pem_private_key,
@@ -21,6 +28,8 @@ from pydantic import root_validator  # type: ignore
 from pydantic import BaseModel, Extra, Field, FilePath, StrictBytes
 
 from ..configuration_file_model import ModelConfigurationModel
+from ..crypto.ecdsa import ecdsa_key_setup
+from ..crypto.eddsa import eddsa_key_setup
 from .logging_utils import LogDict, LogIter
 
 DEFAULT_MODEL_CONFIG: Dict[Any, Any] = {
@@ -129,6 +138,52 @@ def _(__value: Path) -> bytes:
     raise TypeError("Certificate not in DER nor PEM format")
 
 
+def _load_ecc_private_key(path: Path) -> Any:
+    """Read and parse an ECC private key from a PEM/DER file.
+
+    Wraps filesystem errors into ``ValueError`` so they surface as a clean
+    Pydantic ``ValidationError`` instead of leaking a raw ``OSError`` out of the
+    validator. Bad key material already raises ``ValueError`` from cryptography.
+    """
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ValueError(
+            f"Could not read ECC private key file '{path}': {exc}"
+        ) from exc
+
+    if path.suffix == ".pem":
+        return load_pem_private_key(data, None)
+    if path.suffix == ".der":
+        return load_der_private_key(data, None)
+    raise TypeError("ECC private key not in DER nor PEM format")
+
+
+def _expand_ecc_private_key(path: Path, slot_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a new slot dict with the derived ECC fields populated.
+
+    For Ed25519 keys: computes s, prefix, a using eddsa_key_setup.
+    For P256 keys: computes d, w, a using ecdsa_key_setup.
+    The returned dict drops the ``private_key`` entry; the input ``slot_data``
+    is left untouched (no in-place mutation of the caller's config).
+    """
+    key = _load_ecc_private_key(path)
+
+    if isinstance(key, Ed25519PrivateKey):
+        raw = key.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        s, prefix, a = eddsa_key_setup(raw)
+        derived = {"s": s, "prefix": prefix, "a": a}
+    elif isinstance(key, EllipticCurvePrivateKey) and isinstance(key.curve, SECP256R1):
+        # ecdsa_key_setup expects a big-endian 32-byte private scalar
+        raw = key.private_numbers().private_value.to_bytes(32, "big")
+        d, w, a = ecdsa_key_setup(raw)
+        derived = {"d": d, "w": w, "a": a}
+    else:
+        raise TypeError(f"Unsupported ECC key type for r_ecc_keys: {type(key)}")
+
+    return {**{k: v for k, v in slot_data.items() if k != "private_key"}, **derived}
+
+
 class ConfigurationModel(BaseModel, extra=Extra.allow):
     """Pydantic model to validate the configuration file"""
 
@@ -138,22 +193,36 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
     x509_certificate: Union[StrictBytes, FilePath]
 
     @root_validator(pre=True)  # type: ignore
-    def set_paths_to_absolute(cls, values: Dict[str, Union[bytes, Path]]):
+    def set_paths_to_absolute(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        config_dir = values["filepath"].parent
+
         def _set(name: str) -> None:
             if isinstance(value := values.get(name), str):
-                values[name] = cast(Path, values["filepath"]).parent / value
+                values[name] = config_dir / value
 
         _set("s_t_priv")
         _set("s_t_pub")
         _set("x509_certificate")
+
+        # resolve r_ecc_keys private_key paths into new slot dicts (no in-place mutation)
+        if isinstance(r_ecc_keys := values.get("r_ecc_keys"), dict):
+            values["r_ecc_keys"] = {
+                slot: (
+                    {**slot_data, "private_key": config_dir / slot_data["private_key"]}
+                    if isinstance(slot_data, dict)
+                    and isinstance(slot_data.get("private_key"), str)
+                    else slot_data
+                )
+                for slot, slot_data in r_ecc_keys.items()
+            }
+
         return values
 
     @root_validator  # type: ignore
-    def process_values(cls, values: Dict[str, Union[bytes, Path]]):
+    def process_values(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         # process public key
         if (s_t_pub := values.get("s_t_pub")) is not None:
-            public_key = load_public_key(s_t_pub)
-            values["s_t_pub"] = public_key.public_bytes_raw()
+            values["s_t_pub"] = load_public_key(s_t_pub).public_bytes_raw()
 
         # process private key
         if (s_t_priv := values.get("s_t_priv")) is not None:
@@ -167,6 +236,18 @@ class ConfigurationModel(BaseModel, extra=Extra.allow):
         # process certificate
         if (cert := values.get("x509_certificate")) is not None:
             values["x509_certificate"] = load_certificate(cert)
+
+        # expand r_ecc_keys private_key shortcuts into derived fields
+        if isinstance(r_ecc_keys := values.get("r_ecc_keys"), dict):
+            values["r_ecc_keys"] = {
+                slot: (
+                    _expand_ecc_private_key(pk, slot_data)
+                    if isinstance(slot_data, dict)
+                    and isinstance(pk := slot_data.get("private_key"), Path)
+                    else slot_data
+                )
+                for slot, slot_data in r_ecc_keys.items()
+            }
 
         return values
 

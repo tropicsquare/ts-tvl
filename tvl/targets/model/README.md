@@ -269,6 +269,39 @@ with open("config.yaml", "w") as fd:
 A concrete example of how to create a valid configuration file is in the file
 [`examples/generate_configuration.py`](../../../examples/generate_configuration.py).
 
+### ECC signing keys (`r_ecc_keys`)
+
+Each `r_ecc_keys` slot stores a private signing key as **derived** components rather
+than a raw private key:
+
+- Ed25519 (EdDSA): `s` (clamped scalar), `prefix` (nonce seed) and `a` (public key)
+- P-256 (ECDSA): `d`, `w` and `a` (public key)
+
+Computing these by hand is error-prone — `s` must be clamped, and the EdDSA `prefix`
+in particular is easy to get wrong. The **canonical** derivation is implemented by
+[`eddsa_key_setup`](../../crypto/eddsa.py) / [`ecdsa_key_setup`](../../crypto/ecdsa.py):
+
+```python
+from hashlib import sha512
+# Ed25519, given the 32-byte private seed `k`:
+k_hash = sha512(k).digest()
+s      = clamp(k_hash[:32])   # scalar, clamped + reduced mod q (see eddsa_key_setup)
+prefix = k_hash[32:]          # second half of SHA-512(seed) — NOT sha512(s)[:32]
+a      = Ed25519PrivateKey.from_private_bytes(k).public_key().public_bytes_raw()
+```
+
+> **Pitfall:** the EdDSA `prefix` is the *second half of `SHA-512(seed)`*
+> (`sha512(seed)[32:]`), as required by RFC 8032. A common mistake is to compute it as
+> `sha512(s)[:32]` (a hash of the clamped scalar). Such signatures still verify — the
+> prefix only seeds the deterministic nonce — but they will **not** be byte-identical to
+> what a real TROPIC01 chip produces. Deriving the components from the private key (see
+> below) avoids this entirely.
+
+To avoid the manual computation, the `model_server` configuration file lets you point a
+slot at a PEM/DER private key directly; ts-tvl derives `s`/`prefix`/`a` (Ed25519) or
+`d`/`w`/`a` (P-256) for you. See
+[Model Configuration](../../../README.md#model-configuration).
+
 ### Firmware version defaults
 
 The model's behavior corresponds to a specific version of the TROPIC01 firmware
