@@ -165,17 +165,17 @@ def test_default_fw_version(configuration, object_id, expected_version):
         ),
         pytest.param(
             TsL2GetInfoRequest.ObjectIdEnum.RISCV_FW_VERSION,
-            "2.0.0-5-gabcdef-dirty",
+            "2.1.0-5-gabcdef-dirty",
             id="riscv_fw_version_dirty_with_commits",
         ),
         pytest.param(
             TsL2GetInfoRequest.ObjectIdEnum.SPECT_FW_VERSION,
-            "1.2.0-dirty",
+            "1.3.0-dirty",
             id="spect_fw_version_dirty",
         ),
         pytest.param(
             TsL2GetInfoRequest.ObjectIdEnum.RISCV_FW_VERSION,
-            "2.0.0-12",
+            "2.1.0-12",
             id="riscv_fw_version_commits_since_tag",
         ),
     ],
