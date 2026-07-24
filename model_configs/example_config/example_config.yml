@@ -1,3 +1,9 @@
 s_t_priv: tropic01_ese_private_key_1.pem
 s_t_pub: tropic01_ese_public_key_1.pem
 x509_certificate: tropic01_ese_certificate_1.pem
+# ECC signing key loaded directly from a PEM/DER private key.
+# The model derives the slot components (s/prefix/a for Ed25519, d/w/a for P-256).
+r_ecc_keys:
+  0:
+    private_key: tropic01_signing_key_1.pem
+    origin: 2
