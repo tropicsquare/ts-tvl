@@ -51,7 +51,7 @@ def run_server_over_serial(
     port: Union[Path, str],
     baudrate: int,
     configuration: Optional[Path],
-    configuration_out: Path,
+    configuration_out: Optional[Path],
     logger: logging.Logger,
     **_: Any,
 ) -> None:

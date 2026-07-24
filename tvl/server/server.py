@@ -79,8 +79,8 @@ def get_input_arguments():
             "-o",
             "--configuration-out",
             type=_file(_with_ext(".yml", ".yaml")),
-            default=Path.cwd() / (f := ".model_config_save.yaml"),
-            help=f"Yaml file to which save the model configuration. Defaults to ./{f}",
+            default=None,
+            help="Yaml file to which save the model configuration. If not specified, the file will not be written.",
             metavar="FILE",
         )
         subparser.add_argument(

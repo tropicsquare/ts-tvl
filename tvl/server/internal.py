@@ -44,14 +44,19 @@ class TagEnum(bytes, Enum):
 
 
 def instantiate_model(
-    config_in: Optional[Path], config_out: Path, logger: logging.Logger
+    config_in: Optional[Path], config_out: Optional[Path], logger: logging.Logger
 ) -> Tuple[Tropic01Model, Callable[[], None]]:
     """Provide the model and a callback to dump its configuration"""
     configuration = load_configuration(config_in, logger)
     model = Tropic01Model.from_dict(configuration).set_logger(
         logging.getLogger("model")
     )
-    return model, lambda: dump_configuration(config_out, model.to_dict(), logger)
+
+    def save_fn() -> None:
+        if config_out is not None:
+            dump_configuration(config_out, model.to_dict(), logger)
+
+    return model, save_fn
 
 
 @dataclass
@@ -204,10 +209,10 @@ def process(
 def run_server(
     connection: Connection,
     configuration: Optional[Path],
-    configuration_out: Path,
+    configuration_out: Optional[Path],
     logger: logging.Logger,
     get_target_fn: Callable[
-        [Optional[Path], Path, logging.Logger],
+        [Optional[Path], Optional[Path], logging.Logger],
         Tuple[TropicProtocol, Callable[[], None]],
     ] = instantiate_model,
 ) -> None:
