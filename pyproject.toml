@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tvl"
-version = "2.4"
+version = "2.5"
 description = "TROPIC Verification Library"
 authors = ["Tropic Square <support@tropicsquare.com>"]
 license = "BSD-3-Clause-Clear"
