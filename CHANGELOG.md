@@ -12,12 +12,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Target ts-tr01-app FW version 2.1.0
 - Target SPECT FW version 1.3.0
+- `--configuration-out` CLI argument is now optional. When omitted, the model
+  server no longer writes `./.model_config_save.yaml` — the save callback becomes
+  a no-op and nothing is written to disk (ETR01SV-100)
+- SPI FSM: busy emulation (`READY=0` / `NO_RESP`) now fires *before* the response
+  chunk is sent while a response is still pending, rather than only after the
+  buffer is drained — tightening the "busy chip" emulation added in 2.4
 
 ### Added
 
-- `r_ecc_keys` slots can now load a signing key directly from a PEM/DER file via `private_key`; the `s`/`prefix`/`a` (Ed25519) or `d`/`w`/`a` (P-256) components are derived automatically, removing the need to compute and clamp them by hand
+- `r_ecc_keys` slots can now load a signing key directly from a PEM/DER file via
+  `private_key`; the `s`/`prefix`/`a` (Ed25519) or `d`/`w`/`a` (P-256) components
+  are derived automatically (clamping and EdDSA prefix handled correctly),
+  removing the need to compute and clamp them by hand. Mirrors how
+  `s_t_priv`/`s_t_pub` already load. Includes example config and docs on the
+  common EdDSA prefix pitfall (prefix is `sha512(seed)[32:]`, not `sha512(s)[:32]`)
 
 ### Fixed
+
+- Model: partition slot keys are now serialized as plain `int` in
+  `GenericPartition.to_dict()`, preventing enum-typed keys from leaking into the
+  dumped config
 
 ## [2.4]
 
