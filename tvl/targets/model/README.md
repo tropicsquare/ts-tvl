@@ -33,10 +33,12 @@ classDiagram
     }
     class UserDataPartition
     class PairingKeySlot{
+        value
+        state
         write()
         read()
-        is_blank()
-        is_invalidated()
+        invalidate()
+        is_valid()
     }
     class PairingKeys
     class ECDSAKeyMemLayout{
@@ -114,6 +116,10 @@ model = Tropic01Model.from_dict(
         "i_pairing_keys": {
             1: {"value": b"HOST_1_PUBLIC_KEY"},
             2: {"value": b"HOST_2_PUBLIC_KEY"},
+            # a slot may also be described by its state alone: `blank` and
+            # `invalid` slots hold no value. A `value` without a `state`
+            # defaults to `written`.
+            3: {"state": "invalid"},
         },
         "r_ecc_keys": {
             1: {

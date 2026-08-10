@@ -4,6 +4,7 @@ from typing import Any, Dict
 import pytest
 
 from tvl.api.l3_api import TsL3PairingKeyInvalidateCommand
+from tvl.configuration_file_model import ModelConfigurationModel
 from tvl.constants import L3ResultFieldEnum
 from tvl.host.host import Host
 from tvl.targets.model.internal.pairing_keys import KEY_SIZE, SlotState
@@ -69,6 +70,28 @@ def test_invalidate(
 
     assert result.result.value == result_field
     assert model.i_pairing_keys[slot].value == expected_new_value
+
+
+def test_invalidate_then_reload_configuration(host: Host, model: Tropic01Model):
+    """The configuration dumped after an invalidation stays loadable.
+
+    `--configuration-out` writes what `model.to_dict()` returns, and that file is
+    meant to be fed back to the server through `--configuration`.
+    """
+    result = host.send_command(TsL3PairingKeyInvalidateCommand(slot=SET_KEY_IDX))
+    assert result.result.value == L3ResultFieldEnum.OK
+
+    dumped = model.to_dict()
+    assert dumped["i_pairing_keys"][SET_KEY_IDX] == {"value": b"", "state": "invalid"}
+
+    reloaded = Tropic01Model.from_dict(
+        ModelConfigurationModel.parse_obj(dumped).dict(exclude_none=True)
+    )
+
+    assert reloaded.i_pairing_keys[SET_KEY_IDX].state is SlotState.INVALID
+    assert reloaded.i_pairing_keys[SET_KEY_IDX].value == b""
+    assert reloaded.i_pairing_keys[BLANK_KEY_IDX].state is SlotState.BLANK
+    assert reloaded.i_pairing_keys[INVALID_KEY_IDX].state is SlotState.INVALID
 
 
 @pytest.mark.parametrize(
