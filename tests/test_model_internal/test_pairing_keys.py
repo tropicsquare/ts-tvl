@@ -4,6 +4,7 @@ from contextlib import nullcontext
 from typing import Any, ContextManager
 
 import pytest
+from pydantic import ValidationError
 
 from tvl.targets.model.internal.pairing_keys import (
     KEY_SIZE,
@@ -11,6 +12,7 @@ from tvl.targets.model.internal.pairing_keys import (
     InvalidatedSlotError,
     PairingKeys,
     PairingKeySlot,
+    PairingKeySlotModel,
     SlotState,
     WrittenSlotError,
 )
@@ -166,3 +168,71 @@ def test_dict():
     pairing_keys = PairingKeys.from_dict(pairing_key_dict)
     assert pairing_keys.to_dict() == pairing_key_dict
     assert pairing_keys[slot].to_dict() == pairing_key_slot_dict
+
+
+@pytest.mark.parametrize(
+    "state, value, context",
+    [
+        pytest.param(
+            SlotState.WRITTEN,
+            os.urandom(KEY_SIZE),
+            nullcontext(),
+            id="written_correct_size",
+        ),
+        pytest.param(
+            SlotState.WRITTEN,
+            b"",
+            pytest.raises(ValidationError),
+            id="written_empty",
+        ),
+        pytest.param(
+            SlotState.WRITTEN,
+            os.urandom(KEY_SIZE - 1),
+            pytest.raises(ValidationError),
+            id="written_wrong_size",
+        ),
+        pytest.param(
+            SlotState.INVALID,
+            b"",
+            nullcontext(),
+            id="invalidated_empty",
+        ),
+        pytest.param(
+            SlotState.INVALID,
+            os.urandom(KEY_SIZE),
+            pytest.raises(ValidationError),
+            id="invalidated_not_empty",
+        ),
+        pytest.param(
+            SlotState.BLANK,
+            b"",
+            nullcontext(),
+            id="blank_empty",
+        ),
+        pytest.param(
+            SlotState.BLANK,
+            os.urandom(KEY_SIZE),
+            pytest.raises(ValidationError),
+            id="blank_not_empty",
+        ),
+    ],
+)
+def test_pairing_key_slot_model_validation(
+    state: SlotState, value: bytes, context: ContextManager[Any]
+):
+    with context:
+        model = PairingKeySlotModel(value=value, state=state)
+        assert model.value == value
+        assert model.state is state
+
+
+def test_invalidated_slot_configuration_round_trip():
+    """A slot invalidated at runtime must be reloadable from its dumped state."""
+    slot = PairingKeySlot(value=os.urandom(KEY_SIZE), state=SlotState.WRITTEN)
+    slot.invalidate()
+
+    dumped = slot.to_dict()
+    model = PairingKeySlotModel(**dumped)
+
+    assert model.state is SlotState.INVALID
+    assert model.value == b""
