@@ -17,7 +17,7 @@ from typing import (
     Union,
 )
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from typing_extensions import Self
 
 from ....crypto.ecdsa import (

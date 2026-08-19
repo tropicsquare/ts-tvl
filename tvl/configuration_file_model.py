@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Extra, StrictBool, StrictBytes, validator
+from pydantic.v1 import BaseModel, Extra, StrictBool, StrictBytes, validator
 from typing_extensions import TypedDict
 
 from .constants import (

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from ....typing_utils import RangedInt
 from .generic_partition import BaseSlot, GenericModel, GenericPartition

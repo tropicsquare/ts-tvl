@@ -2,7 +2,7 @@ from collections import Counter
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Extra, Field, root_validator
+from pydantic.v1 import BaseModel, Extra, Field, root_validator
 
 
 class InoutTypeEnum(str, Enum):

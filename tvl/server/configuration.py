@@ -24,8 +24,8 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_public_key,
 )
 from cryptography.x509 import load_pem_x509_certificate
-from pydantic import root_validator  # type: ignore
-from pydantic import BaseModel, Extra, Field, FilePath, StrictBytes
+from pydantic.v1 import root_validator  # type: ignore
+from pydantic.v1 import BaseModel, Extra, Field, FilePath, StrictBytes
 
 from ..configuration_file_model import ModelConfigurationModel
 from ..crypto.ecdsa import ecdsa_key_setup

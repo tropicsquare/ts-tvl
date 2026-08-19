@@ -1,7 +1,7 @@
 import contextlib
 from typing import Any, Dict, Iterator, Mapping, Tuple
 
-from pydantic import BaseModel, root_validator  # type: ignore
+from pydantic.v1 import BaseModel, root_validator  # type: ignore
 from typing_extensions import Self
 
 CONFIG_OBJECT_SIZE_BYTES = 0x200
