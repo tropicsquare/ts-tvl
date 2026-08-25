@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Tests: `test_server/test_configuration.py` expected `pydantic.ValidationError`, but
+  since the pydantic v2 migration (#15) the configuration models raise
+  `pydantic.v1.ValidationError`; two tests failed deterministically
+- Configuration object generator template imported `StrictInt` from `pydantic`
+  instead of `pydantic.v1`, so regenerating `configuration_object_impl.py` would
+  mix v1 models with a v2 type
+
 ## [2.5]
 
 ### Changed
