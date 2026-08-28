@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.ec import (
     derive_private_key,
     generate_private_key,
 )
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.hazmat.primitives.serialization import (

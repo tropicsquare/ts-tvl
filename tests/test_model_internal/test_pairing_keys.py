@@ -4,7 +4,7 @@ from contextlib import nullcontext
 from typing import Any, ContextManager, Dict, Optional
 
 import pytest
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from tvl.targets.model.internal.pairing_keys import (
     KEY_SIZE,
