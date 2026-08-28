@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from typing_extensions import Self
 
 from tvl.crypto.conversion import bitlist_to_bytes, ints_to_bitlist

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from pydantic import BaseModel, StrictBool
+from pydantic.v1 import BaseModel, StrictBool
 
 from ....typing_utils import SizedBytes
 from .generic_partition import BaseSlot, GenericModel, GenericPartition
