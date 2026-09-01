@@ -26,6 +26,10 @@ model:
     0:
       value: !!binary |
         oOswZVZnUuX8HaexIOefVX65j1B9J0ueJRYuoLndxCo=
+    # A slot may also be described by its state alone: `blank` and `invalid`
+    # slots hold no value. A `value` without a `state` defaults to `written`.
+    # 1:
+    #   state: invalid
   s_t_priv: !!binary |
     0Bbxb5BN9jlYn7OTjPSlYn1wv/CPFoNkAzdDvhFRdlQ=
   s_t_pub: !!binary |
