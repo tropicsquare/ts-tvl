@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Mapping
 
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, root_validator
 from typing_extensions import Self
 
-from ....typing_utils import FixedSizeBytes
+from ....typing_utils import SizedBytes
 from .generic_partition import BaseSlot, GenericModel, GenericPartition
 
 KEY_SIZE = 32
@@ -117,8 +117,23 @@ class PairingKeys(GenericPartition[PairingKeySlot]):
 
 
 class PairingKeySlotModel(BaseModel):
-    value: FixedSizeBytes[KEY_SIZE]
+    # Blank and invalidated slots hold no value, so an empty `value` has to be
+    # accepted - a stricter field would reject the configuration dumped by the
+    # model after a pairing key invalidation. The field cannot express "empty or
+    # KEY_SIZE-long", so the sizes are checked in `_check_value_matches_state`.
+    value: SizedBytes[0, KEY_SIZE] = b""
     state: SlotState = SlotState.WRITTEN
+
+    @root_validator(skip_on_failure=True)
+    def _check_value_matches_state(cls, values: Dict[str, Any]):  # noqa: N805
+        ln = len(values.get("value", b""))
+        if ln not in (0, KEY_SIZE):
+            raise ValueError(f"A pairing key size must be 0 or {KEY_SIZE}: got {ln}.")
+        if values.get("state") is SlotState.WRITTEN and ln != KEY_SIZE:
+            raise ValueError(
+                f"A written pairing key size must be {KEY_SIZE}: got {ln}."
+            )
+        return values
 
 
 class PairingKeysModel(GenericModel):

@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Configuration object generator template imported `StrictInt` from `pydantic`
   instead of `pydantic.v1`, so regenerating `configuration_object_impl.py` would
   mix v1 models with a v2 type
+- Configuration: invalidated and blank pairing key slots hold no value and are dumped as `value: !!binary ""`, which made the dumped configuration unloadable (`ensure this value has at least 32 characters`). `PairingKeySlotModel.value` now accepts an empty value; it must be either empty or KEY_SIZE bytes long, and a written slot must hold a KEY_SIZE-long value. Broken since 1.8, when `PairingKeySlot` replaced the `0xFF...`/`0x00...` sentinel values with the `state` attribute
+- Configuration: a pairing key slot can be described by its `state` alone, without a `value`
 
 ## [2.5]
 
