@@ -259,7 +259,7 @@ configuration = {
         "i_config": {
             "cfg_uap_ping": 0xDB,
         },
-        "riscv_fw_version": "2.1.0",
+        "riscv_fw_version": "2.2.0",
         "spect_fw_version": "1.3.0",
     },
 }
@@ -316,7 +316,7 @@ firmware versions that were latest available when the model was released.
 These versions are reported via the `GetInfo` L2 command and are defined in
 [`constants.py`](../../constants.py):
 
-- `RISCV_FW_VERSION_STR` — ts-tr01-app FW version the model represents (e.g. `"2.1.0"`)
+- `RISCV_FW_VERSION_STR` — ts-tr01-app FW version the model represents (e.g. `"2.2.0"`)
 - `SPECT_FW_VERSION_STR` — SPECT FW version the model represents (e.g. `"1.3.0"`)
 
 When releasing a new version of ts-tvl that targets a newer FW or SPECT release,

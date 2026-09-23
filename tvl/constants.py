@@ -128,7 +128,7 @@ def encode_fw_version(version: str) -> bytes:
     ).to_bytes(4, "little")
 
 
-RISCV_FW_VERSION_STR = "2.1.0"
+RISCV_FW_VERSION_STR = "2.2.0"
 """RISCV FW version the model's behavior corresponds to (ts-tr01-app).
 This is the FW version that was latest available when the model was released.
 Update this value when releasing a new version targeting a newer FW."""
